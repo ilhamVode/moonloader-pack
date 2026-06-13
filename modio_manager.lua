@@ -34,6 +34,7 @@ local busy = false
 local busy_text = ''
 local last_check_text = 'Проверка еще не запускалась.'
 local last_error = ''
+local pending_delete_id = nil
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -261,7 +262,7 @@ function drawDetails()
     imgui.SameLine()
     if imgui.Button(u8 'Удалить', imgui.ImVec2(130, 0)) then
         if canDelete then
-            deleteScript(item)
+            pending_delete_id = item.id
         else
             msg('Удаление недоступно для выбранного скрипта.', WARN)
         end
@@ -273,7 +274,26 @@ function drawDetails()
     end
 
     imgui.Spacing()
+    drawDeleteConfirmation(item, st)
+    imgui.Spacing()
     imgui.TextWrapped(u8 'После установки, обновления или удаления нажми "Перезагрузить Lua", чтобы MoonLoader перечитал файлы. Менеджер не удаляет сам себя и не трогает скрипты вне манифеста.')
+end
+
+function drawDeleteConfirmation(item, st)
+    if pending_delete_id ~= item.id then return end
+
+    imgui.Separator()
+    imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), u8('Подтвердите удаление: ' .. tostring(item.name or item.file)))
+    imgui.TextWrapped(u8('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
+
+    if imgui.Button(u8 'Да, удалить', imgui.ImVec2(130, 0)) then
+        pending_delete_id = nil
+        deleteScript(item)
+    end
+    imgui.SameLine()
+    if imgui.Button(u8 'Отмена', imgui.ImVec2(110, 0)) then
+        pending_delete_id = nil
+    end
 end
 
 function infoRow(name, value)
