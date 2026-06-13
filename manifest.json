@@ -3,8 +3,8 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-13 13:30 MSK",
-  "notes": "Первый манифест пакета: Lavaka, CtrlLKM и FPSFix.",
+  "updated_at": "2026-06-13 13:40 MSK",
+  "notes": "Manifest for Lavaka, CtrlLKM and FPSFix.",
   "scripts": [
     {
       "id": "lavaka",
@@ -13,7 +13,7 @@
       "version": "1.0",
       "updated_at": "2026-06-13",
       "author": "ModioZodio",
-      "description": "Помощник установки лавки через строгую CEF-цепочку без фонового перехвата.",
+      "description": "Shop placement helper with strict CEF chain and no background CEF suppression.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua"
     },
     {
@@ -23,7 +23,7 @@
       "version": "1.0",
       "updated_at": "2026-06-13",
       "author": "ModioZodio",
-      "description": "Удерживает Ctrl, флудит ЛКМ и отключается при ручном Ctrl или легендарном призе в чате.",
+      "description": "Holds Ctrl, clicks LMB repeatedly, stops on manual Ctrl or legendary prize chat text.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua"
     },
     {
@@ -33,7 +33,7 @@
       "version": "0.1 alpha",
       "updated_at": "2026-06-13",
       "author": "JustFedot / ModioZodio",
-      "description": "FPSFix с интегрированным помощником установки лавки и дополнительными инструментами.",
+      "description": "FPSFix with integrated Lavaka helper and extra tools.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua"
     }
   ]
