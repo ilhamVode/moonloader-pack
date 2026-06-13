@@ -88,6 +88,10 @@ local manifest = {
 
 local runtime = {}
 
+function ui(text)
+    return tostring(text or '')
+end
+
 function main()
     while not isSampAvailable() do wait(0) end
 
