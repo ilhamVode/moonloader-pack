@@ -1,6 +1,8 @@
+local MANAGER_VERSION = '1.1'
+
 script_name('ModioManager')
 script_author('ModioZodio')
-script_version('1.0')
+script_version(MANAGER_VERSION)
 script_properties('work-in-pause')
 
 require 'lib.moonloader'
@@ -40,8 +42,14 @@ local manifest = {
     name = 'ModioZodio MoonLoader Pack',
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
-    updated_at = '2026-06-13 14:35 MSK',
+    updated_at = '2026-06-13 15:05 MSK',
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
+    manager = {
+        file = 'modio_manager.lua',
+        version = '1.1',
+        updated_at = '2026-06-13',
+        url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua'
+    },
     scripts = {
         {
             id = 'lavaka',
@@ -248,6 +256,7 @@ end
 function drawHeader()
     imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
     imgui.TextDisabled(ui('Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-')))
+    imgui.TextColored(managerVersionColor(), ui(managerStatusText()))
 
     imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
     if manifest.notes and #manifest.notes > 0 then
@@ -277,6 +286,11 @@ function drawHeader()
     sameLineIfFits(reload_size.x)
     if imgui.Button(ui 'Перезагрузить Lua', reload_size) then
         reloadScripts()
+    end
+    local manager_update_size = buttonSize(ui 'Обновить менеджер', 210)
+    sameLineIfFits(manager_update_size.x)
+    if imgui.Button(ui 'Обновить менеджер', manager_update_size) then
+        updateManager()
     end
 end
 
@@ -494,6 +508,74 @@ function checkRemoteManifest()
     end)
 end
 
+function managerRemoteVersion()
+    if type(manifest.manager) ~= 'table' then return MANAGER_VERSION end
+    return tostring(manifest.manager.version or MANAGER_VERSION)
+end
+
+function managerIsOutdated()
+    return tostring(MANAGER_VERSION) ~= managerRemoteVersion()
+end
+
+function managerStatusText()
+    local text = 'Modio Manager: ' .. tostring(MANAGER_VERSION) .. ' | на сайте: ' .. managerRemoteVersion()
+    if managerIsOutdated() then
+        return text .. ' | доступно обновление'
+    end
+    return text .. ' | актуальная версия'
+end
+
+function managerVersionColor()
+    if managerIsOutdated() then
+        return imgui.ImVec4(0.95, 0.48, 0.48, 1.00)
+    end
+    return imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
+end
+
+function updateManager()
+    if busy or checking then return end
+
+    local manager = manifest.manager
+    if type(manager) ~= 'table' or not manager.url or manager.url == '' then
+        msg('В манифесте нет ссылки на обновление менеджера.', ERR)
+        return
+    end
+
+    if not managerIsOutdated() then
+        msg('Менеджер уже актуальный.', OK)
+        return
+    end
+
+    busy = true
+    busy_text = 'Обновляю Modio Manager...'
+    last_error = ''
+
+    ensureDir(tmp_dir)
+    local tmp = tmp_dir .. '\\modio_manager.lua.download'
+    local target = getManagerPath()
+
+    downloadUrlToFile(manager.url, tmp, function(id, status)
+        if status == dl_status.STATUSEX_ENDDOWNLOAD then
+            if doesFileExist(tmp) then
+                local ok, err = replaceFile(tmp, target)
+                busy = false
+                busy_text = ''
+                if ok then
+                    msg('Менеджер обновлен. Нажмите "Перезагрузить Lua", чтобы запустить новую версию.', OK)
+                else
+                    last_error = 'Не удалось обновить менеджер: ' .. tostring(err)
+                    msg(last_error, ERR)
+                end
+            else
+                busy = false
+                busy_text = ''
+                last_error = 'Загрузка менеджера завершилась, но временный файл не найден.'
+                msg(last_error, ERR)
+            end
+        end
+    end)
+end
+
 function installOrUpdate(item, mode)
     if busy or not item or not item.url or item.url == '' then return end
     busy = true
@@ -507,8 +589,7 @@ function installOrUpdate(item, mode)
     downloadUrlToFile(item.url, tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             if doesFileExist(tmp) then
-                if doesFileExist(target) then os.remove(target) end
-                local ok, err = os.rename(tmp, target)
+                local ok, err = replaceFile(tmp, target)
                 busy = false
                 busy_text = ''
                 if ok then
@@ -602,6 +683,33 @@ end
 
 function getScriptPath(item)
     return workdir .. '\\' .. tostring(item.file or '')
+end
+
+function getManagerPath()
+    return workdir .. '\\' .. tostring(thisScript().filename or 'modio_manager.lua')
+end
+
+function replaceFile(tmp, target)
+    local backup = target .. '.bak'
+    if doesFileExist(backup) then os.remove(backup) end
+
+    if doesFileExist(target) then
+        local moved, move_err = os.rename(target, backup)
+        if not moved then
+            os.remove(tmp)
+            return false, move_err or 'не удалось подготовить старый файл к замене'
+        end
+    end
+
+    local ok, err = os.rename(tmp, target)
+    if not ok then
+        os.remove(tmp)
+        if doesFileExist(backup) then os.rename(backup, target) end
+        return false, err
+    end
+
+    if doesFileExist(backup) then os.remove(backup) end
+    return true
 end
 
 function loadCachedManifest()
