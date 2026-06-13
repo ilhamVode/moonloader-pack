@@ -1,4 +1,4 @@
-# ModioZodio MoonLoader Pack
+﻿# ModioZodio MoonLoader Pack
 
 Репозиторий для игрового менеджера `modio_manager.lua`.
 
@@ -9,12 +9,12 @@
 
 ## Как опубликовать
 
-1. Создай репозиторий `ModioZodio/moonloader-pack` на GitHub.
+1. Создай репозиторий `ilhamVode/moonloader-pack` на GitHub.
 2. Залей в него `manifest.json` и папку `scripts`.
 3. Raw-манифест должен быть доступен по адресу:
 
 ```text
-https://raw.githubusercontent.com/ModioZodio/moonloader-pack/main/manifest.json
+https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json
 ```
 
 Если имя репозитория будет другим, поменяй `MANIFEST_URL` в `modio_manager.lua` и ссылки `url` в `manifest.json`.

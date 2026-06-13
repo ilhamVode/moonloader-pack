@@ -1,4 +1,4 @@
-script_name('ModioManager')
+﻿script_name('ModioManager')
 script_author('ModioZodio')
 script_version('1.0')
 script_properties('work-in-pause')
@@ -15,7 +15,7 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 local new = imgui.new
 local window = new.bool(false)
 
-local MANIFEST_URL = 'https://raw.githubusercontent.com/ModioZodio/moonloader-pack/main/manifest.json'
+local MANIFEST_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json'
 local PREFIX = '[ModioManager]'
 local CHAT = 0x52C7EA
 local OK = 0x77DD77
@@ -38,7 +38,7 @@ local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
     owner = 'ModioZodio',
-    homepage = 'https://github.com/ModioZodio/moonloader-pack',
+    homepage = 'https://github.com/ilhamVode/moonloader-pack',
     updated_at = '2026-06-13 13:30 MSK',
     notes = 'Встроенный список. После публикации GitHub нажми "Проверить обновления".',
     scripts = {
@@ -50,7 +50,7 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'ModioZodio',
             description = 'Помощник установки лавки через строгую CEF-цепочку без фонового перехвата.',
-            url = 'https://raw.githubusercontent.com/ModioZodio/moonloader-pack/main/scripts/lavaka.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua'
         },
         {
             id = 'ctrllkm',
@@ -60,7 +60,7 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'ModioZodio',
             description = 'Удерживает Ctrl, флудит ЛКМ и отключается при ручном Ctrl или легендарном призе в чате.',
-            url = 'https://raw.githubusercontent.com/ModioZodio/moonloader-pack/main/scripts/ctrllkm.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua'
         },
         {
             id = 'fpsfix',
@@ -70,7 +70,7 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'JustFedot / ModioZodio',
             description = 'FPSFix с интегрированным помощником установки лавки и дополнительными инструментами.',
-            url = 'https://raw.githubusercontent.com/ModioZodio/moonloader-pack/main/scripts/FPSFix.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua'
         }
     }
 }
