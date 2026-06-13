@@ -40,7 +40,7 @@ local manifest = {
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
     updated_at = '2026-06-13 13:30 MSK',
-    notes = 'Встроенный список. После публикации GitHub нажми "Проверить обновления".',
+    notes = 'Пакет MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры через Modio Manager.',
     scripts = {
         {
             id = 'lavaka',
@@ -49,7 +49,7 @@ local manifest = {
             version = '1.0',
             updated_at = '2026-06-13',
             author = 'ModioZodio',
-            description = 'Помощник установки лавки через строгую CEF-цепочку без фонового перехвата.',
+            description = 'Помощник установки лавки через строгую CEF-цепочку без фонового перехвата окон.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua'
         },
         {
@@ -59,7 +59,7 @@ local manifest = {
             version = '1.0',
             updated_at = '2026-06-13',
             author = 'ModioZodio',
-            description = 'Удерживает Ctrl, флудит ЛКМ и отключается при ручном Ctrl или легендарном призе в чате.',
+            description = 'Удерживает Ctrl, флудит ЛКМ и автоматически выключается при ручном нажатии Ctrl или сообщении о легендарном призе.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua'
         },
         {
@@ -69,7 +69,7 @@ local manifest = {
             version = '0.1 alpha',
             updated_at = '2026-06-13',
             author = 'JustFedot / ModioZodio',
-            description = 'FPSFix с интегрированным помощником установки лавки и дополнительными инструментами.',
+            description = 'FPSFix с дополнительными инструментами и встроенным помощником установки лавки.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua'
         }
     }
@@ -449,6 +449,7 @@ function loadManifestFromFile(path, strict)
     if not f then return false, 'Не удалось открыть manifest.json' end
     local raw = f:read('*a') or ''
     f:close()
+    raw = raw:gsub('^\239\187\191', ''):gsub('^%s+', '')
 
     local ok, data = pcall(decodeJson, raw)
     if not ok or type(data) ~= 'table' then

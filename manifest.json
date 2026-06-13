@@ -1,40 +1,40 @@
 {
-  "schema": 1,
-  "name": "ModioZodio MoonLoader Pack",
-  "owner": "ModioZodio",
-  "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-13 13:40 MSK",
-  "notes": "Manifest for Lavaka, CtrlLKM and FPSFix.",
-  "scripts": [
-    {
-      "id": "lavaka",
-      "name": "Lavaka",
-      "file": "lavaka.lua",
-      "version": "1.0",
-      "updated_at": "2026-06-13",
-      "author": "ModioZodio",
-      "description": "Shop placement helper with strict CEF chain and no background CEF suppression.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua"
-    },
-    {
-      "id": "ctrllkm",
-      "name": "CtrlLKM",
-      "file": "ctrllkm.lua",
-      "version": "1.0",
-      "updated_at": "2026-06-13",
-      "author": "ModioZodio",
-      "description": "Holds Ctrl, clicks LMB repeatedly, stops on manual Ctrl or legendary prize chat text.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua"
-    },
-    {
-      "id": "fpsfix",
-      "name": "FPSFix",
-      "file": "FPSFix.lua",
-      "version": "0.1 alpha",
-      "updated_at": "2026-06-13",
-      "author": "JustFedot / ModioZodio",
-      "description": "FPSFix with integrated Lavaka helper and extra tools.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua"
-    }
-  ]
+    "name":  "ModioZodio MoonLoader Pack",
+    "owner":  "ModioZodio",
+    "schema":  1,
+    "homepage":  "https://github.com/ilhamVode/moonloader-pack",
+    "notes":  "Пакет MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры через Modio Manager.",
+    "scripts":  [
+                    {
+                        "updated_at":  "2026-06-13",
+                        "version":  "1.0",
+                        "file":  "lavaka.lua",
+                        "id":  "lavaka",
+                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua",
+                        "name":  "Lavaka",
+                        "description":  "Помощник установки лавки через строгую CEF-цепочку без фонового перехвата окон.",
+                        "author":  "ModioZodio"
+                    },
+                    {
+                        "updated_at":  "2026-06-13",
+                        "version":  "1.0",
+                        "file":  "ctrllkm.lua",
+                        "id":  "ctrllkm",
+                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua",
+                        "name":  "CtrlLKM",
+                        "description":  "Удерживает Ctrl, флудит ЛКМ и автоматически выключается при ручном нажатии Ctrl или сообщении о легендарном призе.",
+                        "author":  "ModioZodio"
+                    },
+                    {
+                        "updated_at":  "2026-06-13",
+                        "version":  "0.1 alpha",
+                        "file":  "FPSFix.lua",
+                        "id":  "fpsfix",
+                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua",
+                        "name":  "FPSFix",
+                        "description":  "FPSFix с дополнительными инструментами и встроенным помощником установки лавки.",
+                        "author":  "JustFedot / ModioZodio"
+                    }
+                ],
+    "updated_at":  "2026-06-13 13:50 MSK"
 }
