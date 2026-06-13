@@ -287,17 +287,28 @@ function drawScriptList()
     local list = manifest.scripts or {}
     for i, item in ipairs(list) do
         local st = runtime[item.id] or inspectLocal(item)
-        local marker = '[ ]'
-        if st.installed then
-            marker = st.outdated and '[!]' or '[✓]'
-        end
-
-        local label = string.format('%s %s##script_%s', marker, item.name or item.id, item.id)
-        if imgui.Selectable(ui(label), selected == i, 0, imgui.ImVec2(0, 34)) then
-            selected = i
-        end
-        imgui.TextDisabled(ui(statusLine(item, st)))
+        drawScriptListItem(i, item, st)
     end
+end
+
+function drawScriptListItem(index, item, st)
+    local id = tostring(item.id or index)
+    local pos = imgui.GetCursorPos()
+    local size = imgui.ImVec2(0, 58)
+
+    if imgui.Selectable(ui('##script_' .. id), selected == index, 0, size) then
+        selected = index
+    end
+
+    local after = imgui.GetCursorPos()
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 8))
+    imgui.Text(ui(item.name or item.id or 'script'))
+
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 31))
+    imgui.TextColored(listVersionColor(st), ui(statusLine(item, st)))
+
+    imgui.SetCursorPos(after)
+    imgui.Spacing()
 end
 
 function drawDetails()
@@ -439,12 +450,22 @@ end
 
 function statusLine(item, st)
     if not st.installed then
-        return 'не установлен | сайт: ' .. tostring(item.version or '-')
+        return 'не установлен | на сайте: ' .. tostring(item.version or '-')
     end
     if st.outdated then
-        return 'локально: ' .. st.local_version .. ' | сайт: ' .. tostring(item.version or '-')
+        return 'обновить: ' .. st.local_version .. ' -> ' .. tostring(item.version or '-')
     end
-    return 'последняя версия: ' .. st.local_version
+    return 'актуальная версия: ' .. st.local_version
+end
+
+function listVersionColor(st)
+    if not st.installed then
+        return imgui.ImVec4(0.92, 0.72, 0.42, 1.00)
+    end
+    if st.outdated then
+        return imgui.ImVec4(0.95, 0.48, 0.48, 1.00)
+    end
+    return imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
 end
 
 function checkRemoteManifest()
