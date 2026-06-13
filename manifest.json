@@ -1,40 +1,50 @@
 {
-    "name":  "ModioZodio MoonLoader Pack",
-    "owner":  "ModioZodio",
-    "schema":  1,
-    "homepage":  "https://github.com/ilhamVode/moonloader-pack",
-    "notes":  "Пакет MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры через Modio Manager.",
-    "scripts":  [
-                    {
-                        "updated_at":  "2026-06-13",
-                        "version":  "1.0",
-                        "file":  "lavaka.lua",
-                        "id":  "lavaka",
-                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua",
-                        "name":  "Lavaka",
-                        "description":  "Помощник установки лавки через строгую CEF-цепочку без фонового перехвата окон.",
-                        "author":  "ModioZodio"
-                    },
-                    {
-                        "updated_at":  "2026-06-13",
-                        "version":  "1.0",
-                        "file":  "ctrllkm.lua",
-                        "id":  "ctrllkm",
-                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua",
-                        "name":  "CtrlLKM",
-                        "description":  "Удерживает Ctrl, флудит ЛКМ и автоматически выключается при ручном нажатии Ctrl или сообщении о легендарном призе.",
-                        "author":  "ModioZodio"
-                    },
-                    {
-                        "updated_at":  "2026-06-13",
-                        "version":  "0.1 alpha",
-                        "file":  "FPSFix.lua",
-                        "id":  "fpsfix",
-                        "url":  "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua",
-                        "name":  "FPSFix",
-                        "description":  "FPSFix с дополнительными инструментами и встроенным помощником установки лавки.",
-                        "author":  "JustFedot / ModioZodio"
-                    }
-                ],
-    "updated_at":  "2026-06-13 13:50 MSK"
+  "schema": 1,
+  "name": "ModioZodio MoonLoader Pack",
+  "owner": "ModioZodio",
+  "homepage": "https://github.com/ilhamVode/moonloader-pack",
+  "updated_at": "2026-06-13 14:10 MSK",
+  "notes": "Пакет MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры через Modio Manager.",
+  "scripts": [
+    {
+      "id": "lavaka",
+      "name": "Lavaka",
+      "file": "lavaka.lua",
+      "version": "1.0",
+      "updated_at": "2026-06-13",
+      "author": "ModioZodio",
+      "description": "Помощник установки лавки через строгую CEF-цепочку без фонового перехвата окон.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua"
+    },
+    {
+      "id": "ctrllkm",
+      "name": "CtrlLKM",
+      "file": "ctrllkm.lua",
+      "version": "1.0",
+      "updated_at": "2026-06-13",
+      "author": "ModioZodio",
+      "description": "Удерживает Ctrl, флудит ЛКМ и автоматически выключается при ручном нажатии Ctrl или сообщении о легендарном призе.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua"
+    },
+    {
+      "id": "fpsfix",
+      "name": "FPSFix",
+      "file": "FPSFix.lua",
+      "version": "0.1 alpha",
+      "updated_at": "2026-06-13",
+      "author": "JustFedot / ModioZodio",
+      "description": "FPSFix с дополнительными инструментами и встроенным помощником установки лавки.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua"
+    },
+    {
+      "id": "infozz",
+      "name": "InfoZZ",
+      "file": "infozz.lua",
+      "version": "1.7.3",
+      "updated_at": "2026-06-13",
+      "author": "Codex / ModioZodio",
+      "description": "TXT-справочник для SA:MP с просмотром файлов, поиском, локальным AI-поиском по загруженным TXT и обновлением базы.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua"
+    }
+  ]
 }

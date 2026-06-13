@@ -72,6 +72,16 @@ local manifest = {
             author = 'JustFedot / ModioZodio',
             description = 'FPSFix с дополнительными инструментами и встроенным помощником установки лавки.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua'
+        },
+        {
+            id = 'infozz',
+            name = 'InfoZZ',
+            file = 'infozz.lua',
+            version = '1.7.3',
+            updated_at = '2026-06-13',
+            author = 'Codex / ModioZodio',
+            description = 'TXT-справочник для SA:MP с просмотром файлов, поиском, локальным AI-поиском по загруженным TXT и обновлением базы.',
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua'
         }
     }
 }
@@ -114,7 +124,7 @@ imgui.OnFrame(
         imgui.SetNextWindowSize(imgui.ImVec2(900, 560), imgui.Cond.FirstUseEver)
         imgui.SetNextWindowSizeConstraints(imgui.ImVec2(760, 470), imgui.ImVec2(1280, 820))
 
-        if imgui.Begin(u8 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
+        if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
             drawHeader()
             imgui.Separator()
 
@@ -161,40 +171,40 @@ function applyStyle()
 end
 
 function drawHeader()
-    imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), u8(manifest.name or 'ModioZodio MoonLoader Pack'))
+    imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
     imgui.SameLine()
-    imgui.TextDisabled(u8('обновлено на сайте: ' .. tostring(manifest.updated_at or '-')))
+    imgui.TextDisabled(ui('обновлено на сайте: ' .. tostring(manifest.updated_at or '-')))
 
-    imgui.TextDisabled(u8('Manifest: ' .. MANIFEST_URL))
+    imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
     if manifest.notes and #manifest.notes > 0 then
-        imgui.TextWrapped(u8(manifest.notes))
+        imgui.TextWrapped(ui(manifest.notes))
     end
 
     if busy or checking then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.35, 1.00), u8(busy_text ~= '' and busy_text or 'Идет операция...'))
+        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.35, 1.00), ui(busy_text ~= '' and busy_text or 'Идет операция...'))
     else
-        imgui.TextDisabled(u8(last_check_text))
+        imgui.TextDisabled(ui(last_check_text))
     end
 
     if last_error ~= '' then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), u8(last_error))
+        imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
 
-    if imgui.Button(u8 'Проверить обновления', imgui.ImVec2(185, 0)) then
+    if imgui.Button(ui 'Проверить обновления', imgui.ImVec2(185, 0)) then
         checkRemoteManifest()
     end
     imgui.SameLine()
-    if imgui.Button(u8 'Обновить локальный статус', imgui.ImVec2(205, 0)) then
+    if imgui.Button(ui 'Обновить локальный статус', imgui.ImVec2(205, 0)) then
         refreshLocalState()
     end
     imgui.SameLine()
-    if imgui.Button(u8 'Перезагрузить Lua', imgui.ImVec2(155, 0)) then
+    if imgui.Button(ui 'Перезагрузить Lua', imgui.ImVec2(155, 0)) then
         reloadScripts()
     end
 end
 
 function drawScriptList()
-    imgui.TextDisabled(u8 'Скрипты')
+    imgui.TextDisabled(ui 'Скрипты')
     imgui.Separator()
 
     local list = manifest.scripts or {}
@@ -206,24 +216,24 @@ function drawScriptList()
         end
 
         local label = string.format('%s %s##script_%s', marker, item.name or item.id, item.id)
-        if imgui.Selectable(u8(label), selected == i, 0, imgui.ImVec2(0, 34)) then
+        if imgui.Selectable(ui(label), selected == i, 0, imgui.ImVec2(0, 34)) then
             selected = i
         end
-        imgui.TextDisabled(u8(statusLine(item, st)))
+        imgui.TextDisabled(ui(statusLine(item, st)))
     end
 end
 
 function drawDetails()
     local item = (manifest.scripts or {})[selected]
     if not item then
-        imgui.TextDisabled(u8 'Скриптов в манифесте нет.')
+        imgui.TextDisabled(ui 'Скриптов в манифесте нет.')
         return
     end
 
     local st = runtime[item.id] or inspectLocal(item)
-    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), u8(item.name or item.id))
+    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(item.name or item.id))
     imgui.SameLine()
-    imgui.TextDisabled(u8(item.file or '-'))
+    imgui.TextDisabled(ui(item.file or '-'))
 
     imgui.Separator()
     infoRow('Автор', item.author or '-')
@@ -242,7 +252,7 @@ function drawDetails()
     local canUpdate = st.installed and st.outdated and not busy
     local canDelete = st.installed and not busy
 
-    if imgui.Button(u8 'Установить', imgui.ImVec2(130, 0)) then
+    if imgui.Button(ui 'Установить', imgui.ImVec2(130, 0)) then
         if canInstall then
             installOrUpdate(item, 'install')
         else
@@ -251,7 +261,7 @@ function drawDetails()
     end
 
     imgui.SameLine()
-    if imgui.Button(u8 'Обновить', imgui.ImVec2(130, 0)) then
+    if imgui.Button(ui 'Обновить', imgui.ImVec2(130, 0)) then
         if canUpdate then
             installOrUpdate(item, 'update')
         else
@@ -260,7 +270,7 @@ function drawDetails()
     end
 
     imgui.SameLine()
-    if imgui.Button(u8 'Удалить', imgui.ImVec2(130, 0)) then
+    if imgui.Button(ui 'Удалить', imgui.ImVec2(130, 0)) then
         if canDelete then
             pending_delete_id = item.id
         else
@@ -269,46 +279,46 @@ function drawDetails()
     end
 
     imgui.SameLine()
-    if imgui.Button(u8 'Открыть папку', imgui.ImVec2(140, 0)) then
+    if imgui.Button(ui 'Открыть папку', imgui.ImVec2(140, 0)) then
         os.execute('explorer "' .. workdir .. '"')
     end
 
     imgui.Spacing()
     drawDeleteConfirmation(item, st)
     imgui.Spacing()
-    imgui.TextWrapped(u8 'После установки, обновления или удаления нажми "Перезагрузить Lua", чтобы MoonLoader перечитал файлы. Менеджер не удаляет сам себя и не трогает скрипты вне манифеста.')
+    imgui.TextWrapped(ui 'После установки, обновления или удаления нажми "Перезагрузить Lua", чтобы MoonLoader перечитал файлы. Менеджер не удаляет сам себя и не трогает скрипты вне манифеста.')
 end
 
 function drawDeleteConfirmation(item, st)
     if pending_delete_id ~= item.id then return end
 
     imgui.Separator()
-    imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), u8('Подтвердите удаление: ' .. tostring(item.name or item.file)))
-    imgui.TextWrapped(u8('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
+    imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui('Подтвердите удаление: ' .. tostring(item.name or item.file)))
+    imgui.TextWrapped(ui('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
 
-    if imgui.Button(u8 'Да, удалить', imgui.ImVec2(130, 0)) then
+    if imgui.Button(ui 'Да, удалить', imgui.ImVec2(130, 0)) then
         pending_delete_id = nil
         deleteScript(item)
     end
     imgui.SameLine()
-    if imgui.Button(u8 'Отмена', imgui.ImVec2(110, 0)) then
+    if imgui.Button(ui 'Отмена', imgui.ImVec2(110, 0)) then
         pending_delete_id = nil
     end
 end
 
 function infoRow(name, value)
-    imgui.TextDisabled(u8(name .. ':'))
+    imgui.TextDisabled(ui(name .. ':'))
     imgui.SameLine(190)
-    imgui.TextWrapped(u8(tostring(value)))
+    imgui.TextWrapped(ui(tostring(value)))
 end
 
 function drawStatusBadge(st)
     if not st.installed then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.65, 0.30, 1.00), u8 'Статус: не установлен')
+        imgui.TextColored(imgui.ImVec4(1.00, 0.65, 0.30, 1.00), ui 'Статус: не установлен')
     elseif st.outdated then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.28, 1.00), u8 'Статус: доступно обновление')
+        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.28, 1.00), ui 'Статус: доступно обновление')
     else
-        imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), u8 'Статус: установлена последняя версия')
+        imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), ui 'Статус: установлена последняя версия')
     end
 end
 
