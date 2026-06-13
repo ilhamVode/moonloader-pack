@@ -125,14 +125,17 @@ end)
 imgui.OnFrame(
     function() return window[0] end,
     function()
-        imgui.SetNextWindowSize(imgui.ImVec2(900, 560), imgui.Cond.FirstUseEver)
-        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(760, 470), imgui.ImVec2(1280, 820))
+        local sx, sy = getScreenResolution()
+        local start_w = math.min(math.max(sx * 0.72, 1040), sx - 80)
+        local start_h = math.min(math.max(sy * 0.72, 650), sy - 80)
+        imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
+        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(940, 610), imgui.ImVec2(math.max(960, sx - 40), math.max(640, sy - 40)))
 
         if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
             drawHeader()
             imgui.Separator()
 
-            imgui.BeginChild('script_list', imgui.ImVec2(285, 0), true)
+            imgui.BeginChild('script_list', imgui.ImVec2(310, 0), true)
             drawScriptList()
             imgui.EndChild()
 
@@ -311,9 +314,23 @@ function drawDeleteConfirmation(item, st)
 end
 
 function infoRow(name, value)
+    value = tostring(value or '-')
     imgui.TextDisabled(ui(name .. ':'))
-    imgui.SameLine(190)
-    imgui.TextWrapped(ui(tostring(value)))
+
+    local region = imgui.GetContentRegionAvail().x
+    local label_w = 175
+    if region > 520 then
+        imgui.SameLine(label_w)
+        imgui.PushTextWrapPos(imgui.GetCursorPosX() + math.max(260, region - label_w))
+        imgui.TextWrapped(ui(value))
+        imgui.PopTextWrapPos()
+    else
+        imgui.Indent(12)
+        imgui.PushTextWrapPos(imgui.GetCursorPosX() + math.max(260, region - 16))
+        imgui.TextWrapped(ui(value))
+        imgui.PopTextWrapPos()
+        imgui.Unindent(12)
+    end
 end
 
 function drawStatusBadge(st)
