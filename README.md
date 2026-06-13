@@ -1,4 +1,4 @@
-﻿# ModioZodio MoonLoader Pack
+# ModioZodio MoonLoader Pack
 
 Репозиторий для игрового менеджера `modio_manager.lua`.
 

@@ -1,4 +1,4 @@
-﻿script_name('ModioManager')
+script_name('ModioManager')
 script_author('ModioZodio')
 script_version('1.0')
 script_properties('work-in-pause')
