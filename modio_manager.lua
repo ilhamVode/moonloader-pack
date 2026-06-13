@@ -92,6 +92,28 @@ function ui(text)
     return tostring(text or '')
 end
 
+function buttonSize(label, min_width)
+    min_width = min_width or 140
+    local ok, size = pcall(imgui.CalcTextSize, label)
+    if ok and size then
+        return imgui.ImVec2(math.max(min_width, size.x + 30), 0)
+    end
+    return imgui.ImVec2(min_width, 0)
+end
+
+function textWidth(text)
+    local ok, size = pcall(imgui.CalcTextSize, tostring(text or ''))
+    if ok and size then return size.x end
+    return 0
+end
+
+function sameLineIfFits(width)
+    local spacing = imgui.GetStyle().ItemSpacing.x
+    if imgui.GetContentRegionAvail().x > width + spacing then
+        imgui.SameLine()
+    end
+end
+
 function main()
     while not isSampAvailable() do wait(0) end
 
@@ -126,16 +148,16 @@ imgui.OnFrame(
     function() return window[0] end,
     function()
         local sx, sy = getScreenResolution()
-        local start_w = math.min(math.max(sx * 0.72, 1040), sx - 80)
-        local start_h = math.min(math.max(sy * 0.72, 650), sy - 80)
+        local start_w = math.min(math.max(sx * 0.80, 1180), sx - 80)
+        local start_h = math.min(math.max(sy * 0.78, 700), sy - 80)
         imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
-        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(940, 610), imgui.ImVec2(math.max(960, sx - 40), math.max(640, sy - 40)))
+        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(1040, 650), imgui.ImVec2(math.max(1060, sx - 40), math.max(680, sy - 40)))
 
         if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
             drawHeader()
             imgui.Separator()
 
-            imgui.BeginChild('script_list', imgui.ImVec2(310, 0), true)
+            imgui.BeginChild('script_list', imgui.ImVec2(330, 0), true)
             drawScriptList()
             imgui.EndChild()
 
@@ -179,8 +201,7 @@ end
 
 function drawHeader()
     imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
-    imgui.SameLine()
-    imgui.TextDisabled(ui('обновлено на сайте: ' .. tostring(manifest.updated_at or '-')))
+    imgui.TextDisabled(ui('Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-')))
 
     imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
     if manifest.notes and #manifest.notes > 0 then
@@ -197,15 +218,18 @@ function drawHeader()
         imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
 
-    if imgui.Button(ui 'Проверить обновления', imgui.ImVec2(185, 0)) then
+    local check_size = buttonSize(ui 'Проверить обновления', 220)
+    if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest()
     end
-    imgui.SameLine()
-    if imgui.Button(ui 'Обновить локальный статус', imgui.ImVec2(205, 0)) then
+    local local_status_size = buttonSize(ui 'Обновить локальный статус', 260)
+    sameLineIfFits(local_status_size.x)
+    if imgui.Button(ui 'Обновить локальный статус', local_status_size) then
         refreshLocalState()
     end
-    imgui.SameLine()
-    if imgui.Button(ui 'Перезагрузить Lua', imgui.ImVec2(155, 0)) then
+    local reload_size = buttonSize(ui 'Перезагрузить Lua', 190)
+    sameLineIfFits(reload_size.x)
+    if imgui.Button(ui 'Перезагрузить Lua', reload_size) then
         reloadScripts()
     end
 end
@@ -238,9 +262,11 @@ function drawDetails()
     end
 
     local st = runtime[item.id] or inspectLocal(item)
-    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(item.name or item.id))
-    imgui.SameLine()
-    imgui.TextDisabled(ui(item.file or '-'))
+    local title = ui(item.name or item.id)
+    local filename = ui(item.file or '-')
+    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), title)
+    sameLineIfFits(textWidth(filename) + 8)
+    imgui.TextDisabled(filename)
 
     imgui.Separator()
     infoRow('Автор', item.author or '-')
@@ -259,7 +285,8 @@ function drawDetails()
     local canUpdate = st.installed and st.outdated and not busy
     local canDelete = st.installed and not busy
 
-    if imgui.Button(ui 'Установить', imgui.ImVec2(130, 0)) then
+    local install_size = buttonSize(ui 'Установить', 170)
+    if imgui.Button(ui 'Установить', install_size) then
         if canInstall then
             installOrUpdate(item, 'install')
         else
@@ -267,8 +294,9 @@ function drawDetails()
         end
     end
 
-    imgui.SameLine()
-    if imgui.Button(ui 'Обновить', imgui.ImVec2(130, 0)) then
+    local update_size = buttonSize(ui 'Обновить', 170)
+    sameLineIfFits(update_size.x)
+    if imgui.Button(ui 'Обновить', update_size) then
         if canUpdate then
             installOrUpdate(item, 'update')
         else
@@ -276,18 +304,14 @@ function drawDetails()
         end
     end
 
-    imgui.SameLine()
-    if imgui.Button(ui 'Удалить', imgui.ImVec2(130, 0)) then
+    local delete_size = buttonSize(ui 'Удалить', 170)
+    sameLineIfFits(delete_size.x)
+    if imgui.Button(ui 'Удалить', delete_size) then
         if canDelete then
             pending_delete_id = item.id
         else
             msg('Удаление недоступно для выбранного скрипта.', WARN)
         end
-    end
-
-    imgui.SameLine()
-    if imgui.Button(ui 'Открыть папку', imgui.ImVec2(140, 0)) then
-        os.execute('explorer "' .. workdir .. '"')
     end
 
     imgui.Spacing()
@@ -303,23 +327,26 @@ function drawDeleteConfirmation(item, st)
     imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui('Подтвердите удаление: ' .. tostring(item.name or item.file)))
     imgui.TextWrapped(ui('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
 
-    if imgui.Button(ui 'Да, удалить', imgui.ImVec2(130, 0)) then
+    local confirm_size = buttonSize(ui 'Да, удалить', 170)
+    if imgui.Button(ui 'Да, удалить', confirm_size) then
         pending_delete_id = nil
         deleteScript(item)
     end
-    imgui.SameLine()
-    if imgui.Button(ui 'Отмена', imgui.ImVec2(110, 0)) then
+    local cancel_size = buttonSize(ui 'Отмена', 130)
+    sameLineIfFits(cancel_size.x)
+    if imgui.Button(ui 'Отмена', cancel_size) then
         pending_delete_id = nil
     end
 end
 
 function infoRow(name, value)
     value = tostring(value or '-')
-    imgui.TextDisabled(ui(name .. ':'))
+    local label = ui(name .. ':')
+    imgui.TextDisabled(label)
 
     local region = imgui.GetContentRegionAvail().x
-    local label_w = 175
-    if region > 520 then
+    local label_w = math.max(210, textWidth(label) + 24)
+    if region > label_w + 260 then
         imgui.SameLine(label_w)
         imgui.PushTextWrapPos(imgui.GetCursorPosX() + math.max(260, region - label_w))
         imgui.TextWrapped(ui(value))
