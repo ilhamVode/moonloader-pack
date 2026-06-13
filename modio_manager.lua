@@ -40,8 +40,8 @@ local manifest = {
     name = 'ModioZodio MoonLoader Pack',
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
-    updated_at = '2026-06-13 13:30 MSK',
-    notes = 'Пакет MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры через Modio Manager.',
+    updated_at = '2026-06-13 14:35 MSK',
+    notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     scripts = {
         {
             id = 'lavaka',
@@ -51,6 +51,17 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'ModioZodio',
             description = 'Помощник установки лавки через строгую CEF-цепочку без фонового перехвата окон.',
+            commands = {
+                '/lavaka - включить или выключить помощник установки лавки',
+                '/lavakadebug - включить или выключить диагностические сообщения'
+            },
+            usage = 'Встаньте на место установки лавки и включите /lavaka. Скрипт сам открывает интерактивное меню, выбирает действие установки и выключается после успешной установки или сообщения, что лавка уже стоит.',
+            features = {
+                'строгая цепочка действий: запрос меню, ожидание CEF-ответа, действие установки, ожидание закрытия окна',
+                'адаптивные задержки под игровые ограничения, чтобы не долбиться вслепую в кд',
+                'сообщает примерное время установки и сам останавливается после результата'
+            },
+            notes = 'Фоновый CEF-перехват убран специально: так скрипт не ломает другие CEF-окна игры, например /time.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua'
         },
         {
@@ -61,6 +72,16 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'ModioZodio',
             description = 'Удерживает Ctrl, флудит ЛКМ и автоматически выключается при ручном нажатии Ctrl или сообщении о легендарном призе.',
+            commands = {
+                '/ctrllkm - включить или выключить Ctrl + ЛКМ helper'
+            },
+            usage = 'Запустите командой /ctrllkm. Скрипт удерживает Ctrl и нажимает ЛКМ по циклу. Если вы сами нажмете Ctrl или в чате появится фраза про легендарный приз, скрипт выключится.',
+            features = {
+                'автоматически прекращает работу при ручном нажатии Ctrl',
+                'останавливается по системному сообщению с текстом "и выиграл легендарный приз"',
+                'не выводит повторяющиеся подсказки в чат во время работы'
+            },
+            notes = 'Название и команды приведены к ЛКМ, потому что ПКМ был ошибкой в старой формулировке.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua'
         },
         {
@@ -71,6 +92,16 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'JustFedot / ModioZodio',
             description = 'FPSFix с дополнительными инструментами и встроенным помощником установки лавки.',
+            commands = {
+                '/fps - открыть окно FPSFix'
+            },
+            usage = 'Откройте /fps и управляйте функциями через окно. Внутри добавлен раздел Lavaka: можно включать помощник установки лавки, debug-режим и видеть последний результат установки.',
+            features = {
+                'основное окно FPSFix с настройками',
+                'встроенный помощник установки лавки с той же логикой, что и отдельный lavaka.lua',
+                'при запуске установки лавки окно закрывается, чтобы не мешать курсору'
+            },
+            notes = 'Авторская основа FPSFix сохранена, интеграция Lavaka добавлена отдельно и не требует удаления standalone lavaka.lua.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua'
         },
         {
@@ -81,6 +112,17 @@ local manifest = {
             updated_at = '2026-06-13',
             author = 'Codex / ModioZodio',
             description = 'TXT-справочник для SA:MP с просмотром файлов, поиском, локальным AI-поиском по загруженным TXT и обновлением базы.',
+            commands = {
+                '/infozz - открыть справочник'
+            },
+            usage = 'Откройте окно /infozz, выберите TXT-файл слева и пользуйтесь поиском по базе. Скрипт подходит для хранения подсказок, заметок и справочной информации прямо в игре.',
+            features = {
+                'просмотр TXT-файлов в игровом окне',
+                'поиск по загруженным материалам',
+                'локальный AI-поиск по базе без ручного пролистывания больших текстов',
+                'обновление списка файлов из интерфейса'
+            },
+            notes = 'Полезен как внутриигровая база знаний: команды, цены, заметки, инструкции и любые TXT-материалы.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua'
         }
     }
@@ -270,12 +312,9 @@ function drawDetails()
 
     imgui.Separator()
     infoRow('Автор', item.author or '-')
-    infoRow('Описание', item.description or '-')
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
     infoRow('Версия на сайте', item.version or '-')
     infoRow('Последнее обновление на сайте', item.updated_at or '-')
-    infoRow('Файл', getScriptPath(item))
-    infoRow('Ссылка', item.url or '-')
 
     imgui.Spacing()
     drawStatusBadge(st)
@@ -317,7 +356,12 @@ function drawDetails()
     imgui.Spacing()
     drawDeleteConfirmation(item, st)
     imgui.Spacing()
-    imgui.TextWrapped(ui 'После установки, обновления или удаления нажми "Перезагрузить Lua", чтобы MoonLoader перечитал файлы. Менеджер не удаляет сам себя и не трогает скрипты вне манифеста.')
+
+    drawTextSection('Что делает', item.description)
+    drawListSection('Команды', item.commands)
+    drawTextSection('Как пользоваться', item.usage)
+    drawListSection('Особенности', item.features)
+    drawTextSection('Важно', item.notes)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -336,6 +380,25 @@ function drawDeleteConfirmation(item, st)
     sameLineIfFits(cancel_size.x)
     if imgui.Button(ui 'Отмена', cancel_size) then
         pending_delete_id = nil
+    end
+end
+
+function drawSectionTitle(title)
+    imgui.Spacing()
+    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(title))
+end
+
+function drawTextSection(title, text)
+    if type(text) ~= 'string' or text == '' then return end
+    drawSectionTitle(title)
+    imgui.TextWrapped(ui(text))
+end
+
+function drawListSection(title, list)
+    if type(list) ~= 'table' or #list == 0 then return end
+    drawSectionTitle(title)
+    for _, line in ipairs(list) do
+        imgui.TextWrapped(ui('- ' .. tostring(line)))
     end
 end
 
