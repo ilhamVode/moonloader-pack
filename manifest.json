@@ -3,11 +3,11 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-13 15:05 MSK",
+  "updated_at": "2026-06-13 15:45 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.1",
+    "version": "1.3",
     "updated_at": "2026-06-13",
     "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua"
   },
@@ -63,6 +63,8 @@
       "version": "0.1 alpha",
       "updated_at": "2026-06-13",
       "author": "JustFedot / ModioZodio",
+      "forbidden": true,
+      "warning": "Есть возможность получить бан. Используйте только если понимаете риск.",
       "description": "FPSFix с дополнительными инструментами и встроенным разделом Lavaka. Удобный вариант для тех, кто хочет управлять помощником лавки из одного окна.",
       "commands": [
         "/fps - открыть окно FPSFix"
@@ -97,6 +99,51 @@
       ],
       "notes": "Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua"
+    },
+    {
+      "id": "autoopenroulettes",
+      "name": "AutoOpenRoulettes",
+      "file": "AutoOpenRoulettes.lua",
+      "version": "2.4",
+      "updated_at": "2026-06-13",
+      "author": "CaJlaT",
+      "description": "Автоматическое открытие поддерживаемых рулеток Arizona RP через CEF-окно CrateRoulette. Скрипт запускает открытие, забирает приз и выходит из окна рулетки.",
+      "commands": [
+        "/autoroulette - включить или остановить автооткрытие рулеток"
+      ],
+      "usage": "Откройте окно рулетки в игре. Когда скрипт определит поддерживаемую рулетку, используйте /autoroulette для запуска. Призы записываются в папку moonloader\\Roulette по датам.",
+      "features": [
+        "поддерживаемые id рулеток: 555, 556, 557, 1425",
+        "автоматически отправляет crate.roulette.open",
+        "после открытия забирает приз через crate.roulette.takePrize",
+        "закрывает окно рулетки через crate.roulette.exit",
+        "логирует полученные призы в текстовый файл за текущую дату"
+      ],
+      "notes": "Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua"
+    },
+    {
+      "id": "gribi",
+      "name": "Gribi",
+      "file": "Gribi.lua",
+      "version": "без версии",
+      "updated_at": "2026-06-13",
+      "author": "vlaDICK2288",
+      "forbidden": true,
+      "warning": "Есть возможность получить бан. Скрипт рендерит игровые объекты и может считаться запрещенным помощником.",
+      "description": "Рендер-помощник для поиска грибов. Скрипт ищет 3D-текст \"Срезать гриб\" и рисует на экране метку с дистанцией до гриба.",
+      "commands": [
+        "/gribs - включить или выключить рендер грибов"
+      ],
+      "usage": "Включите /gribs рядом с местами появления грибов. Если гриб находится в зоне видимости, скрипт покажет подпись \"Грибок\" и расстояние до него.",
+      "features": [
+        "поиск 3D-текста \"Срезать гриб\"",
+        "рендер подписи на экране поверх позиции гриба",
+        "показ дистанции до гриба в метрах",
+        "переключение одной командой без дополнительного окна"
+      ],
+      "notes": "В оригинальном файле нет script_version, поэтому версия отображается как \"без версии\". Автор указан из сообщения загрузки скрипта: vlaDICK2288.",
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua"
     }
   ]
 }

@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.1'
+local MANAGER_VERSION = '1.3'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -37,16 +37,19 @@ local busy_text = ''
 local last_check_text = 'Проверка еще не запускалась.'
 local last_error = ''
 local pending_delete_id = nil
+local pending_delete_forbidden = false
+local filter_modio_only = false
+local show_forbidden = false
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
-    updated_at = '2026-06-13 15:05 MSK',
+    updated_at = '2026-06-13 15:45 MSK',
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.1',
+        version = '1.3',
         updated_at = '2026-06-13',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua'
     },
@@ -102,6 +105,8 @@ local manifest = {
             version = '0.1 alpha',
             updated_at = '2026-06-13',
             author = 'JustFedot / ModioZodio',
+            forbidden = true,
+            warning = 'Есть возможность получить бан. Используйте только если понимаете риск.',
             description = 'FPSFix с дополнительными инструментами и встроенным разделом Lavaka. Удобный вариант для тех, кто хочет управлять помощником лавки из одного окна.',
             commands = {
                 '/fps - открыть окно FPSFix'
@@ -136,6 +141,51 @@ local manifest = {
             },
             notes = 'Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.',
             url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua'
+        },
+        {
+            id = 'autoopenroulettes',
+            name = 'AutoOpenRoulettes',
+            file = 'AutoOpenRoulettes.lua',
+            version = '2.4',
+            updated_at = '2026-06-13',
+            author = 'CaJlaT',
+            description = 'Автоматическое открытие поддерживаемых рулеток Arizona RP через CEF-окно CrateRoulette. Скрипт запускает открытие, забирает приз и выходит из окна рулетки.',
+            commands = {
+                '/autoroulette - включить или остановить автооткрытие рулеток'
+            },
+            usage = 'Откройте окно рулетки в игре. Когда скрипт определит поддерживаемую рулетку, используйте /autoroulette для запуска. Призы записываются в папку moonloader\\Roulette по датам.',
+            features = {
+                'поддерживаемые id рулеток: 555, 556, 557, 1425',
+                'автоматически отправляет crate.roulette.open',
+                'после открытия забирает приз через crate.roulette.takePrize',
+                'закрывает окно рулетки через crate.roulette.exit',
+                'логирует полученные призы в текстовый файл за текущую дату'
+            },
+            notes = 'Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.',
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua'
+        },
+        {
+            id = 'gribi',
+            name = 'Gribi',
+            file = 'Gribi.lua',
+            version = 'без версии',
+            updated_at = '2026-06-13',
+            author = 'vlaDICK2288',
+            forbidden = true,
+            warning = 'Есть возможность получить бан. Скрипт рендерит игровые объекты и может считаться запрещенным помощником.',
+            description = 'Рендер-помощник для поиска грибов. Скрипт ищет 3D-текст "Срезать гриб" и рисует на экране метку с дистанцией до гриба.',
+            commands = {
+                '/gribs - включить или выключить рендер грибов'
+            },
+            usage = 'Включите /gribs рядом с местами появления грибов. Если гриб находится в зоне видимости, скрипт покажет подпись "Грибок" и расстояние до него.',
+            features = {
+                'поиск 3D-текста "Срезать гриб"',
+                'рендер подписи на экране поверх позиции гриба',
+                'показ дистанции до гриба в метрах',
+                'переключение одной командой без дополнительного окна'
+            },
+            notes = 'В оригинальном файле нет script_version, поэтому версия отображается как "без версии". Автор указан из сообщения загрузки скрипта: vlaDICK2288.',
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua'
         }
     }
 }
@@ -166,6 +216,10 @@ function sameLineIfFits(width)
     if imgui.GetContentRegionAvail().x > width + spacing then
         imgui.SameLine()
     end
+end
+
+function colorU32(color)
+    return imgui.ColorConvertFloat4ToU32(color)
 end
 
 function main()
@@ -273,6 +327,8 @@ function drawHeader()
         imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
 
+    drawFilters()
+
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest()
@@ -292,16 +348,74 @@ function drawHeader()
     if imgui.Button(ui 'Обновить менеджер', manager_update_size) then
         updateManager()
     end
+
+    local danger_size = buttonSize(ui 'Удалить запрещенные', 230)
+    sameLineIfFits(danger_size.x)
+    if dangerButton(ui 'Удалить запрещенные', danger_size) then
+        pending_delete_forbidden = true
+    end
+
+    drawForbiddenDeleteConfirmation()
+end
+
+function drawFilters()
+    imgui.Spacing()
+    filter_modio_only = drawSwitch('filter_modio_only', 'Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
+    imgui.SameLine()
+    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
+    imgui.Spacing()
+end
+
+function drawSwitch(id, label, value, active_color)
+    local size = imgui.ImVec2(46, 24)
+    local pos = imgui.GetCursorScreenPos()
+    local clicked = imgui.InvisibleButton(ui('##switch_' .. id), size)
+    if clicked then value = not value end
+
+    local hovered = imgui.IsItemHovered()
+    local bg = value and active_color or imgui.ImVec4(0.24, 0.28, 0.34, 1.00)
+    if hovered and not value then bg = imgui.ImVec4(0.30, 0.35, 0.42, 1.00) end
+    if hovered and value then bg = imgui.ImVec4(math.min(active_color.x + 0.06, 1), math.min(active_color.y + 0.06, 1), math.min(active_color.z + 0.06, 1), 1.00) end
+
+    local draw = imgui.GetWindowDrawList()
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), 12, 15)
+
+    local radius = 9
+    local knob_x = value and (pos.x + size.x - radius - 4) or (pos.x + radius + 4)
+    draw:AddCircleFilled(imgui.ImVec2(knob_x, pos.y + size.y / 2), radius, colorU32(imgui.ImVec4(0.94, 0.96, 0.98, 1.00)), 24)
+
+    imgui.SameLine()
+    imgui.Text(ui(label))
+    return value
+end
+
+function dangerButton(label, size)
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.55, 0.15, 0.16, 1.00))
+    imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.72, 0.20, 0.22, 1.00))
+    imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.42, 0.10, 0.11, 1.00))
+    local clicked = imgui.Button(label, size)
+    imgui.PopStyleColor(3)
+    return clicked
 end
 
 function drawScriptList()
     imgui.TextDisabled(ui 'Скрипты')
     imgui.Separator()
 
+    ensureSelectedVisible()
+
     local list = manifest.scripts or {}
+    local shown = 0
     for i, item in ipairs(list) do
-        local st = runtime[item.id] or inspectLocal(item)
-        drawScriptListItem(i, item, st)
+        if isScriptVisible(item) then
+            local st = runtime[item.id] or inspectLocal(item)
+            drawScriptListItem(i, item, st)
+            shown = shown + 1
+        end
+    end
+
+    if shown == 0 then
+        imgui.TextDisabled(ui 'Нет скриптов по выбранным фильтрам.')
     end
 end
 
@@ -325,8 +439,40 @@ function drawScriptListItem(index, item, st)
     imgui.Spacing()
 end
 
+function isModioScript(item)
+    return tostring(item.author or ''):find('ModioZodio', 1, true) ~= nil
+end
+
+function isScriptVisible(item)
+    if filter_modio_only and not isModioScript(item) then
+        return false
+    end
+    if item.forbidden and not show_forbidden then
+        return false
+    end
+    return true
+end
+
+function ensureSelectedVisible()
+    local list = manifest.scripts or {}
+    if list[selected] and isScriptVisible(list[selected]) then return end
+
+    for i, item in ipairs(list) do
+        if isScriptVisible(item) then
+            selected = i
+            return
+        end
+    end
+
+    selected = 1
+end
+
 function drawDetails()
     local item = (manifest.scripts or {})[selected]
+    if not item or not isScriptVisible(item) then
+        ensureSelectedVisible()
+        item = (manifest.scripts or {})[selected]
+    end
     if not item then
         imgui.TextDisabled(ui 'Скриптов в манифесте нет.')
         return
@@ -340,9 +486,13 @@ function drawDetails()
     imgui.TextDisabled(filename)
 
     imgui.Separator()
+    if item.forbidden then
+        imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(item.warning or 'Есть возможность получить бан.'))
+        imgui.Spacing()
+    end
     infoRow('Автор', item.author or '-')
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
-    infoRow('Версия на сайте', item.version or '-')
+    infoRow('Версия на сайте', versionText(item.version))
     infoRow('Последнее обновление на сайте', item.updated_at or '-')
 
     imgui.Spacing()
@@ -412,6 +562,55 @@ function drawDeleteConfirmation(item, st)
     end
 end
 
+function drawForbiddenDeleteConfirmation()
+    if not pending_delete_forbidden then return end
+
+    imgui.Spacing()
+    imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui 'Подтвердите удаление всех запрещенных скриптов.')
+    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из manifest, у которых стоит forbidden = true. Сейчас это FPSFix и Gribi.')
+
+    local confirm_size = buttonSize(ui 'Да, удалить запрещенные', 250)
+    if dangerButton(ui 'Да, удалить запрещенные', confirm_size) then
+        pending_delete_forbidden = false
+        deleteForbiddenScripts()
+    end
+    local cancel_size = buttonSize(ui 'Отмена', 130)
+    sameLineIfFits(cancel_size.x)
+    if imgui.Button(ui 'Отмена', cancel_size) then
+        pending_delete_forbidden = false
+    end
+end
+
+function deleteForbiddenScripts()
+    if busy then return end
+
+    local deleted = 0
+    local failed = 0
+    for _, item in ipairs(manifest.scripts or {}) do
+        if item.forbidden then
+            local path = getScriptPath(item)
+            if doesFileExist(path) then
+                local ok = os.remove(path)
+                if ok then
+                    deleted = deleted + 1
+                else
+                    failed = failed + 1
+                end
+            end
+        end
+    end
+
+    refreshLocalState()
+    ensureSelectedVisible()
+
+    if failed > 0 then
+        last_error = 'Не удалось удалить запрещенных скриптов: ' .. tostring(failed)
+        msg(last_error, ERR)
+    else
+        msg('Удалено запрещенных скриптов: ' .. tostring(deleted), WARN)
+    end
+end
+
 function drawSectionTitle(title)
     imgui.Spacing()
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(title))
@@ -457,6 +656,8 @@ function drawStatusBadge(st)
         imgui.TextColored(imgui.ImVec4(1.00, 0.65, 0.30, 1.00), ui 'Статус: не установлен')
     elseif st.outdated then
         imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.28, 1.00), ui 'Статус: доступно обновление')
+    elseif st.no_version then
+        imgui.TextColored(imgui.ImVec4(0.55, 0.72, 0.92, 1.00), ui 'Статус: установлен, версия не указана автором')
     else
         imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), ui 'Статус: установлена последняя версия')
     end
@@ -464,10 +665,13 @@ end
 
 function statusLine(item, st)
     if not st.installed then
-        return 'не установлен | на сайте: ' .. tostring(item.version or '-')
+        return 'не установлен | на сайте: ' .. versionText(item.version)
+    end
+    if st.no_version then
+        return 'установлен | версия не указана'
     end
     if st.outdated then
-        return 'обновить: ' .. st.local_version .. ' -> ' .. tostring(item.version or '-')
+        return 'обновить: ' .. st.local_version .. ' -> ' .. versionText(item.version)
     end
     return 'актуальная версия: ' .. st.local_version
 end
@@ -476,10 +680,23 @@ function listVersionColor(st)
     if not st.installed then
         return imgui.ImVec4(0.92, 0.72, 0.42, 1.00)
     end
+    if st.no_version then
+        return imgui.ImVec4(0.62, 0.74, 0.90, 1.00)
+    end
     if st.outdated then
         return imgui.ImVec4(0.95, 0.48, 0.48, 1.00)
     end
     return imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
+end
+
+function isNoVersion(value)
+    local v = tostring(value or '')
+    return v == '' or v == '-' or v == 'без версии'
+end
+
+function versionText(value)
+    if isNoVersion(value) then return 'без версии' end
+    return tostring(value)
 end
 
 function checkRemoteManifest()
@@ -644,12 +861,14 @@ function inspectLocal(item)
     local installed = doesFileExist(path)
     local local_version = installed and readScriptVersion(path) or nil
     local remote_version = tostring(item.version or '')
-    local outdated = installed and remote_version ~= '' and tostring(local_version or '') ~= remote_version
+    local no_version = isNoVersion(remote_version)
+    local outdated = installed and not no_version and tostring(local_version or '') ~= remote_version
 
     return {
         installed = installed,
-        local_version = local_version or 'неизвестно',
+        local_version = local_version or (no_version and 'без версии' or 'неизвестно'),
         outdated = outdated,
+        no_version = no_version,
         modified_at = installed and getModifiedText(path) or '-'
     }
 end
