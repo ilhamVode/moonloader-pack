@@ -11,6 +11,25 @@ local imgui = require 'mimgui'
 local encoding = require 'encoding'
 encoding.default = 'CP1251'
 local u8 = encoding.UTF8
+
+-- Helpers for mimgui labels and button sizing.
+-- Without these aliases the script crashes on ui(...) and buttonSize(...).
+local function ui(text)
+    return tostring(text or '')
+end
+
+function buttonSize(label, min_width, height)
+    min_width = min_width or 120
+    height = height or 34
+
+    local width = min_width
+    local ok, size = pcall(imgui.CalcTextSize, label)
+    if ok and size and size.x then
+        width = math.max(min_width, size.x + 24)
+    end
+
+    return imgui.ImVec2(width, height)
+end
 local dl_status = require('moonloader').download_status
 local ok_lfs, lfs = pcall(require, 'lfs')
 
@@ -46,6 +65,7 @@ local show_forbidden = false
 local show_manager_changelog = false
 local script_changelog_open = {}
 local seen_scripts = {}
+local runtime = {}
 local last_local_refresh_clock = 0
 local next_remote_check_at = 0
 local manifest = {
