@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.2'
+local MANAGER_VERSION = '1.7.3'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -72,6 +72,30 @@ local manifest = {
     },
     scripts = {}
 }
+
+function textWidth(text)
+    local ok, size = pcall(imgui.CalcTextSize, tostring(text or ''))
+    if ok and size then return size.x end
+    return 0
+end
+
+function sameLineIfFits(width)
+    local spacing = imgui.GetStyle().ItemSpacing.x
+    if imgui.GetContentRegionAvail().x > width + spacing then
+        imgui.SameLine()
+    end
+end
+
+function colorU32(color)
+    return imgui.ColorConvertFloat4ToU32(color)
+end
+
+function cacheBustUrl(url)
+    url = tostring(url or '')
+    if url == '' then return url end
+    local sep = url:find('?', 1, true) and '&' or '?'
+    return url .. sep .. 'modio_ts=' .. tostring(os.time())
+end
 
 function refreshLocalStateIfNeeded(force)
     local now = os.clock()
