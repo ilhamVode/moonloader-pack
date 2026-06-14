@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.6'
+local MANAGER_VERSION = '1.5.1'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -51,12 +51,12 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.6',
+        version = '1.5.1',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
             {
-                version = '1.6',
+                version = '1.5.1',
                 date = '2026-06-14',
                 changes = {
                     'кнопка обновления менеджера получила мягкое пульсирующее свечение, когда доступна новая версия',
