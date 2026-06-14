@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.4'
+local MANAGER_VERSION = '1.5'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -51,10 +51,20 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.4',
+        version = '1.5',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5',
+                date = '2026-06-14',
+                changes = {
+                    'улучшена логика кнопок действий: установка, обновление и удаление показываются по состоянию скрипта',
+                    'кнопка истории версий скрипта перенесена ближе к блоку версий',
+                    'убрана лишняя кнопка обновления локального статуса из верхней панели',
+                    'кнопка обновления менеджера показывается только когда доступна новая версия'
+                }
+            },
             {
                 version = '1.4',
                 date = '2026-06-14',
@@ -438,14 +448,6 @@ function drawHeader()
     imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
     imgui.TextDisabled(ui('Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-')))
     imgui.TextColored(managerVersionColor(), ui(managerStatusText()))
-    local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
-    local manager_history_size = buttonSize(manager_history_label, 210)
-    if imgui.Button(manager_history_label, manager_history_size) then
-        show_manager_changelog = not show_manager_changelog
-    end
-    if show_manager_changelog then
-        drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
-    end
 
     imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
     if manifest.notes and #manifest.notes > 0 then
@@ -468,26 +470,33 @@ function drawHeader()
     if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest()
     end
-    local local_status_size = buttonSize(ui 'Обновить локальный статус', 260)
-    sameLineIfFits(local_status_size.x)
-    if imgui.Button(ui 'Обновить локальный статус', local_status_size) then
-        refreshLocalState()
-    end
     local reload_size = buttonSize(ui 'Перезагрузить Lua', 190)
     sameLineIfFits(reload_size.x)
     if imgui.Button(ui 'Перезагрузить Lua', reload_size) then
         reloadScripts()
     end
-    local manager_update_size = buttonSize(ui 'Обновить менеджер', 210)
-    sameLineIfFits(manager_update_size.x)
-    if imgui.Button(ui 'Обновить менеджер', manager_update_size) then
-        updateManager()
+    if managerIsOutdated() then
+        local manager_update_size = buttonSize(ui 'Обновить менеджер', 210)
+        sameLineIfFits(manager_update_size.x)
+        if imgui.Button(ui 'Обновить менеджер', manager_update_size) then
+            updateManager()
+        end
+    end
+    local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
+    local manager_history_size = buttonSize(manager_history_label, 210)
+    sameLineIfFits(manager_history_size.x)
+    if imgui.Button(manager_history_label, manager_history_size) then
+        show_manager_changelog = not show_manager_changelog
     end
 
     local danger_size = buttonSize(ui 'Удалить запрещенные', 230)
     sameLineIfFits(danger_size.x)
     if dangerButton(ui 'Удалить запрещенные', danger_size) then
         pending_delete_forbidden = true
+    end
+
+    if show_manager_changelog then
+        drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
     end
 
     drawForbiddenDeleteConfirmation()
@@ -629,42 +638,53 @@ function drawDetails()
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
     infoRow('Версия на сайте', versionText(item.version))
     infoRow('Последнее обновление на сайте', item.updated_at or '-')
+    drawScriptChangelog(item)
 
     imgui.Spacing()
     drawStatusBadge(st)
     imgui.Spacing()
 
-    local canInstall = not st.installed and not busy
-    local canUpdate = st.installed and st.outdated and not busy
     local canDelete = st.installed and not busy
 
-    local install_size = buttonSize(ui 'Установить', 170)
-    if imgui.Button(ui 'Установить', install_size) then
-        if canInstall then
-            installOrUpdate(item, 'install')
-        else
-            msg('Установка недоступна для выбранного скрипта.', WARN)
+    if not st.installed then
+        local install_size = buttonSize(ui 'Установить', 190)
+        if imgui.Button(ui 'Установить', install_size) then
+            if busy then
+                msg('Сейчас идет другая операция.', WARN)
+            else
+                installOrUpdate(item, 'install')
+            end
+        end
+    elseif st.outdated then
+        local update_size = buttonSize(ui 'Обновить', 190)
+        if imgui.Button(ui 'Обновить', update_size) then
+            if busy then
+                msg('Сейчас идет другая операция.', WARN)
+            else
+                installOrUpdate(item, 'update')
+            end
         end
     end
 
-    local update_size = buttonSize(ui 'Обновить', 170)
-    sameLineIfFits(update_size.x)
-    if imgui.Button(ui 'Обновить', update_size) then
-        if canUpdate then
-            installOrUpdate(item, 'update')
-        else
-            msg('Обновление не требуется или сейчас идет другая операция.', WARN)
+    if canDelete then
+        if st.outdated then
+            sameLineIfFits(170)
         end
-    end
-
-    local delete_size = buttonSize(ui 'Удалить', 170)
-    sameLineIfFits(delete_size.x)
-    if imgui.Button(ui 'Удалить', delete_size) then
-        if canDelete then
+        local delete_size = buttonSize(ui 'Удалить', 170)
+        if imgui.Button(ui 'Удалить', delete_size) then
             pending_delete_id = item.id
-        else
-            msg('Удаление недоступно для выбранного скрипта.', WARN)
         end
+    elseif st.installed then
+        local delete_size = buttonSize(ui 'Удалить', 170)
+        if imgui.Button(ui 'Удалить', delete_size) then
+            msg('Удаление недоступно, пока идет другая операция.', WARN)
+        end
+    end
+
+    if not st.installed and busy then
+        imgui.TextDisabled(ui 'Установка будет доступна после завершения текущей операции.')
+    elseif st.installed and st.outdated and busy then
+        imgui.TextDisabled(ui 'Обновление будет доступно после завершения текущей операции.')
     end
 
     imgui.Spacing()
@@ -676,7 +696,6 @@ function drawDetails()
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
-    drawScriptChangelog(item)
 end
 
 function drawDeleteConfirmation(item, st)
