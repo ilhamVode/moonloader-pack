@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.0'
+local MANAGER_VERSION = '1.7.2'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -65,7 +65,7 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-14',
                 changes = {
-                    'Каталог скриптов убран из кода менеджера и загружается из GitHub manifest.json'
+                    'После установки или обновления менеджер точечно загружает установленный скрипт без Ctrl+R'
                 }
             }
         }
@@ -894,6 +894,7 @@ function installOrUpdate(item, mode)
                 if ok then
                     refreshLocalState()
                     msg((mode == 'install' and 'Установлен: ' or 'Обновлен: ') .. item.name, OK)
+                    reloadInstalledScript(item, target)
                 else
                     last_error = 'Не удалось записать файл: ' .. tostring(err)
                     msg(last_error, ERR)
@@ -921,6 +922,8 @@ function deleteScript(item)
         return
     end
 
+    unloadLoadedScript(item, path)
+
     local ok, err = os.remove(path)
     if ok then
         refreshLocalState()
@@ -929,6 +932,65 @@ function deleteScript(item)
         last_error = 'Не удалось удалить файл: ' .. tostring(err)
         msg(last_error, ERR)
     end
+end
+
+function reloadInstalledScript(item, path)
+    if not item or not path or path == '' then return end
+    if item.file == thisScript().filename then return end
+
+    local ok, err = pcall(function()
+        local loaded = findLoadedScriptByPath(path)
+        if loaded and loaded.reload then
+            loaded:reload()
+            msg('Скрипт перезагружен: ' .. tostring(item.name or item.file), OK)
+        else
+            script.load(path)
+            msg('Скрипт загружен: ' .. tostring(item.name or item.file), OK)
+        end
+    end)
+
+    if not ok then
+        last_error = 'Файл установлен, но не удалось запустить скрипт: ' .. tostring(err)
+        msg(last_error, WARN)
+    end
+end
+
+
+function unloadLoadedScript(item, path)
+    if not item or not path or path == '' then return end
+    if item.file == thisScript().filename then return end
+
+    local loaded = findLoadedScriptByPath(path)
+    if not loaded then return end
+
+    if not loaded.unload then
+        msg('Не удалось остановить скрипт перед удалением: метод unload недоступен.', WARN)
+        return
+    end
+
+    local ok, err = pcall(function()
+        loaded:unload()
+    end)
+
+    if ok then
+        msg('Скрипт остановлен: ' .. tostring(item.name or item.file), WARN)
+    else
+        msg('Не удалось остановить скрипт перед удалением: ' .. tostring(err), WARN)
+    end
+end
+
+function findLoadedScriptByPath(path)
+    local target = normalizePath(path)
+    for _, scr in ipairs(script.list()) do
+        if normalizePath(scr.path) == target then
+            return scr
+        end
+    end
+    return nil
+end
+
+function normalizePath(path)
+    return tostring(path or ''):gsub('/', '\\'):lower()
 end
 
 function refreshLocalState()
@@ -1015,7 +1077,11 @@ end
 
 function loadCachedManifest()
     if doesFileExist(cache_manifest_path) then
-        return loadManifestFromFile(cache_manifest_path, false) == true
+        local loaded = loadManifestFromFile(cache_manifest_path, false) == true
+        if loaded then
+            last_check_text = 'Показан локальный кеш, проверяю свежий манифест с GitHub.'
+        end
+        return loaded
     end
     return false
 end
