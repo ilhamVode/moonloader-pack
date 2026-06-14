@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.0'
+local MANAGER_VERSION = '1.8.1'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,9 +85,9 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
-                date = '2026-06-14',
+                date = '2026-06-15',
                 changes = {
-                    'После установки или обновления менеджер точечно загружает установленный скрипт без Ctrl+R'
+                    'Зависимости остаются подсказкой и отдельной установкой, но менеджер не блокирует запуск скрипта после установки или обновления'
                 }
             }
         }
@@ -1192,11 +1192,7 @@ function installOrUpdate(item, mode)
                 if ok then
                     refreshLocalState()
                     msg((mode == 'install' and 'Установлен: ' or 'Обновлен: ') .. item.name, OK)
-                    if countMissingDependencyFiles(resolveScriptDependencies(item)) > 0 then
-                        msg('Скрипт установлен, но не запущен: установите недостающие зависимости.', WARN)
-                    else
-                        reloadInstalledScript(item, target)
-                    end
+                    reloadInstalledScript(item, target)
                 else
                     last_error = 'Не удалось записать файл: ' .. tostring(err)
                     msg(last_error, ERR)
