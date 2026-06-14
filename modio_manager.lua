@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.1'
+local MANAGER_VERSION = '1.5.2'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -51,10 +51,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.1',
+        version = '1.5.2',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5.2',
+                date = '2026-06-14',
+                changes = {
+                    'убрана лишняя кнопка ручной перезагрузки Lua из верхней панели',
+                    'сообщение после обновления менеджера больше не просит вручную перезагружать Lua'
+                }
+            },
             {
                 version = '1.5.1',
                 date = '2026-06-14',
@@ -477,11 +485,6 @@ function drawHeader()
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest()
-    end
-    local reload_size = buttonSize(ui 'Перезагрузить Lua', 190)
-    sameLineIfFits(reload_size.x)
-    if imgui.Button(ui 'Перезагрузить Lua', reload_size) then
-        reloadScripts()
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
@@ -1016,7 +1019,7 @@ function updateManager()
                 busy = false
                 busy_text = ''
                 if ok then
-                    msg('Менеджер обновлен. Нажмите "Перезагрузить Lua", чтобы запустить новую версию.', OK)
+                    msg('Менеджер обновлен.', OK)
                 else
                     last_error = 'Не удалось обновить менеджер: ' .. tostring(err)
                     msg(last_error, ERR)
