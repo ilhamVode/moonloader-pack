@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.6.0'
+local MANAGER_VERSION = '1.6.1'
 
 script_name('ModioManager')
 script_author('ModioZodio')
