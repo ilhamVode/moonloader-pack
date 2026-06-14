@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.2'
+local MANAGER_VERSION = '1.5.3'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -51,10 +51,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.2',
+        version = '1.5.3',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5.3',
+                date = '2026-06-14',
+                changes = {
+                    'добавлен cache-bust при скачивании манифеста, менеджера и скриптов',
+                    'менеджер больше не должен показывать старую версию из кэша GitHub или загрузчика'
+                }
+            },
             {
                 version = '1.5.2',
                 date = '2026-06-14',
@@ -373,6 +381,13 @@ end
 
 function colorU32(color)
     return imgui.ColorConvertFloat4ToU32(color)
+end
+
+function cacheBustUrl(url)
+    url = tostring(url or '')
+    if url == '' then return url end
+    local sep = url:find('?', 1, true) and '&' or '?'
+    return url .. sep .. 'modio_ts=' .. tostring(os.time())
 end
 
 function main()
@@ -947,7 +962,7 @@ function checkRemoteManifest()
     last_error = ''
 
     local tmp = tmp_dir .. '\\manifest_' .. os.time() .. '.json'
-    downloadUrlToFile(MANIFEST_URL, tmp, function(id, status)
+    downloadUrlToFile(cacheBustUrl(MANIFEST_URL), tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             checking = false
             busy_text = ''
@@ -1012,7 +1027,7 @@ function updateManager()
     local tmp = tmp_dir .. '\\modio_manager.lua.download'
     local target = getManagerPath()
 
-    downloadUrlToFile(manager.url, tmp, function(id, status)
+    downloadUrlToFile(cacheBustUrl(manager.url), tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             if doesFileExist(tmp) then
                 local ok, err = replaceFile(tmp, target)
@@ -1044,7 +1059,7 @@ function installOrUpdate(item, mode)
     local tmp = tmp_dir .. '\\' .. item.file .. '.download'
     local target = getScriptPath(item)
 
-    downloadUrlToFile(item.url, tmp, function(id, status)
+    downloadUrlToFile(cacheBustUrl(item.url), tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             if doesFileExist(tmp) then
                 local ok, err = replaceFile(tmp, target)
