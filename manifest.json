@@ -3,7 +3,7 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-13 15:45 MSK",
+  "updated_at": "2026-06-14 00:00 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
@@ -60,12 +60,12 @@
       "id": "fpsfix",
       "name": "FPSFix",
       "file": "FPSFix.lua",
-      "version": "0.1 alpha",
-      "updated_at": "2026-06-13",
+      "version": "1.1",
+      "updated_at": "2026-06-14",
       "author": "JustFedot / ModioZodio",
       "forbidden": true,
       "warning": "Есть возможность получить бан. Используйте только если понимаете риск.",
-      "description": "FPSFix с дополнительными инструментами и встроенным разделом Lavaka. Удобный вариант для тех, кто хочет управлять помощником лавки из одного окна.",
+      "description": "FPSFix с дополнительными инструментами, встроенным разделом Lavaka и автоедой по CEF-событию сытости Arizona HUD.",
       "commands": [
         "/fps - открыть окно FPSFix"
       ],
@@ -74,9 +74,10 @@
         "основные функции FPSFix",
         "встроенный помощник установки лавки с логикой отдельного lavaka.lua",
         "окно закрывается при запуске установки лавки, чтобы не мешать курсору",
-        "отображение последнего результата установки"
+        "отображение последнего результата установки",
+        "автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже"
       ],
-      "notes": "Авторская основа FPSFix сохранена. Интеграция Lavaka добавлена отдельно; standalone lavaka.lua можно оставить установленным.",
+      "notes": "Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua"
     },
     {

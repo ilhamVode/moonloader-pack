@@ -1,5 +1,5 @@
 script_author('JustFedot')
-local script__version = '0.1 alpha'
+local script__version = '1.1'
 script_version(script__version)
 script_description(
     'Универсальный помощник для Центрального Рынка с множеством функций и системой логов с уведомлениями в телеграм.')
@@ -1056,6 +1056,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 end
 
 function onReceivePacket(id, bitStream)
+    handleSatietyReceivePacket(id, bitStream)
     handleLavakaReceivePacket(id, bitStream)
     if script_status.active then
         if (id == PACKET_DISCONNECTION_NOTIFICATION) or
@@ -1070,6 +1071,48 @@ function onReceivePacket(id, bitStream)
     end
 end
 
+local cef_satiety = {
+    threshold = 20,
+    cooldownMs = 15000,
+    lastEatAt = 0,
+    lastValue = nil
+}
+
+function handleSatietyReceivePacket(id, bs)
+    if id ~= 220 then return end
+
+    local text = lavakaReadCefPacket(bs)
+    local value = parseSatietyCef(text)
+    if not value then return end
+
+    cef_satiety.lastValue = value
+    if value <= cef_satiety.threshold then
+        triggerAutoEatBySatiety(value)
+    end
+end
+
+function parseSatietyCef(text)
+    if type(text) ~= 'string' then return nil end
+    if not text:find("event.arizonahud.playerSatiety", 1, true) then return nil end
+
+    local value = text:match("%[(%d+)%]")
+    return value and tonumber(value) or nil
+end
+
+function triggerAutoEatBySatiety(value)
+    if not cfg.auto_eat.active then return end
+
+    local command = tostring(cfg.auto_eat.command or '')
+    command = command:gsub('^%s+', ''):gsub('%s+$', '')
+    if command == '' then return end
+
+    local now = math.floor(os.clock() * 1000)
+    if now - cef_satiety.lastEatAt < cef_satiety.cooldownMs then return end
+
+    cef_satiety.lastEatAt = now
+    sampSendChat(command)
+    writeStatistic('AutoEat CEF satiety trigger: ' .. tostring(value))
+end
 function onReceiveRpc(id, bitStream)
     if script_status.active then
         if (id == RPC_SCRINITGAME) then
@@ -2311,3 +2354,4 @@ function samp_create_sync_data(sync_type, copy_from_player)
 end
 
 -------------End
+
