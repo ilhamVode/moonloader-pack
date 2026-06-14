@@ -7,10 +7,19 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.1",
+    "version": "1.8.2",
     "updated_at": "2026-06-15",
     "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.2",
+        "date": "2026-06-15",
+        "changes": [
+          "раздел зависимостей в карточке скрипта стал компактным: только название и статус",
+          "добавлен общий раздел зависимостей менеджера со списком скриптов, которым они нужны",
+          "убран вывод технического состава библиотеки из интерфейса"
+        ]
+      },
       {
         "version": "1.8.1",
         "date": "2026-06-15",
@@ -476,7 +485,6 @@
     {
       "id": "arizona-events",
       "name": "Arizona Events",
-      "description": "Библиотека событий Arizona RP. Нужна для скриптов, которые используют require 'arizona-events'.",
       "source_dir": "lib/arizona-events",
       "target_dir": "lib/arizona-events",
       "files": [

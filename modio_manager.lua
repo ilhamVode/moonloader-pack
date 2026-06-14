@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.1'
+local MANAGER_VERSION = '1.8.2'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -64,8 +64,8 @@ local pending_delete_forbidden = false
 local filter_modio_only = false
 local show_forbidden = false
 local show_manager_changelog = false
+local show_dependencies_panel = false
 local script_changelog_open = {}
-local script_dependencies_open = {}
 local seen_scripts = {}
 local runtime = {}
 local last_local_refresh_clock = 0
@@ -87,7 +87,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Зависимости остаются подсказкой и отдельной установкой, но менеджер не блокирует запуск скрипта после установки или обновления'
+                    'Раздел зависимостей стал компактнее: в карточке скрипта показываются только названия и статус',
+                    'Добавлен общий раздел зависимостей менеджера со списком скриптов, которым они нужны'
                 }
             }
         }
@@ -259,6 +260,16 @@ function drawHeader()
     if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
+
+    local deps_label = dependenciesButtonLabel()
+    if deps_label ~= '' then
+        local deps_size = buttonSize(deps_label, 180)
+        sameLineIfFits(deps_size.x)
+        if imgui.Button(deps_label, deps_size) then
+            show_dependencies_panel = not show_dependencies_panel
+        end
+    end
+
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
@@ -277,6 +288,10 @@ function drawHeader()
 
     if show_manager_changelog then
         drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
+    end
+
+    if show_dependencies_panel then
+        drawDependenciesPanel()
     end
 
     drawForbiddenDeleteConfirmation()
@@ -548,7 +563,6 @@ function drawDetails()
 
     imgui.Spacing()
     drawStatusBadge(st)
-    drawDependenciesSection(item, st)
     imgui.Spacing()
 
     local canDelete = st.installed and not busy
@@ -615,6 +629,7 @@ function drawDetails()
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
+    drawDependenciesSection(item, st)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -706,84 +721,111 @@ function drawListSection(title, list)
 end
 
 function drawDependenciesSection(item, st)
-    local id = tostring(item.id or item.file or item.name or 'script')
     local deps = resolveScriptDependencies(item)
-    local missing = countMissingDependencyFiles(deps)
-    local total = countDependencyFiles(deps)
-    local opened = script_dependencies_open[id] == true
-    local title = (opened and 'v ' or '> ') .. 'Зависимости'
+    if #deps == 0 then return end
 
-    if total > 0 then
-        if missing > 0 then
-            title = title .. ' | не хватает: ' .. tostring(missing)
-        else
-            title = title .. ' | установлены'
-        end
-    else
-        title = title .. ' | не указаны'
-    end
-
-    imgui.Spacing()
-    if imgui.Button(ui(title), buttonSize(ui(title), 260)) then
-        script_dependencies_open[id] = not opened
-    end
-
-    if not script_dependencies_open[id] then return end
-
-    imgui.Indent(12)
-    if type(item.dependencies) ~= 'table' or #item.dependencies == 0 then
-        imgui.TextDisabled(ui 'Для этого скрипта в manifest.json не указаны зависимости.')
-        imgui.Unindent(12)
-        return
-    end
-
-    if #deps == 0 then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui 'Зависимости указаны, но их описания не найдены в корневом блоке manifest.dependencies.')
-        imgui.Unindent(12)
-        return
-    end
-
+    drawSectionTitle('Зависимости')
     for _, dep in ipairs(deps) do
         local dep_missing = countMissingDependencyFiles({ dep })
         local dep_title = tostring(dep.name or dep.id or 'dependency')
+        local status = dep_missing > 0 and 'не установлена' or 'установлена'
         local color = dep_missing > 0 and imgui.ImVec4(1.00, 0.68, 0.35, 1.00) or imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
-        imgui.TextColored(color, ui(dep_title))
-        if dep.description and tostring(dep.description) ~= '' then
-            imgui.TextWrapped(ui(tostring(dep.description)))
-        end
-        imgui.TextDisabled(ui('Нужен для: ' .. tostring(item.name or item.id or item.file)))
-
-        for _, file in ipairs(dependencyFiles(dep)) do
-            local target = dependencyTargetPath(dep, file)
-            local exists = doesFileExist(target)
-            local status = exists and '[OK] ' or '[--] '
-            imgui.TextColored(
-                exists and imgui.ImVec4(0.55, 0.82, 0.62, 1.00) or imgui.ImVec4(1.00, 0.55, 0.35, 1.00),
-                ui(status .. dependencyTargetRelativePath(dep, file))
-            )
-        end
-        imgui.Spacing()
+        imgui.TextColored(color, ui(dep_title .. ' - ' .. status))
     end
 
+    local missing = countMissingDependencyFiles(deps)
     local locked = managerIsOutdated()
-    if locked then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.66, 0.30, 1.00), ui 'Сначала обновите Modio Manager, затем устанавливайте зависимости.')
-    elseif busy then
-        imgui.TextDisabled(ui 'Установка зависимостей будет доступна после завершения текущей операции.')
-    else
+    if missing > 0 and not locked and not busy then
         local missing_label = ui 'Скачать недостающие зависимости'
         if imgui.Button(missing_label, buttonSize(missing_label, 270)) then
             installDependenciesForScript(item, false)
         end
+    elseif missing > 0 and locked then
+        imgui.TextDisabled(ui 'Сначала обновите Modio Manager.')
+    elseif missing > 0 and busy then
+        imgui.TextDisabled(ui 'Установка будет доступна после завершения текущей операции.')
+    end
+end
 
-        local reinstall_label = ui 'Переустановить зависимости'
-        sameLineIfFits(buttonSize(reinstall_label, 240).x)
-        if imgui.Button(reinstall_label, buttonSize(reinstall_label, 240)) then
-            installDependenciesForScript(item, true)
+function dependenciesButtonLabel()
+    local deps = allDependencies()
+    if #deps == 0 then return '' end
+
+    local missing = countMissingDependencies(deps)
+    if show_dependencies_panel then
+        return ui 'Скрыть зависимости'
+    end
+    if missing > 0 then
+        return ui('Зависимости: не хватает ' .. tostring(missing))
+    end
+    return ui 'Зависимости'
+end
+
+function drawDependenciesPanel()
+    local deps = allDependencies()
+    if #deps == 0 then return end
+
+    imgui.Spacing()
+    imgui.Separator()
+    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui 'Зависимости')
+
+    local missing_total = countMissingDependencies(deps)
+    if missing_total > 0 then
+        imgui.TextColored(imgui.ImVec4(1.00, 0.68, 0.35, 1.00), ui('Нужно установить: ' .. tostring(missing_total)))
+    else
+        imgui.TextColored(imgui.ImVec4(0.55, 0.82, 0.62, 1.00), ui 'Все зависимости установлены.')
+    end
+
+    for _, dep in ipairs(deps) do
+        local missing = countMissingDependencyFiles({ dep })
+        local title = tostring(dep.name or dep.id or 'dependency')
+        local status = missing > 0 and 'не установлена' or 'установлена'
+        local color = missing > 0 and imgui.ImVec4(1.00, 0.68, 0.35, 1.00) or imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
+
+        imgui.Spacing()
+        imgui.TextColored(color, ui(title .. ' - ' .. status))
+
+        local users = scriptsUsingDependency(dep)
+        if #users > 0 then
+            imgui.TextDisabled(ui 'Нужна для:')
+            imgui.SameLine()
+            for index, script_item in ipairs(users) do
+                if index > 1 then
+                    imgui.SameLine()
+                    imgui.TextDisabled(ui ',')
+                    imgui.SameLine()
+                end
+
+                local link_label = ui(tostring(script_item.name or script_item.id or script_item.file) .. '##dep_' .. tostring(dep.id) .. '_' .. tostring(script_item.id or index))
+                if imgui.SmallButton(link_label) then
+                    selectScript(script_item)
+                end
+            end
         end
     end
 
-    imgui.Unindent(12)
+    if managerIsOutdated() then
+        imgui.TextDisabled(ui 'Сначала обновите Modio Manager, затем устанавливайте зависимости.')
+    elseif busy then
+        imgui.TextDisabled(ui 'Установка зависимостей будет доступна после завершения текущей операции.')
+    else
+        local missing_label = ui 'Скачать недостающие'
+        if missing_total > 0 then
+            if imgui.Button(missing_label, buttonSize(missing_label, 190)) then
+                installAllDependencies(false)
+            end
+        end
+
+        local reinstall_label = ui 'Переустановить все'
+        if missing_total > 0 then
+            sameLineIfFits(buttonSize(reinstall_label, 180).x)
+        end
+        if imgui.Button(reinstall_label, buttonSize(reinstall_label, 180)) then
+            installAllDependencies(true)
+        end
+    end
+
+    imgui.Separator()
 end
 
 function drawScriptChangelog(item)
@@ -1019,6 +1061,45 @@ function resolveScriptDependencies(item)
     return result
 end
 
+function allDependencies()
+    if type(manifest.dependencies) ~= 'table' then return {} end
+    return manifest.dependencies
+end
+
+function scriptsUsingDependency(dep)
+    local result = {}
+    local dep_id = tostring(type(dep) == 'table' and dep.id or dep or '')
+    if dep_id == '' then return result end
+
+    for _, item in ipairs(manifest.scripts or {}) do
+        if type(item.dependencies) == 'table' then
+            for _, ref in ipairs(item.dependencies) do
+                local id = type(ref) == 'table' and tostring(ref.id or '') or tostring(ref or '')
+                if id == dep_id then
+                    result[#result + 1] = item
+                    break
+                end
+            end
+        end
+    end
+
+    return result
+end
+
+function selectScript(target)
+    local target_id = tostring(type(target) == 'table' and (target.id or target.file or target.name) or '')
+    if target_id == '' then return end
+
+    for index, item in ipairs(manifest.scripts or {}) do
+        local id = tostring(item.id or item.file or item.name or '')
+        if id == target_id then
+            selected = index
+            markScriptSeen(item)
+            return
+        end
+    end
+end
+
 function dependencyById(id)
     id = tostring(id or '')
     if id == '' or type(manifest.dependencies) ~= 'table' then return nil end
@@ -1051,6 +1132,16 @@ function countMissingDependencyFiles(deps)
             if not doesFileExist(dependencyTargetPath(dep, file)) then
                 missing = missing + 1
             end
+        end
+    end
+    return missing
+end
+
+function countMissingDependencies(deps)
+    local missing = 0
+    for _, dep in ipairs(deps or {}) do
+        if countMissingDependencyFiles({ dep }) > 0 then
+            missing = missing + 1
         end
     end
     return missing
@@ -1100,13 +1191,27 @@ function dependencySourceUrl(dep, file)
 end
 
 function installDependenciesForScript(item, force)
-    if busy then return end
-
     local deps = resolveScriptDependencies(item)
     if #deps == 0 then
         msg('Для выбранного скрипта зависимости не указаны в manifest.json.', WARN)
         return
     end
+
+    installDependencies(deps, item, force)
+end
+
+function installAllDependencies(force)
+    local deps = allDependencies()
+    if #deps == 0 then
+        msg('В manifest.json нет зависимостей.', WARN)
+        return
+    end
+
+    installDependencies(deps, nil, force)
+end
+
+function installDependencies(deps, item, force)
+    if busy then return end
 
     local queue = {}
     for _, dep in ipairs(deps) do
@@ -1124,7 +1229,7 @@ function installDependenciesForScript(item, force)
     end
 
     if #queue == 0 then
-        msg('Все зависимости выбранного скрипта уже установлены.', OK)
+        msg('Все зависимости уже установлены.', OK)
         return
     end
 
@@ -1141,13 +1246,15 @@ function downloadDependencyQueue(item, queue, index, failed)
         refreshLocalState()
 
         if failed > 0 then
-            last_error = 'Не удалось установить файлов зависимостей: ' .. tostring(failed)
+            last_error = 'Не удалось установить зависимости.'
             msg(last_error, ERR)
         else
-            msg('Зависимости установлены: ' .. tostring(#queue), OK)
-            local script_path = getScriptPath(item)
-            if doesFileExist(script_path) then
-                reloadInstalledScript(item, script_path)
+            msg('Зависимости установлены.', OK)
+            if type(item) == 'table' then
+                local script_path = getScriptPath(item)
+                if doesFileExist(script_path) then
+                    reloadInstalledScript(item, script_path)
+                end
             end
         end
         return
