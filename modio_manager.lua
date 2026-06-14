@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5'
+local MANAGER_VERSION = '1.6'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -51,10 +51,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5',
+        version = '1.6',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.6',
+                date = '2026-06-14',
+                changes = {
+                    'кнопка обновления менеджера получила мягкое пульсирующее свечение, когда доступна новая версия',
+                    'визуальный акцент сделан спокойным красно-оранжевым, без лишнего визуального шума'
+                }
+            },
             {
                 version = '1.5',
                 date = '2026-06-14',
@@ -476,11 +484,7 @@ function drawHeader()
         reloadScripts()
     end
     if managerIsOutdated() then
-        local manager_update_size = buttonSize(ui 'Обновить менеджер', 210)
-        sameLineIfFits(manager_update_size.x)
-        if imgui.Button(ui 'Обновить менеджер', manager_update_size) then
-            updateManager()
-        end
+        drawManagerUpdateButton()
     end
     local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
     local manager_history_size = buttonSize(manager_history_label, 210)
@@ -540,6 +544,46 @@ function dangerButton(label, size)
     local clicked = imgui.Button(label, size)
     imgui.PopStyleColor(3)
     return clicked
+end
+
+function drawManagerUpdateButton()
+    local label = ui 'Обновить менеджер'
+    local size = buttonSize(label, 210)
+    size = imgui.ImVec2(size.x, 34)
+    sameLineIfFits(size.x)
+
+    local pulse = 0.5 + 0.5 * math.sin(os.clock() * 2.4)
+    local pos = imgui.GetCursorScreenPos()
+    local draw = imgui.GetWindowDrawList()
+    local glow = imgui.ImVec4(1.00, 0.22 + pulse * 0.12, 0.10, 0.20 + pulse * 0.18)
+    local border = imgui.ImVec4(1.00, 0.46 + pulse * 0.18, 0.22, 0.65)
+
+    draw:AddRectFilled(
+        imgui.ImVec2(pos.x - 4, pos.y - 4),
+        imgui.ImVec2(pos.x + size.x + 4, pos.y + size.y + 4),
+        colorU32(glow),
+        9,
+        15
+    )
+
+    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.46 + pulse * 0.10, 0.15, 0.12, 1.00))
+    imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.68, 0.22, 0.16, 1.00))
+    imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.55, 0.12, 0.10, 1.00))
+    local clicked = imgui.Button(label, size)
+    imgui.PopStyleColor(3)
+
+    draw:AddRect(
+        imgui.ImVec2(pos.x - 1, pos.y - 1),
+        imgui.ImVec2(pos.x + size.x + 1, pos.y + size.y + 1),
+        colorU32(border),
+        7,
+        15,
+        1.5
+    )
+
+    if clicked then
+        updateManager()
+    end
 end
 
 function drawScriptList()
