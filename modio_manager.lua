@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.4'
+local MANAGER_VERSION = '1.5.5'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -19,6 +19,7 @@ local window = new.bool(false)
 
 local MANIFEST_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
+local REMOTE_CHECK_INTERVAL = 3600
 local PREFIX = '[ModioManager]'
 local CHAT = 0x52C7EA
 local OK = 0x77DD77
@@ -44,6 +45,7 @@ local show_forbidden = false
 local show_manager_changelog = false
 local script_changelog_open = {}
 local last_local_refresh_clock = 0
+local next_remote_check_at = 0
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -53,10 +55,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.4',
+        version = '1.5.5',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5.5',
+                date = '2026-06-14',
+                changes = {
+                    'добавлена тихая автоматическая проверка обновлений раз в час',
+                    'ручная проверка обновлений через кнопку осталась доступна в любое время'
+                }
+            },
             {
                 version = '1.5.4',
                 date = '2026-06-14',
@@ -429,8 +439,10 @@ function main()
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
+    next_remote_check_at = os.time() + 10
 
     while true do
+        checkRemoteManifestIfNeeded()
         wait(0)
     end
 end
@@ -521,7 +533,7 @@ function drawHeader()
 
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if imgui.Button(ui 'Проверить обновления', check_size) then
-        checkRemoteManifest()
+        checkRemoteManifest(false)
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
@@ -977,27 +989,43 @@ function versionText(value)
     return tostring(value)
 end
 
-function checkRemoteManifest()
+function checkRemoteManifestIfNeeded()
+    if next_remote_check_at <= 0 then return end
+    if os.time() < next_remote_check_at then return end
     if checking or busy then return end
+
+    checkRemoteManifest(true)
+end
+
+function checkRemoteManifest(silent)
+    if checking or busy then return end
+    silent = silent == true
     checking = true
     busy_text = 'Проверяю манифест...'
-    last_error = ''
+    if not silent then
+        last_error = ''
+    end
 
     local tmp = tmp_dir .. '\\manifest_' .. os.time() .. '.json'
     downloadUrlToFile(cacheBustUrl(MANIFEST_URL), tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             checking = false
             busy_text = ''
+            next_remote_check_at = os.time() + REMOTE_CHECK_INTERVAL
             local ok, err = loadManifestFromFile(tmp, true)
             os.remove(tmp)
             if ok then
                 saveManifestCache()
                 refreshLocalState()
                 last_check_text = 'Последняя проверка: ' .. os.date('%d.%m.%Y %H:%M:%S')
-                msg('Манифест обновлен.', OK)
+                if not silent then
+                    msg('Манифест обновлен.', OK)
+                end
             else
-                last_error = err or 'Не удалось прочитать manifest.json'
-                msg(last_error, ERR)
+                if not silent then
+                    last_error = err or 'Не удалось прочитать manifest.json'
+                    msg(last_error, ERR)
+                end
             end
         end
     end)
