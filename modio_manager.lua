@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3'
+local MANAGER_VERSION = '1.8.4'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -87,8 +87,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Переделан общий раздел зависимостей: у каждой библиотеки свой статус и своя кнопка установки',
-                    'В карточке скрипта добавлена отдельная кнопка установки зависимостей именно для выбранного скрипта'
+                    'Убрана переустановка уже установленных зависимостей, чтобы не провоцировать перезагрузку MoonLoader во время записи lib-файлов',
+                    'Кнопки зависимостей теперь устанавливают только недостающие библиотеки'
                 }
             }
         }
@@ -735,11 +735,13 @@ function drawDependenciesSection(item, st)
     end
 
     local locked = managerIsOutdated()
-    if not locked and not busy then
-        local label = missing > 0 and ui 'Установить зависимости скрипта' or ui 'Переустановить зависимости скрипта'
+    if missing > 0 and not locked and not busy then
+        local label = ui 'Установить зависимости скрипта'
         if imgui.Button(label, buttonSize(label, 300)) then
-            installDependenciesForScript(item, missing == 0)
+            installDependenciesForScript(item)
         end
+    elseif missing == 0 then
+        imgui.TextDisabled(ui 'Все зависимости скрипта установлены.')
     elseif locked then
         imgui.TextDisabled(ui 'Сначала обновите Modio Manager.')
     elseif busy then
@@ -787,12 +789,12 @@ function drawDependenciesPanel()
         imgui.SameLine(230)
         imgui.TextColored(color, ui(status))
 
-        if not managerIsOutdated() and not busy then
-            local action_text = missing > 0 and ui 'Установить' or ui 'Переустановить'
+        if missing > 0 and not managerIsOutdated() and not busy then
+            local action_text = ui 'Установить'
             local action = action_text .. '##dep_action_' .. tostring(dep.id or title)
             imgui.SameLine(410)
             if imgui.Button(action, buttonSize(action_text, 160)) then
-                installDependency(dep, missing == 0)
+                installDependency(dep)
             end
         end
 
@@ -828,13 +830,6 @@ function drawDependenciesPanel()
             end
         end
 
-        local reinstall_label = ui 'Переустановить все'
-        if missing_total > 0 then
-            sameLineIfFits(buttonSize(reinstall_label, 180).x)
-        end
-        if imgui.Button(reinstall_label, buttonSize(reinstall_label, 180)) then
-            installAllDependencies(true)
-        end
     end
 
     imgui.Separator()
@@ -1202,39 +1197,39 @@ function dependencySourceUrl(dep, file)
     return base .. '/' .. source
 end
 
-function installDependenciesForScript(item, force)
+function installDependenciesForScript(item)
     local deps = resolveScriptDependencies(item)
     if #deps == 0 then
         msg('Для выбранного скрипта зависимости не указаны в manifest.json.', WARN)
         return
     end
 
-    installDependencies(deps, item, force)
+    installDependencies(deps, item)
 end
 
-function installDependency(dep, force)
+function installDependency(dep)
     if type(dep) ~= 'table' then return end
-    installDependencies({ dep }, nil, force)
+    installDependencies({ dep }, nil)
 end
 
-function installAllDependencies(force)
+function installAllDependencies()
     local deps = allDependencies()
     if #deps == 0 then
         msg('В manifest.json нет зависимостей.', WARN)
         return
     end
 
-    installDependencies(deps, nil, force)
+    installDependencies(deps, nil)
 end
 
-function installDependencies(deps, item, force)
+function installDependencies(deps, item)
     if busy then return end
 
     local queue = {}
     for _, dep in ipairs(deps) do
         for _, file in ipairs(dependencyFiles(dep)) do
             local target = dependencyTargetPath(dep, file)
-            if force or not doesFileExist(target) then
+            if not doesFileExist(target) then
                 queue[#queue + 1] = {
                     dep = dep,
                     file = file,
