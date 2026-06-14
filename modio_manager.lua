@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.6.1'
+local MANAGER_VERSION = '1.7.0'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -53,450 +53,25 @@ local manifest = {
     name = 'ModioZodio MoonLoader Pack',
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
-    updated_at = '2026-06-14 00:00 MSK',
-    notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
+    updated_at = '-',
+    notes = 'Каталог скриптов загружается из GitHub manifest.json и хранится локально в moonloader/config/modio_manager/manifest_cache.json.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.6.1',
-        updated_at = '2026-06-14',
+        version = MANAGER_VERSION,
+        updated_at = '-',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
             {
-                version = '1.6.1',
+                version = MANAGER_VERSION,
                 date = '2026-06-14',
                 changes = {
-                    'Изменен текст предупреждения для запрещенных скриптов, чтобы он был информативным и игроки осознанно принимали риск использования таких скриптов'
-                }
-            },
-            {
-                version = '1.5.6',
-                date = '2026-06-14',
-                changes = {
-                    'в список скриптов добавлена красная отметка для запрещенных скриптов',
-                    'в верхней части менеджера показывается предупреждение, если установлен хотя бы один рискованный скрипт'
-                }
-            },
-            {
-                version = '1.5.5',
-                date = '2026-06-14',
-                changes = {
-                    'добавлена тихая автоматическая проверка обновлений раз в час',
-                    'ручная проверка обновлений через кнопку осталась доступна в любое время'
-                }
-            },
-            {
-                version = '1.5.4',
-                date = '2026-06-14',
-                changes = {
-                    'добавлена автоматическая перепроверка локального состояния скриптов в открытом окне',
-                    'ручное удаление или подмена файла через проводник теперь отображаются без перезапуска менеджера'
-                }
-            },
-            {
-                version = '1.5.3',
-                date = '2026-06-14',
-                changes = {
-                    'добавлен cache-bust при скачивании манифеста, менеджера и скриптов',
-                    'менеджер больше не должен показывать старую версию из кэша GitHub или загрузчика'
-                }
-            },
-            {
-                version = '1.5.2',
-                date = '2026-06-14',
-                changes = {
-                    'убрана лишняя кнопка ручной перезагрузки Lua из верхней панели',
-                    'сообщение после обновления менеджера больше не просит вручную перезагружать Lua'
-                }
-            },
-            {
-                version = '1.5.1',
-                date = '2026-06-14',
-                changes = {
-                    'кнопка обновления менеджера получила мягкое пульсирующее свечение, когда доступна новая версия',
-                    'визуальный акцент сделан спокойным красно-оранжевым, без лишнего визуального шума'
-                }
-            },
-            {
-                version = '1.5',
-                date = '2026-06-14',
-                changes = {
-                    'улучшена логика кнопок действий: установка, обновление и удаление показываются по состоянию скрипта',
-                    'кнопка истории версий скрипта перенесена ближе к блоку версий',
-                    'убрана лишняя кнопка обновления локального статуса из верхней панели',
-                    'кнопка обновления менеджера показывается только когда доступна новая версия'
-                }
-            },
-            {
-                version = '1.4',
-                date = '2026-06-14',
-                changes = {
-                    'добавлена история версий менеджера и каждого скрипта',
-                    'в карточках скриптов появился аккуратный спойлер с изменениями',
-                    'история скрыта по умолчанию, чтобы не перегружать окно'
-                }
-            },
-            {
-                version = '1.3',
-                date = '2026-06-13',
-                changes = {
-                    'добавлены фильтры списка: только ModioZodio и показ запрещенных скриптов',
-                    'добавлена кнопка удаления всех запрещенных скриптов с подтверждением',
-                    'FPSFix и Gribi помечены как рискованные'
-                }
-            },
-            {
-                version = '1.2',
-                date = '2026-06-13',
-                changes = {
-                    'добавлены AutoOpenRoulettes и Gribi',
-                    'улучшено отображение скриптов без script_version'
-                }
-            },
-            {
-                version = '1.1',
-                date = '2026-06-13',
-                changes = {
-                    'добавлено самообновление Modio Manager из GitHub',
-                    'расширено описание скриптов в окне менеджера'
-                }
-            },
-            {
-                version = '1.0',
-                date = '2026-06-13',
-                changes = {
-                    'первая версия менеджера установки, обновления и удаления MoonLoader-скриптов'
+                    'Каталог скриптов убран из кода менеджера и загружается из GitHub manifest.json'
                 }
             }
         }
     },
-    scripts = {
-        {
-            id = 'lavaka',
-            name = 'Lavaka',
-            file = 'lavaka.lua',
-            version = '1.0',
-            updated_at = '2026-06-13',
-            author = 'ModioZodio',
-            description = 'Помощник установки лавки через интерактивное CEF-меню Arizona RP. Скрипт не кликает вслепую: он отправляет запрос, ждет ответ игры, выполняет действие установки и выключается после результата.',
-            commands = {
-                '/lavaka - включить или выключить помощник установки лавки',
-                '/lavakadebug - включить или выключить диагностические сообщения'
-            },
-            usage = 'Встаньте на место установки лавки и включите /lavaka. Скрипт будет сам повторять попытки с учетом игровых задержек. После успешной установки или сообщения, что лавка уже установлена, помощник остановится.',
-            features = {
-                'строгая CEF-цепочка: запрос меню, ожидание ответа, действие установки, ожидание закрытия окна',
-                'адаптивное ожидание под игровые ограничения',
-                'сообщение о примерном времени установки',
-                'защита от ложных сообщений игроков: реакция только на системные подсказки и ошибки'
-            },
-            notes = 'Фоновый CEF-перехват убран специально: так скрипт не вмешивается в другие CEF-окна игры, например /time.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua',
-            changelog = {
-                {
-                    version = '1.0',
-                    date = '2026-06-13',
-                    changes = {
-                        'первая версия помощника установки лавки',
-                        'реализована строгая CEF-цепочка открытия меню и действия установки',
-                        'добавлено адаптивное ожидание игровых задержек',
-                        'убран фоновый CEF-перехват, чтобы не ломать другие окна игры',
-                        'добавлен вывод примерного времени установки'
-                    }
-                }
-            }
-        },
-        {
-            id = 'ctrllkm',
-            name = 'CtrlLKM',
-            file = 'ctrllkm.lua',
-            version = '1.0',
-            updated_at = '2026-06-13',
-            author = 'ModioZodio',
-            description = 'Helper для автоматического Ctrl + ЛКМ. Подходит для действий, где нужно удерживать Ctrl и часто нажимать левую кнопку мыши.',
-            commands = {
-                '/ctrllkm - включить или выключить Ctrl + ЛКМ helper'
-            },
-            usage = 'Запустите /ctrllkm. Скрипт удерживает Ctrl и нажимает ЛКМ по циклу. Если вы сами нажмете Ctrl, скрипт сразу выключится, чтобы управление не застряло.',
-            features = {
-                'автоматическое удержание Ctrl',
-                'циклическое нажатие ЛКМ',
-                'отключение при ручном нажатии Ctrl',
-                'отключение по сообщению в чате с текстом "и выиграл легендарный приз"',
-                'не выводит повторяющиеся подсказки в чат во время работы'
-            },
-            notes = 'Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua',
-            changelog = {
-                {
-                    version = '1.0',
-                    date = '2026-06-13',
-                    changes = {
-                        'первая версия Ctrl + ЛКМ helper',
-                        'добавлено отключение при ручном нажатии Ctrl',
-                        'добавлено отключение по сообщению о легендарном призе',
-                        'убраны лишние повторяющиеся подсказки в чат',
-                        'название и команды приведены к ЛКМ'
-                    }
-                }
-            }
-        },
-        {
-            id = 'fpsfix',
-            name = 'FPSFix',
-            file = 'FPSFix.lua',
-            version = '1.1',
-            updated_at = '2026-06-14',
-            author = 'JustFedot / ModioZodio',
-            forbidden = true,
-            warning = 'Есть возможность получить бан. Используйте только если понимаете риск.',
-            description = 'FPSFix с дополнительными инструментами, встроенным разделом Lavaka и автоедой по CEF-событию сытости Arizona HUD.',
-            commands = {
-                '/fps - открыть окно FPSFix'
-            },
-            usage = 'Откройте /fps и управляйте функциями через окно. Внутри добавлен раздел Lavaka: можно включать помощник установки лавки, debug-режим и видеть последний результат установки.',
-            features = {
-                'основные функции FPSFix',
-                'встроенный помощник установки лавки с логикой отдельного lavaka.lua',
-                'окно закрывается при запуске установки лавки, чтобы не мешать курсору',
-                'отображение последнего результата установки',
-                'автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже'
-            },
-            notes = 'Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua',
-            changelog = {
-                {
-                    version = '1.1',
-                    date = '2026-06-14',
-                    changes = {
-                        'автоеда переведена на CEF-событие event.arizonahud.playerSatiety',
-                        'еда срабатывает при сытости 20 или ниже',
-                        'добавлен cooldown автоеды 15 секунд',
-                        'CEF-пакеты только читаются и не блокируются'
-                    }
-                },
-                {
-                    version = '0.1 alpha',
-                    date = '2026-06-13',
-                    changes = {
-                        'добавлен FPSFix в Modio Pack',
-                        'встроен раздел Lavaka с управлением помощником установки лавки',
-                        'добавлено отображение последнего результата установки'
-                    }
-                }
-            }
-        },
-        {
-            id = 'infozz',
-            name = 'InfoZZ',
-            file = 'infozz.lua',
-            version = '1.7.3',
-            updated_at = '2026-06-13',
-            author = 'Codex / ModioZodio',
-            description = 'Внутриигровой TXT-справочник для SA:MP. Помогает хранить и быстро искать заметки, инструкции, цены, команды и любые текстовые материалы.',
-            commands = {
-                '/infozz - открыть справочник'
-            },
-            usage = 'Откройте /infozz, выберите TXT-файл слева и используйте поиск по тексту. Список файлов можно обновить из интерфейса, если вы добавили новые материалы.',
-            features = {
-                'просмотр TXT-файлов в игровом окне',
-                'поиск по загруженным материалам',
-                'локальный AI-поиск по базе',
-                'обновление списка файлов без перезапуска игры'
-            },
-            notes = 'Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua',
-            changelog = {
-                {
-                    version = '1.7.3',
-                    date = '2026-06-13',
-                    changes = {
-                        'скрипт добавлен в Modio Pack',
-                        'описаны команды, принцип работы и сценарии использования',
-                        'сохранены функции TXT-справочника, поиска и обновления списка файлов'
-                    }
-                }
-            }
-        },
-        {
-            id = 'autoopenroulettes',
-            name = 'AutoOpenRoulettes',
-            file = 'AutoOpenRoulettes.lua',
-            version = '2.4',
-            updated_at = '2026-06-13',
-            author = 'CaJlaT',
-            description = 'Автоматическое открытие поддерживаемых рулеток Arizona RP через CEF-окно CrateRoulette. Скрипт запускает открытие, забирает приз и выходит из окна рулетки.',
-            commands = {
-                '/autoroulette - включить или остановить автооткрытие рулеток'
-            },
-            usage = 'Откройте окно рулетки в игре. Когда скрипт определит поддерживаемую рулетку, используйте /autoroulette для запуска. Призы записываются в папку moonloader\\Roulette по датам.',
-            features = {
-                'поддерживаемые id рулеток: 555, 556, 557, 1425',
-                'автоматически отправляет crate.roulette.open',
-                'после открытия забирает приз через crate.roulette.takePrize',
-                'закрывает окно рулетки через crate.roulette.exit',
-                'логирует полученные призы в текстовый файл за текущую дату'
-            },
-            notes = 'Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua',
-            changelog = {
-                {
-                    version = '2.4',
-                    date = '2026-06-13',
-                    changes = {
-                        'скрипт добавлен в Modio Pack',
-                        'описаны поддерживаемые рулетки и команда /autoroulette',
-                        'указано логирование полученных призов'
-                    }
-                }
-            }
-        },
-        {
-            id = 'gribi',
-            name = 'Gribi',
-            file = 'Gribi.lua',
-            version = 'без версии',
-            updated_at = '2026-06-13',
-            author = 'vlaDICK2288',
-            forbidden = true,
-            warning = 'Есть возможность получить бан. Скрипт рендерит игровые объекты и может считаться запрещенным помощником.',
-            description = 'Рендер-помощник для поиска грибов. Скрипт ищет 3D-текст "Срезать гриб" и рисует на экране метку с дистанцией до гриба.',
-            commands = {
-                '/gribs - включить или выключить рендер грибов'
-            },
-            usage = 'Включите /gribs рядом с местами появления грибов. Если гриб находится в зоне видимости, скрипт покажет подпись "Грибок" и расстояние до него.',
-            features = {
-                'поиск 3D-текста "Срезать гриб"',
-                'рендер подписи на экране поверх позиции гриба',
-                'показ дистанции до гриба в метрах',
-                'переключение одной командой без дополнительного окна'
-            },
-            notes = 'В оригинальном файле нет script_version, поэтому версия отображается как "без версии". Автор указан из сообщения загрузки скрипта: vlaDICK2288.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua',
-            changelog = {
-                {
-                    version = 'без версии',
-                    date = '2026-06-13',
-                    changes = {
-                        'скрипт добавлен в Modio Pack',
-                        'автор указан по оригинальному файлу',
-                        'добавлено предупреждение о риске бана',
-                        'версия отображается как "без версии", потому что в оригинале нет script_version'
-                    }
-                }
-            }
-        },
-        {
-            id = 'bfishing',
-            name = 'bFishing',
-            file = 'bFishing.lua',
-            version = '1.0',
-            updated_at = '2026-06-14',
-            author = 'bakhusse',
-            forbidden = true,
-            warning = 'Есть возможность получить бан. Скрипт автоматизирует рыбалку и CEF-мини-игру, используйте только если понимаете риск.',
-            description = 'Помощник для рыбалки на Arizona RP. Автоматизирует прохождение новой CEF-мини-игры, умеет заново забрасывать удочку после улова и позволяет настраивать задержки действий.',
-            commands = {
-                '/bfish - открыть или закрыть меню настроек'
-            },
-            usage = 'Откройте /bfish, настройте задержки и режимы работы. Чтобы бот начал работу, закиньте удочку в игре; дальше он будет реагировать на CEF-мини-игру и, при включенной настройке, повторно забрасывать удочку после улова.',
-            features = {
-                'автоматическое прохождение CEF-мини-игры рыбалки',
-                'автозаброс через /fishrod после сообщения об улове',
-                'настраиваемые фиксированные или случайные задержки',
-                'выбор слота удочки в диалоге',
-                'сохранение настроек в moonloader/config/bFishing.json'
-            },
-            notes = 'Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/bFishing.lua',
-            changelog = {
-                {
-                    version = '1.0',
-                    date = '2026-06-14',
-                    changes = {
-                        'скрипт добавлен в Modio Pack',
-                        'добавлено описание команд, настроек и принципа работы',
-                        'в копию pack добавлен script_version для корректной проверки актуальности'
-                    },
-                }
-            },
-        },
-        {
-            id = 'adoklad',
-            name = 'A-Doklad',
-            file = 'doklad.lua',
-            version = '1.0',
-            updated_at = '2026-06-14',
-            author = 'не указан',
-            description = 'Скрипт для автоматических докладов в рацию на посту для армий Arizona RP. Отправляет заданный доклад через выбранный интервал и помогает не забывать регулярные сообщения на посту.',
-            commands = {
-                '/dmenu - открыть меню настройки доклада',
-                '/doklad - включить автоматические доклады или показать время до следующего доклада',
-                '/dokladoff - выключить автоматические доклады'
-            },
-            usage = 'Откройте /dmenu, укажите имя, пост, состояние и интервал. После /doklad скрипт отправляет доклад в рацию и повторяет его через заданное время. При включенных настройках может дополнительно вызвать /time и сделать F8.',
-            features = {
-                'настройка имени, поста и состояния',
-                'отправка доклада в /r по заданному интервалу',
-                'команда для проверки времени до следующего доклада',
-                'опциональный вызов /time',
-                'опциональное нажатие F8 после доклада',
-                'сохранение настроек в doklad_settings.ini'
-            },
-            notes = 'Требования: MoonLoader, SAMP.Lua, mimgui, inicfg, encoding. В исходном описании автор не указан; в pack добавлены script_name и script_version для менеджера.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/doklad.lua',
-            changelog = {
-                {
-                    version = '1.0',
-                    date = '2026-06-14',
-                    changes = {
-                        'скрипт добавлен в Modio Pack',
-                        'добавлено описание команд и логики авто-докладов',
-                        'в копию pack добавлены script_name и script_version для корректной проверки актуальности'
-                    },
-                }
-            },
-        }
-    }
+    scripts = {}
 }
-
-local runtime = {}
-
-function ui(text)
-    return tostring(text or '')
-end
-
-function buttonSize(label, min_width)
-    min_width = min_width or 140
-    local ok, size = pcall(imgui.CalcTextSize, label)
-    if ok and size then
-        return imgui.ImVec2(math.max(min_width, size.x + 30), 0)
-    end
-    return imgui.ImVec2(min_width, 0)
-end
-
-function textWidth(text)
-    local ok, size = pcall(imgui.CalcTextSize, tostring(text or ''))
-    if ok and size then return size.x end
-    return 0
-end
-
-function sameLineIfFits(width)
-    local spacing = imgui.GetStyle().ItemSpacing.x
-    if imgui.GetContentRegionAvail().x > width + spacing then
-        imgui.SameLine()
-    end
-end
-
-function colorU32(color)
-    return imgui.ColorConvertFloat4ToU32(color)
-end
-
-function cacheBustUrl(url)
-    url = tostring(url or '')
-    if url == '' then return url end
-    local sep = url:find('?', 1, true) and '&' or '?'
-    return url .. sep .. 'modio_ts=' .. tostring(os.time())
-end
 
 function refreshLocalStateIfNeeded(force)
     local now = os.clock()
@@ -528,7 +103,7 @@ function main()
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
-    next_remote_check_at = os.time() + 10
+    checkRemoteManifest(true)
 
     while true do
         checkRemoteManifestIfNeeded()
@@ -803,7 +378,7 @@ function drawScriptListItem(index, item, st)
 
     local after = imgui.GetCursorPos()
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 8))
-    if item.forbidden then
+    if isForbiddenScript(item) then
         imgui.TextColored(imgui.ImVec4(1.00, 0.28, 0.28, 1.00), ui '!')
         imgui.SameLine()
     end
@@ -843,7 +418,7 @@ end
 
 function hasInstalledForbiddenScripts()
     for _, item in ipairs(manifest.scripts or {}) do
-        if item.forbidden then
+        if isForbiddenScript(item) then
             local st = runtime[item.id] or inspectLocal(item)
             if st.installed then
                 return true
@@ -857,11 +432,26 @@ function isModioScript(item)
     return tostring(item.author or ''):find('ModioZodio', 1, true) ~= nil
 end
 
+function scriptId(item)
+    return tostring(type(item) == 'table' and (item.id or item.file or item.name) or ''):lower()
+end
+
+function isForbiddenScript(item)
+    return type(item) == 'table' and item.forbidden == true
+end
+
+function forbiddenWarning(item)
+    if type(item) == 'table' and type(item.warning) == 'string' and item.warning ~= '' then
+        return item.warning
+    end
+    return 'Есть возможность получить бан.'
+end
+
 function isScriptVisible(item)
     if filter_modio_only and not isModioScript(item) then
         return false
     end
-    if item.forbidden and not show_forbidden then
+    if isForbiddenScript(item) and not show_forbidden then
         return false
     end
     return true
@@ -900,8 +490,8 @@ function drawDetails()
     imgui.TextDisabled(filename)
 
     imgui.Separator()
-    if item.forbidden then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(item.warning or 'Есть возможность получить бан.'))
+    if isForbiddenScript(item) then
+        imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(forbiddenWarning(item)))
         imgui.Spacing()
     end
     infoRow('Автор', item.author or '-')
@@ -1004,7 +594,7 @@ function drawForbiddenDeleteConfirmation()
 
     imgui.Spacing()
     imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui 'Подтвердите удаление всех запрещенных скриптов.')
-    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из manifest, у которых стоит forbidden = true.')
+    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из внутреннего списка рискованных скриптов менеджера.')
 
     local confirm_size = buttonSize(ui 'Да, удалить запрещенные', 250)
     if dangerButton(ui 'Да, удалить запрещенные', confirm_size) then
@@ -1024,7 +614,7 @@ function deleteForbiddenScripts()
     local deleted = 0
     local failed = 0
     for _, item in ipairs(manifest.scripts or {}) do
-        if item.forbidden then
+        if isForbiddenScript(item) then
             local path = getScriptPath(item)
             if doesFileExist(path) then
                 local ok = os.remove(path)
@@ -1425,8 +1015,9 @@ end
 
 function loadCachedManifest()
     if doesFileExist(cache_manifest_path) then
-        loadManifestFromFile(cache_manifest_path, false)
+        return loadManifestFromFile(cache_manifest_path, false) == true
     end
+    return false
 end
 
 function loadSeenScripts()
