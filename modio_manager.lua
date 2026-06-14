@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.6'
+local MANAGER_VERSION = '1.6.0'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -30,6 +30,7 @@ local workdir = getWorkingDirectory()
 local config_dir = workdir .. '\\config\\modio_manager'
 local tmp_dir = config_dir .. '\\tmp'
 local cache_manifest_path = config_dir .. '\\manifest_cache.json'
+local seen_scripts_path = config_dir .. '\\seen_scripts.json'
 local imgui_ini_path = config_dir .. '\\imgui.ini'
 
 local selected = 1
@@ -44,6 +45,7 @@ local filter_modio_only = false
 local show_forbidden = false
 local show_manager_changelog = false
 local script_changelog_open = {}
+local seen_scripts = {}
 local last_local_refresh_clock = 0
 local next_remote_check_at = 0
 local manifest = {
@@ -55,10 +57,19 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.6',
+        version = '1.6.0',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.6.0',
+                date = '2026-06-14',
+                changes = {
+                    'добавлены bFishing и A-Doklad в каталог скриптов',
+                    'добавлены аккуратные NEW-метки для новых скриптов с запоминанием просмотра',
+                    'установка и обновление скриптов блокируются, если сам менеджер устарел'
+                }
+            },
             {
                 version = '1.5.6',
                 date = '2026-06-14',
@@ -375,6 +386,79 @@ local manifest = {
                     }
                 }
             }
+        },
+        {
+            id = 'bfishing',
+            name = 'bFishing',
+            file = 'bFishing.lua',
+            version = '1.0',
+            updated_at = '2026-06-14',
+            author = 'bakhusse',
+            forbidden = true,
+            warning = 'Есть возможность получить бан. Скрипт автоматизирует рыбалку и CEF-мини-игру, используйте только если понимаете риск.',
+            description = 'Помощник для рыбалки на Arizona RP. Автоматизирует прохождение новой CEF-мини-игры, умеет заново забрасывать удочку после улова и позволяет настраивать задержки действий.',
+            commands = {
+                '/bfish - открыть или закрыть меню настроек'
+            },
+            usage = 'Откройте /bfish, настройте задержки и режимы работы. Чтобы бот начал работу, закиньте удочку в игре; дальше он будет реагировать на CEF-мини-игру и, при включенной настройке, повторно забрасывать удочку после улова.',
+            features = {
+                'автоматическое прохождение CEF-мини-игры рыбалки',
+                'автозаброс через /fishrod после сообщения об улове',
+                'настраиваемые фиксированные или случайные задержки',
+                'выбор слота удочки в диалоге',
+                'сохранение настроек в moonloader/config/bFishing.json'
+            },
+            notes = 'Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.',
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/bFishing.lua',
+            changelog = {
+                {
+                    version = '1.0',
+                    date = '2026-06-14',
+                    changes = {
+                        'скрипт добавлен в Modio Pack',
+                        'добавлено описание команд, настроек и принципа работы',
+                        'в копию pack добавлен script_version для корректной проверки актуальности'
+                    },
+                }
+            },
+        },
+        {
+            id = 'adoklad',
+            name = 'A-Doklad',
+            file = 'doklad.lua',
+            version = '1.0',
+            updated_at = '2026-06-14',
+            author = 'не указан',
+            forbidden = true,
+            warning = 'Есть возможность получить бан. Скрипт автоматизирует отправку докладов в рацию, используйте только если понимаете риск.',
+            description = 'Скрипт для автоматических докладов в рацию на посту для армий Arizona RP. Отправляет заданный доклад через выбранный интервал и помогает не забывать регулярные сообщения на посту.',
+            commands = {
+                '/dmenu - открыть меню настройки доклада',
+                '/doklad - включить автоматические доклады или показать время до следующего доклада',
+                '/dokladoff - выключить автоматические доклады'
+            },
+            usage = 'Откройте /dmenu, укажите имя, пост, состояние и интервал. После /doklad скрипт отправляет доклад в рацию и повторяет его через заданное время. При включенных настройках может дополнительно вызвать /time и сделать F8.',
+            features = {
+                'настройка имени, поста и состояния',
+                'отправка доклада в /r по заданному интервалу',
+                'команда для проверки времени до следующего доклада',
+                'опциональный вызов /time',
+                'опциональное нажатие F8 после доклада',
+                'сохранение настроек в doklad_settings.ini'
+            },
+            notes = 'Требования: MoonLoader, SAMP.Lua, mimgui, inicfg, encoding. В исходном описании автор не указан; в pack добавлены script_name и script_version для менеджера.',
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/doklad.lua',
+            changelog = {
+                {
+                    version = '1.0',
+                    date = '2026-06-14',
+                    changes = {
+                        'скрипт добавлен в Modio Pack',
+                        'добавлено описание команд и логики авто-докладов',
+                        'в копию pack добавлены script_name и script_version для корректной проверки актуальности'
+                    },
+                }
+            },
         }
     }
 }
@@ -435,6 +519,7 @@ function main()
     ensureDir(config_dir)
     ensureDir(tmp_dir)
     loadCachedManifest()
+    loadSeenScripts()
     refreshLocalState()
 
     sampRegisterChatCommand('modio', function()
@@ -453,6 +538,18 @@ function main()
         checkRemoteManifestIfNeeded()
         wait(0)
     end
+end
+
+function markScriptSeen(item)
+    local id = tostring(type(item) == 'table' and (item.id or item.file or item.name) or '')
+    if id == '' or seen_scripts[id] then return end
+    seen_scripts[id] = true
+    saveSeenScripts()
+end
+
+function isScriptNew(item)
+    local id = tostring(type(item) == 'table' and (item.id or item.file or item.name) or '')
+    return id ~= '' and seen_scripts[id] ~= true
 end
 
 imgui.OnInitialize(function()
@@ -526,6 +623,7 @@ function drawHeader()
     if manifest.notes and #manifest.notes > 0 then
         imgui.TextWrapped(ui(manifest.notes))
     end
+    drawNewScriptsNotice()
     drawInstalledForbiddenWarning()
 
     if busy or checking then
@@ -567,6 +665,16 @@ function drawHeader()
     drawForbiddenDeleteConfirmation()
 end
 
+function drawNewScriptsNotice()
+    local count = countNewScripts()
+    if count <= 0 then return end
+
+    imgui.TextColored(
+        imgui.ImVec4(0.45, 0.72, 1.00, 1.00),
+        ui('В каталоге появились новые скрипты: ' .. tostring(count))
+    )
+end
+
 function drawInstalledForbiddenWarning()
     if not hasInstalledForbiddenScripts() then return end
 
@@ -574,6 +682,16 @@ function drawInstalledForbiddenWarning()
         imgui.ImVec4(1.00, 0.36, 0.36, 1.00),
         ui 'В сборке установлены скрипты, за которые можно получить бан.'
     )
+end
+
+function countNewScripts()
+    local count = 0
+    for _, item in ipairs(manifest.scripts or {}) do
+        if isScriptNew(item) then
+            count = count + 1
+        end
+    end
+    return count
 end
 
 function drawFilters()
@@ -684,6 +802,7 @@ function drawScriptListItem(index, item, st)
 
     if imgui.Selectable(ui('##script_' .. id), selected == index, 0, size) then
         selected = index
+        markScriptSeen(item)
     end
 
     local after = imgui.GetCursorPos()
@@ -693,12 +812,37 @@ function drawScriptListItem(index, item, st)
         imgui.SameLine()
     end
     imgui.Text(ui(item.name or item.id or 'script'))
+    if isScriptNew(item) then
+        imgui.SameLine()
+        drawNewBadge()
+    end
 
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 31))
     imgui.TextColored(listVersionColor(st), ui(statusLine(item, st)))
 
     imgui.SetCursorPos(after)
     imgui.Spacing()
+end
+
+function drawNewBadge()
+    local label = ui 'NEW'
+    local text_size = imgui.CalcTextSize(label)
+    local pad_x = 8
+    local pad_y = 3
+    local pos = imgui.GetCursorScreenPos()
+    local size = imgui.ImVec2(text_size.x + pad_x * 2, text_size.y + pad_y * 2)
+    local draw = imgui.GetWindowDrawList()
+
+    draw:AddRectFilled(
+        pos,
+        imgui.ImVec2(pos.x + size.x, pos.y + size.y),
+        colorU32(imgui.ImVec4(0.18, 0.46, 0.82, 1.00)),
+        7,
+        15
+    )
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + pad_x, pos.y + pad_y - 1))
+    imgui.TextColored(imgui.ImVec4(0.94, 0.98, 1.00, 1.00), label)
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + size.x + 4, pos.y))
 end
 
 function hasInstalledForbiddenScripts()
@@ -775,11 +919,21 @@ function drawDetails()
     imgui.Spacing()
 
     local canDelete = st.installed and not busy
+    local script_actions_locked = managerIsOutdated()
+    if script_actions_locked then
+        imgui.TextColored(
+            imgui.ImVec4(1.00, 0.66, 0.30, 1.00),
+            ui 'Сначала обновите Modio Manager. Установка и обновление скриптов временно заблокированы.'
+        )
+        imgui.Spacing()
+    end
 
     if not st.installed then
         local install_size = buttonSize(ui 'Установить', 190)
         if imgui.Button(ui 'Установить', install_size) then
-            if busy then
+            if script_actions_locked then
+                msg('Сначала обновите Modio Manager, затем устанавливайте скрипты.', WARN)
+            elseif busy then
                 msg('Сейчас идет другая операция.', WARN)
             else
                 installOrUpdate(item, 'install')
@@ -788,7 +942,9 @@ function drawDetails()
     elseif st.outdated then
         local update_size = buttonSize(ui 'Обновить', 190)
         if imgui.Button(ui 'Обновить', update_size) then
-            if busy then
+            if script_actions_locked then
+                msg('Сначала обновите Modio Manager, затем обновляйте скрипты.', WARN)
+            elseif busy then
                 msg('Сейчас идет другая операция.', WARN)
             else
                 installOrUpdate(item, 'update')
@@ -852,7 +1008,7 @@ function drawForbiddenDeleteConfirmation()
 
     imgui.Spacing()
     imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui 'Подтвердите удаление всех запрещенных скриптов.')
-    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из manifest, у которых стоит forbidden = true. Сейчас это FPSFix и Gribi.')
+    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из manifest, у которых стоит forbidden = true.')
 
     local confirm_size = buttonSize(ui 'Да, удалить запрещенные', 250)
     if dangerButton(ui 'Да, удалить запрещенные', confirm_size) then
@@ -1277,6 +1433,25 @@ function loadCachedManifest()
     end
 end
 
+function loadSeenScripts()
+    seen_scripts = {}
+    if not doesFileExist(seen_scripts_path) then return end
+
+    local f = io.open(seen_scripts_path, 'r')
+    if not f then return end
+    local raw = f:read('*a') or ''
+    f:close()
+    raw = raw:gsub('^\239\187\191', ''):gsub('^%s+', '')
+
+    local ok, data = pcall(decodeJson, raw)
+    if not ok or type(data) ~= 'table' then return end
+    for id, value in pairs(data) do
+        if value == true then
+            seen_scripts[tostring(id)] = true
+        end
+    end
+end
+
 function loadManifestFromFile(path, strict)
     local f = io.open(path, 'r')
     if not f then return false, 'Не удалось открыть manifest.json' end
@@ -1305,6 +1480,13 @@ function saveManifestCache()
     local f = io.open(cache_manifest_path, 'w')
     if not f then return end
     f:write(encodeJson(manifest))
+    f:close()
+end
+
+function saveSeenScripts()
+    local f = io.open(seen_scripts_path, 'w')
+    if not f then return end
+    f:write(encodeJson(seen_scripts))
     f:close()
 end
 
