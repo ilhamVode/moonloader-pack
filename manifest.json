@@ -401,7 +401,7 @@
         "выбор слота удочки в диалоге",
         "сохранение настроек в moonloader/config/bFishing.json"
       ],
-      "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, samp.events, encoding. Автор указан из script_author: bakhusse.",
+      "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/bFishing.lua",
       "changelog": [
         {
