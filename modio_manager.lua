@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.2'
+local MANAGER_VERSION = '1.8.3'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -87,8 +87,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Раздел зависимостей стал компактнее: в карточке скрипта показываются только названия и статус',
-                    'Добавлен общий раздел зависимостей менеджера со списком скриптов, которым они нужны'
+                    'Переделан общий раздел зависимостей: у каждой библиотеки свой статус и своя кнопка установки',
+                    'В карточке скрипта добавлена отдельная кнопка установки зависимостей именно для выбранного скрипта'
                 }
             }
         }
@@ -725,6 +725,7 @@ function drawDependenciesSection(item, st)
     if #deps == 0 then return end
 
     drawSectionTitle('Зависимости')
+    local missing = countMissingDependencyFiles(deps)
     for _, dep in ipairs(deps) do
         local dep_missing = countMissingDependencyFiles({ dep })
         local dep_title = tostring(dep.name or dep.id or 'dependency')
@@ -733,16 +734,15 @@ function drawDependenciesSection(item, st)
         imgui.TextColored(color, ui(dep_title .. ' - ' .. status))
     end
 
-    local missing = countMissingDependencyFiles(deps)
     local locked = managerIsOutdated()
-    if missing > 0 and not locked and not busy then
-        local missing_label = ui 'Скачать недостающие зависимости'
-        if imgui.Button(missing_label, buttonSize(missing_label, 270)) then
-            installDependenciesForScript(item, false)
+    if not locked and not busy then
+        local label = missing > 0 and ui 'Установить зависимости скрипта' or ui 'Переустановить зависимости скрипта'
+        if imgui.Button(label, buttonSize(label, 300)) then
+            installDependenciesForScript(item, missing == 0)
         end
-    elseif missing > 0 and locked then
+    elseif locked then
         imgui.TextDisabled(ui 'Сначала обновите Modio Manager.')
-    elseif missing > 0 and busy then
+    elseif busy then
         imgui.TextDisabled(ui 'Установка будет доступна после завершения текущей операции.')
     end
 end
@@ -783,7 +783,18 @@ function drawDependenciesPanel()
         local color = missing > 0 and imgui.ImVec4(1.00, 0.68, 0.35, 1.00) or imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
 
         imgui.Spacing()
-        imgui.TextColored(color, ui(title .. ' - ' .. status))
+        imgui.TextColored(imgui.ImVec4(0.930, 0.950, 0.980, 1.00), ui(title))
+        imgui.SameLine(230)
+        imgui.TextColored(color, ui(status))
+
+        if not managerIsOutdated() and not busy then
+            local action_text = missing > 0 and ui 'Установить' or ui 'Переустановить'
+            local action = action_text .. '##dep_action_' .. tostring(dep.id or title)
+            imgui.SameLine(410)
+            if imgui.Button(action, buttonSize(action_text, 160)) then
+                installDependency(dep, missing == 0)
+            end
+        end
 
         local users = scriptsUsingDependency(dep)
         if #users > 0 then
@@ -809,7 +820,8 @@ function drawDependenciesPanel()
     elseif busy then
         imgui.TextDisabled(ui 'Установка зависимостей будет доступна после завершения текущей операции.')
     else
-        local missing_label = ui 'Скачать недостающие'
+        imgui.Spacing()
+        local missing_label = ui 'Установить все недостающие'
         if missing_total > 0 then
             if imgui.Button(missing_label, buttonSize(missing_label, 190)) then
                 installAllDependencies(false)
@@ -1198,6 +1210,11 @@ function installDependenciesForScript(item, force)
     end
 
     installDependencies(deps, item, force)
+end
+
+function installDependency(dep, force)
+    if type(dep) ~= 'table' then return end
+    installDependencies({ dep }, nil, force)
 end
 
 function installAllDependencies(force)
