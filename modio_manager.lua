@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.5'
+local MANAGER_VERSION = '1.8.6'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -87,8 +87,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Установка зависимостей стала двухфазной: сначала все файлы скачиваются во временную папку, потом копируются внешним процессом',
-                    'Если MoonLoader перезагрузит Lua из-за изменения lib-файлов, копирование зависимостей больше не должно обрываться вместе с менеджером'
+                    'Копирование зависимостей запускается отдельным detached-процессом и больше не удерживается внутри Modio Manager',
+                    'Добавлена задержка перед записью lib-файлов, чтобы внешний установщик переживал перезагрузку Lua'
                 }
             }
         }
@@ -1283,17 +1283,26 @@ function downloadDependencyQueue(item, queue, index, failed)
 end
 
 function installDownloadedDependencies(item, queue)
-    busy_text = 'Копирую зависимости...'
+    busy_text = 'Запускаю установку зависимостей...'
 
-    local script_path = tmp_dir .. '\\install_dependencies_' .. tostring(os.time()) .. '.ps1'
+    local stamp = tostring(os.time())
+    local script_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.ps1'
+    local done_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.done'
+    local fail_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.fail'
     local lines = {
-        "$ErrorActionPreference = 'Stop'"
+        "$ErrorActionPreference = 'Stop'",
+        "Start-Sleep -Milliseconds 1200",
+        "try {"
     }
 
     for _, entry in ipairs(queue) do
-        lines[#lines + 1] = "New-Item -ItemType Directory -Force -LiteralPath " .. psQuote(parentDir(entry.target)) .. " | Out-Null"
-        lines[#lines + 1] = "Copy-Item -LiteralPath " .. psQuote(entry.tmp) .. " -Destination " .. psQuote(entry.target) .. " -Force"
+        lines[#lines + 1] = "  New-Item -ItemType Directory -Force -LiteralPath " .. psQuote(parentDir(entry.target)) .. " | Out-Null"
+        lines[#lines + 1] = "  Copy-Item -LiteralPath " .. psQuote(entry.tmp) .. " -Destination " .. psQuote(entry.target) .. " -Force"
     end
+    lines[#lines + 1] = "  Set-Content -LiteralPath " .. psQuote(done_path) .. " -Value 'ok' -Encoding ASCII"
+    lines[#lines + 1] = "} catch {"
+    lines[#lines + 1] = "  Set-Content -LiteralPath " .. psQuote(fail_path) .. " -Value ($_.Exception.Message) -Encoding UTF8"
+    lines[#lines + 1] = "}"
 
     local ok, err = writeTextFile(script_path, table.concat(lines, "\r\n"))
     if not ok then
@@ -1304,15 +1313,16 @@ function installDownloadedDependencies(item, queue)
         return
     end
 
-    local exit_code = os.execute('powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ' .. cmdQuote(script_path))
+    local command = 'cmd /c start "" /min powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ' .. cmdQuote(script_path)
+    local exit_code = os.execute(command)
     busy = false
     busy_text = ''
     refreshLocalState()
 
     if exit_code == true or exit_code == 0 then
-        msg('Зависимости установлены. Если Lua перезагрузился, откройте /modio снова.', OK)
+        msg('Установка зависимостей запущена. Если Lua перезагрузится, откройте /modio через пару секунд.', OK)
     else
-        last_error = 'Не удалось скопировать зависимости.'
+        last_error = 'Не удалось запустить установку зависимостей.'
         msg(last_error, ERR)
     end
 end
