@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.4'
+local MANAGER_VERSION = '1.8.5'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -87,8 +87,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Убрана переустановка уже установленных зависимостей, чтобы не провоцировать перезагрузку MoonLoader во время записи lib-файлов',
-                    'Кнопки зависимостей теперь устанавливают только недостающие библиотеки'
+                    'Установка зависимостей стала двухфазной: сначала все файлы скачиваются во временную папку, потом копируются внешним процессом',
+                    'Если MoonLoader перезагрузит Lua из-за изменения lib-файлов, копирование зависимостей больше не должно обрываться вместе с менеджером'
                 }
             }
         }
@@ -1226,6 +1226,7 @@ function installDependencies(deps, item)
     if busy then return end
 
     local queue = {}
+    local stamp = tostring(os.time())
     for _, dep in ipairs(deps) do
         for _, file in ipairs(dependencyFiles(dep)) do
             local target = dependencyTargetPath(dep, file)
@@ -1234,7 +1235,8 @@ function installDependencies(deps, item)
                     dep = dep,
                     file = file,
                     target = target,
-                    url = dependencySourceUrl(dep, file)
+                    url = dependencySourceUrl(dep, file),
+                    tmp = tmp_dir .. '\\dependency_' .. stamp .. '_' .. tostring(#queue + 1) .. '.download'
                 }
             end
         end
@@ -1253,43 +1255,66 @@ end
 
 function downloadDependencyQueue(item, queue, index, failed)
     if index > #queue then
-        busy = false
-        busy_text = ''
-        refreshLocalState()
-
         if failed > 0 then
+            busy = false
+            busy_text = ''
+            refreshLocalState()
             last_error = 'Не удалось установить зависимости.'
             msg(last_error, ERR)
         else
-            msg('Зависимости установлены.', OK)
-            if type(item) == 'table' then
-                local script_path = getScriptPath(item)
-                if doesFileExist(script_path) then
-                    reloadInstalledScript(item, script_path)
-                end
-            end
+            installDownloadedDependencies(item, queue)
         end
         return
     end
 
     local entry = queue[index]
-    busy_text = 'Устанавливаю зависимости: ' .. tostring(index) .. '/' .. tostring(#queue)
+    busy_text = 'Скачиваю зависимости: ' .. tostring(index) .. '/' .. tostring(#queue)
     ensureDir(tmp_dir)
-    ensureParentDir(entry.target)
 
-    local tmp = tmp_dir .. '\\dependency_' .. tostring(os.time()) .. '_' .. tostring(index) .. '.download'
-    downloadUrlToFile(cacheBustUrl(entry.url), tmp, function(id, status)
+    downloadUrlToFile(cacheBustUrl(entry.url), entry.tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             local next_failed = failed
-            if doesFileExist(tmp) then
-                local ok = replaceFile(tmp, entry.target)
-                if not ok then next_failed = next_failed + 1 end
-            else
+            if not doesFileExist(entry.tmp) then
                 next_failed = next_failed + 1
             end
             downloadDependencyQueue(item, queue, index + 1, next_failed)
         end
     end)
+end
+
+function installDownloadedDependencies(item, queue)
+    busy_text = 'Копирую зависимости...'
+
+    local script_path = tmp_dir .. '\\install_dependencies_' .. tostring(os.time()) .. '.ps1'
+    local lines = {
+        "$ErrorActionPreference = 'Stop'"
+    }
+
+    for _, entry in ipairs(queue) do
+        lines[#lines + 1] = "New-Item -ItemType Directory -Force -LiteralPath " .. psQuote(parentDir(entry.target)) .. " | Out-Null"
+        lines[#lines + 1] = "Copy-Item -LiteralPath " .. psQuote(entry.tmp) .. " -Destination " .. psQuote(entry.target) .. " -Force"
+    end
+
+    local ok, err = writeTextFile(script_path, table.concat(lines, "\r\n"))
+    if not ok then
+        busy = false
+        busy_text = ''
+        last_error = 'Не удалось подготовить установку зависимостей: ' .. tostring(err)
+        msg(last_error, ERR)
+        return
+    end
+
+    local exit_code = os.execute('powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ' .. cmdQuote(script_path))
+    busy = false
+    busy_text = ''
+    refreshLocalState()
+
+    if exit_code == true or exit_code == 0 then
+        msg('Зависимости установлены. Если Lua перезагрузился, откройте /modio снова.', OK)
+    else
+        last_error = 'Не удалось скопировать зависимости.'
+        msg(last_error, ERR)
+    end
 end
 
 function installOrUpdate(item, mode)
@@ -1490,6 +1515,28 @@ function replaceFile(tmp, target)
 
     if doesFileExist(backup) then os.remove(backup) end
     return true
+end
+
+function writeTextFile(path, text)
+    ensureParentDir(path)
+    local f, err = io.open(path, 'w')
+    if not f then return false, err end
+    f:write(text or '')
+    f:close()
+    return true
+end
+
+function cmdQuote(value)
+    return '"' .. tostring(value or ''):gsub('"', '\\"') .. '"'
+end
+
+function psQuote(value)
+    return "'" .. tostring(value or ''):gsub("'", "''") .. "'"
+end
+
+function parentDir(path)
+    local normalized = tostring(path or ''):gsub('/', '\\')
+    return normalized:match('^(.*)\\[^\\]+$') or normalized
 end
 
 function loadCachedManifest()
