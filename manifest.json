@@ -3,30 +3,40 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-14 22:00 MSK",
+  "updated_at": "2026-06-15 00:00 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.3",
-    "updated_at": "2026-06-14",
+    "version": "1.8.0",
+    "updated_at": "2026-06-15",
     "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.0",
+        "date": "2026-06-15",
+        "changes": [
+          "добавлен раздел зависимостей в карточке выбранного скрипта",
+          "менеджер показывает установлены ли файлы зависимости и какие файлы отсутствуют",
+          "добавлена установка недостающих зависимостей и переустановка зависимостей выбранного скрипта",
+          "bFishing привязан к зависимости arizona-events"
+        ]
+      },
       {
         "version": "1.7.3",
         "date": "2026-06-14",
         "changes": [
-          "????????? ?????? ????????? ????? ?????? ???????? ?? ????",
-          "?????????? cacheBustUrl ??? ???????? ??????? manifest.json ? GitHub",
-          "?????????? ????????? UI-helper ??????? textWidth, sameLineIfFits ? colorU32"
+          "исправлен запуск менеджера после выноса каталога из кода",
+          "возвращена cacheBustUrl для загрузки свежего manifest.json с GitHub",
+          "возвращены служебные UI-helper функции textWidth, sameLineIfFits и colorU32"
         ]
       },
       {
         "version": "1.7.2",
         "date": "2026-06-14",
         "changes": [
-          "??? ???????? ???????? ????????????? ??????????? ?????? ? ??????, ? ????? ??????? ????",
-          "??? ????????? ? ?????????? ???????? ??????? ????????? ??? ????????????? ?????? ?????? ?????? ??? Ctrl+R",
-          "manifest_cache.json ???????????? ?????? ??? ????????? fallback: ?????? GitHub manifest ????????????? ????? ??? ??????? ? ??? ?????? ????????"
+          "при удалении менеджер останавливает загруженный скрипт в памяти, а потом удаляет файл",
+          "при установке и обновлении менеджер точечно загружает или перезагружает только нужный скрипт без Ctrl+R",
+          "manifest_cache.json используется только как временный fallback: свежий GitHub manifest запрашивается сразу при запуске и при ручной проверке"
         ]
       },
       {
@@ -401,7 +411,7 @@
         "выбор слота удочки в диалоге",
         "сохранение настроек в moonloader/config/bFishing.json"
       ],
-      "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.",
+      "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse. Менеджер может установить arizona-events из раздела зависимостей.",
       "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/bFishing.lua",
       "changelog": [
         {
@@ -413,6 +423,9 @@
             "в копию pack добавлен script_version для корректной проверки актуальности"
           ]
         }
+      ],
+      "dependencies": [
+        "arizona-events"
       ]
     },
     {
@@ -448,6 +461,21 @@
             "в копию pack добавлены script_name и script_version для корректной проверки актуальности"
           ]
         }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "arizona-events",
+      "name": "Arizona Events",
+      "description": "Библиотека событий Arizona RP. Нужна для скриптов, которые используют require 'arizona-events'.",
+      "source_dir": "lib/arizona-events",
+      "target_dir": "lib/arizona-events",
+      "files": [
+        "init.lua",
+        "core.lua",
+        "bitstream.lua",
+        "subprocess.lua"
       ]
     }
   ]
