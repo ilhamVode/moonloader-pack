@@ -7,9 +7,52 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.3",
-    "updated_at": "2026-06-13",
-    "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua"
+    "version": "1.4",
+    "updated_at": "2026-06-14",
+    "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua",
+    "changelog": [
+      {
+        "version": "1.4",
+        "date": "2026-06-14",
+        "changes": [
+          "добавлена история версий менеджера и каждого скрипта",
+          "в карточках скриптов появился аккуратный спойлер с изменениями",
+          "история скрыта по умолчанию, чтобы не перегружать окно"
+        ]
+      },
+      {
+        "version": "1.3",
+        "date": "2026-06-13",
+        "changes": [
+          "добавлены фильтры списка: только ModioZodio и показ запрещенных скриптов",
+          "добавлена кнопка удаления всех запрещенных скриптов с подтверждением",
+          "FPSFix и Gribi помечены как рискованные"
+        ]
+      },
+      {
+        "version": "1.2",
+        "date": "2026-06-13",
+        "changes": [
+          "добавлены AutoOpenRoulettes и Gribi",
+          "улучшено отображение скриптов без script_version"
+        ]
+      },
+      {
+        "version": "1.1",
+        "date": "2026-06-13",
+        "changes": [
+          "добавлено самообновление Modio Manager из GitHub",
+          "расширено описание скриптов в окне менеджера"
+        ]
+      },
+      {
+        "version": "1.0",
+        "date": "2026-06-13",
+        "changes": [
+          "первая версия менеджера установки, обновления и удаления MoonLoader-скриптов"
+        ]
+      }
+    ]
   },
   "scripts": [
     {
@@ -32,7 +75,20 @@
         "защита от ложных сообщений игроков: реакция только на системные подсказки и ошибки"
       ],
       "notes": "Фоновый CEF-перехват убран специально: так скрипт не вмешивается в другие CEF-окна игры, например /time.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua",
+      "changelog": [
+        {
+          "version": "1.0",
+          "date": "2026-06-13",
+          "changes": [
+            "первая версия помощника установки лавки",
+            "реализована строгая CEF-цепочка открытия меню и действия установки",
+            "добавлено адаптивное ожидание игровых задержек",
+            "убран фоновый CEF-перехват, чтобы не ломать другие окна игры",
+            "добавлен вывод примерного времени установки"
+          ]
+        }
+      ]
     },
     {
       "id": "ctrllkm",
@@ -54,7 +110,20 @@
         "без повторяющихся подсказок в чат во время работы"
       ],
       "notes": "Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua",
+      "changelog": [
+        {
+          "version": "1.0",
+          "date": "2026-06-13",
+          "changes": [
+            "первая версия Ctrl + ЛКМ helper",
+            "добавлено отключение при ручном нажатии Ctrl",
+            "добавлено отключение по сообщению о легендарном призе",
+            "убраны лишние повторяющиеся подсказки в чат",
+            "название и команды приведены к ЛКМ"
+          ]
+        }
+      ]
     },
     {
       "id": "fpsfix",
@@ -78,7 +147,28 @@
         "автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже"
       ],
       "notes": "Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua",
+      "changelog": [
+        {
+          "version": "1.1",
+          "date": "2026-06-14",
+          "changes": [
+            "автоеда переведена на CEF-событие event.arizonahud.playerSatiety",
+            "еда срабатывает при сытости 20 или ниже",
+            "добавлен cooldown автоеды 15 секунд",
+            "CEF-пакеты только читаются и не блокируются"
+          ]
+        },
+        {
+          "version": "0.1 alpha",
+          "date": "2026-06-13",
+          "changes": [
+            "добавлен FPSFix в Modio Pack",
+            "встроен раздел Lavaka с управлением помощником установки лавки",
+            "добавлено отображение последнего результата установки"
+          ]
+        }
+      ]
     },
     {
       "id": "infozz",
@@ -99,7 +189,18 @@
         "обновление списка файлов без перезапуска игры"
       ],
       "notes": "Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua",
+      "changelog": [
+        {
+          "version": "1.7.3",
+          "date": "2026-06-13",
+          "changes": [
+            "скрипт добавлен в Modio Pack",
+            "описаны команды, принцип работы и сценарии использования",
+            "сохранены функции TXT-справочника, поиска и обновления списка файлов"
+          ]
+        }
+      ]
     },
     {
       "id": "autoopenroulettes",
@@ -121,7 +222,18 @@
         "логирует полученные призы в текстовый файл за текущую дату"
       ],
       "notes": "Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua",
+      "changelog": [
+        {
+          "version": "2.4",
+          "date": "2026-06-13",
+          "changes": [
+            "скрипт добавлен в Modio Pack",
+            "описаны поддерживаемые рулетки и команда /autoroulette",
+            "указано логирование полученных призов"
+          ]
+        }
+      ]
     },
     {
       "id": "gribi",
@@ -144,7 +256,19 @@
         "переключение одной командой без дополнительного окна"
       ],
       "notes": "В оригинальном файле нет script_version, поэтому версия отображается как \"без версии\". Автор указан из сообщения загрузки скрипта: vlaDICK2288.",
-      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua"
+      "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua",
+      "changelog": [
+        {
+          "version": "без версии",
+          "date": "2026-06-13",
+          "changes": [
+            "скрипт добавлен в Modio Pack",
+            "автор указан по оригинальному файлу",
+            "добавлено предупреждение о риске бана",
+            "версия отображается как \"без версии\", потому что в оригинале нет script_version"
+          ]
+        }
+      ]
     }
   ]
 }

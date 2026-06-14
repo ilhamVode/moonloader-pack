@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.3'
+local MANAGER_VERSION = '1.4'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -40,6 +40,8 @@ local pending_delete_id = nil
 local pending_delete_forbidden = false
 local filter_modio_only = false
 local show_forbidden = false
+local show_manager_changelog = false
+local script_changelog_open = {}
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -49,9 +51,52 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.3',
-        updated_at = '2026-06-13',
-        url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua'
+        version = '1.4',
+        updated_at = '2026-06-14',
+        url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
+        changelog = {
+            {
+                version = '1.4',
+                date = '2026-06-14',
+                changes = {
+                    'добавлена история версий менеджера и каждого скрипта',
+                    'в карточках скриптов появился аккуратный спойлер с изменениями',
+                    'история скрыта по умолчанию, чтобы не перегружать окно'
+                }
+            },
+            {
+                version = '1.3',
+                date = '2026-06-13',
+                changes = {
+                    'добавлены фильтры списка: только ModioZodio и показ запрещенных скриптов',
+                    'добавлена кнопка удаления всех запрещенных скриптов с подтверждением',
+                    'FPSFix и Gribi помечены как рискованные'
+                }
+            },
+            {
+                version = '1.2',
+                date = '2026-06-13',
+                changes = {
+                    'добавлены AutoOpenRoulettes и Gribi',
+                    'улучшено отображение скриптов без script_version'
+                }
+            },
+            {
+                version = '1.1',
+                date = '2026-06-13',
+                changes = {
+                    'добавлено самообновление Modio Manager из GitHub',
+                    'расширено описание скриптов в окне менеджера'
+                }
+            },
+            {
+                version = '1.0',
+                date = '2026-06-13',
+                changes = {
+                    'первая версия менеджера установки, обновления и удаления MoonLoader-скриптов'
+                }
+            }
+        }
     },
     scripts = {
         {
@@ -74,7 +119,20 @@ local manifest = {
                 'защита от ложных сообщений игроков: реакция только на системные подсказки и ошибки'
             },
             notes = 'Фоновый CEF-перехват убран специально: так скрипт не вмешивается в другие CEF-окна игры, например /time.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/lavaka.lua',
+            changelog = {
+                {
+                    version = '1.0',
+                    date = '2026-06-13',
+                    changes = {
+                        'первая версия помощника установки лавки',
+                        'реализована строгая CEF-цепочка открытия меню и действия установки',
+                        'добавлено адаптивное ожидание игровых задержек',
+                        'убран фоновый CEF-перехват, чтобы не ломать другие окна игры',
+                        'добавлен вывод примерного времени установки'
+                    }
+                }
+            }
         },
         {
             id = 'ctrllkm',
@@ -96,7 +154,20 @@ local manifest = {
                 'не выводит повторяющиеся подсказки в чат во время работы'
             },
             notes = 'Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/ctrllkm.lua',
+            changelog = {
+                {
+                    version = '1.0',
+                    date = '2026-06-13',
+                    changes = {
+                        'первая версия Ctrl + ЛКМ helper',
+                        'добавлено отключение при ручном нажатии Ctrl',
+                        'добавлено отключение по сообщению о легендарном призе',
+                        'убраны лишние повторяющиеся подсказки в чат',
+                        'название и команды приведены к ЛКМ'
+                    }
+                }
+            }
         },
         {
             id = 'fpsfix',
@@ -120,7 +191,28 @@ local manifest = {
                 'автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже'
             },
             notes = 'Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/FPSFix.lua',
+            changelog = {
+                {
+                    version = '1.1',
+                    date = '2026-06-14',
+                    changes = {
+                        'автоеда переведена на CEF-событие event.arizonahud.playerSatiety',
+                        'еда срабатывает при сытости 20 или ниже',
+                        'добавлен cooldown автоеды 15 секунд',
+                        'CEF-пакеты только читаются и не блокируются'
+                    }
+                },
+                {
+                    version = '0.1 alpha',
+                    date = '2026-06-13',
+                    changes = {
+                        'добавлен FPSFix в Modio Pack',
+                        'встроен раздел Lavaka с управлением помощником установки лавки',
+                        'добавлено отображение последнего результата установки'
+                    }
+                }
+            }
         },
         {
             id = 'infozz',
@@ -141,7 +233,18 @@ local manifest = {
                 'обновление списка файлов без перезапуска игры'
             },
             notes = 'Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/infozz.lua',
+            changelog = {
+                {
+                    version = '1.7.3',
+                    date = '2026-06-13',
+                    changes = {
+                        'скрипт добавлен в Modio Pack',
+                        'описаны команды, принцип работы и сценарии использования',
+                        'сохранены функции TXT-справочника, поиска и обновления списка файлов'
+                    }
+                }
+            }
         },
         {
             id = 'autoopenroulettes',
@@ -163,7 +266,18 @@ local manifest = {
                 'логирует полученные призы в текстовый файл за текущую дату'
             },
             notes = 'Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/AutoOpenRoulettes.lua',
+            changelog = {
+                {
+                    version = '2.4',
+                    date = '2026-06-13',
+                    changes = {
+                        'скрипт добавлен в Modio Pack',
+                        'описаны поддерживаемые рулетки и команда /autoroulette',
+                        'указано логирование полученных призов'
+                    }
+                }
+            }
         },
         {
             id = 'gribi',
@@ -186,7 +300,19 @@ local manifest = {
                 'переключение одной командой без дополнительного окна'
             },
             notes = 'В оригинальном файле нет script_version, поэтому версия отображается как "без версии". Автор указан из сообщения загрузки скрипта: vlaDICK2288.',
-            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua'
+            url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/scripts/Gribi.lua',
+            changelog = {
+                {
+                    version = 'без версии',
+                    date = '2026-06-13',
+                    changes = {
+                        'скрипт добавлен в Modio Pack',
+                        'автор указан по оригинальному файлу',
+                        'добавлено предупреждение о риске бана',
+                        'версия отображается как "без версии", потому что в оригинале нет script_version'
+                    }
+                }
+            }
         }
     }
 }
@@ -312,6 +438,14 @@ function drawHeader()
     imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
     imgui.TextDisabled(ui('Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-')))
     imgui.TextColored(managerVersionColor(), ui(managerStatusText()))
+    local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
+    local manager_history_size = buttonSize(manager_history_label, 210)
+    if imgui.Button(manager_history_label, manager_history_size) then
+        show_manager_changelog = not show_manager_changelog
+    end
+    if show_manager_changelog then
+        drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
+    end
 
     imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
     if manifest.notes and #manifest.notes > 0 then
@@ -542,6 +676,7 @@ function drawDetails()
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
+    drawScriptChangelog(item)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -628,6 +763,45 @@ function drawListSection(title, list)
     drawSectionTitle(title)
     for _, line in ipairs(list) do
         imgui.TextWrapped(ui('- ' .. tostring(line)))
+    end
+end
+
+function drawScriptChangelog(item)
+    if type(item) ~= 'table' then return end
+    local id = tostring(item.id or item.file or item.name or 'script')
+    imgui.Spacing()
+    local opened = script_changelog_open[id] == true
+    local label = opened and ui 'Скрыть историю версий' or ui 'Показать историю версий'
+    if imgui.Button(label, buttonSize(label, 220)) then
+        script_changelog_open[id] = not opened
+    end
+    if script_changelog_open[id] then
+        drawChangelog(item.changelog)
+    end
+end
+
+function drawChangelog(changelog)
+    if type(changelog) ~= 'table' or #changelog == 0 then
+        imgui.TextDisabled(ui 'История версий пока не заполнена.')
+        return
+    end
+
+    imgui.Spacing()
+    for _, entry in ipairs(changelog) do
+        local title = tostring(entry.version or 'версия')
+        if entry.date and tostring(entry.date) ~= '' then
+            title = title .. ' | ' .. tostring(entry.date)
+        end
+        imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(title))
+
+        if type(entry.changes) == 'table' then
+            for _, change in ipairs(entry.changes) do
+                imgui.TextWrapped(ui('- ' .. tostring(change)))
+            end
+        elseif entry.text and tostring(entry.text) ~= '' then
+            imgui.TextWrapped(ui(tostring(entry.text)))
+        end
+        imgui.Spacing()
     end
 end
 
