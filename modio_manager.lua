@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.6'
+local MANAGER_VERSION = '1.7.3'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -37,7 +37,6 @@ local new = imgui.new
 local window = new.bool(false)
 
 local MANIFEST_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json'
-local RAW_BASE_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local PREFIX = '[ModioManager]'
@@ -64,7 +63,6 @@ local pending_delete_forbidden = false
 local filter_modio_only = false
 local show_forbidden = false
 local show_manager_changelog = false
-local show_dependencies_panel = false
 local script_changelog_open = {}
 local seen_scripts = {}
 local runtime = {}
@@ -85,10 +83,9 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
-                date = '2026-06-15',
+                date = '2026-06-14',
                 changes = {
-                    'Копирование зависимостей запускается отдельным detached-процессом и больше не удерживается внутри Modio Manager',
-                    'Добавлена задержка перед записью lib-файлов, чтобы внешний установщик переживал перезагрузку Lua'
+                    'После установки или обновления менеджер точечно загружает установленный скрипт без Ctrl+R'
                 }
             }
         }
@@ -260,16 +257,6 @@ function drawHeader()
     if imgui.Button(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
-
-    local deps_label = dependenciesButtonLabel()
-    if deps_label ~= '' then
-        local deps_size = buttonSize(deps_label, 180)
-        sameLineIfFits(deps_size.x)
-        if imgui.Button(deps_label, deps_size) then
-            show_dependencies_panel = not show_dependencies_panel
-        end
-    end
-
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
@@ -288,10 +275,6 @@ function drawHeader()
 
     if show_manager_changelog then
         drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
-    end
-
-    if show_dependencies_panel then
-        drawDependenciesPanel()
     end
 
     drawForbiddenDeleteConfirmation()
@@ -629,7 +612,6 @@ function drawDetails()
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
-    drawDependenciesSection(item, st)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -679,7 +661,6 @@ function deleteForbiddenScripts()
         if isForbiddenScript(item) then
             local path = getScriptPath(item)
             if doesFileExist(path) then
-                unloadLoadedScript(item, path)
                 local ok = os.remove(path)
                 if ok then
                     deleted = deleted + 1
@@ -718,121 +699,6 @@ function drawListSection(title, list)
     for _, line in ipairs(list) do
         imgui.TextWrapped(ui('- ' .. tostring(line)))
     end
-end
-
-function drawDependenciesSection(item, st)
-    local deps = resolveScriptDependencies(item)
-    if #deps == 0 then return end
-
-    drawSectionTitle('Зависимости')
-    local missing = countMissingDependencyFiles(deps)
-    for _, dep in ipairs(deps) do
-        local dep_missing = countMissingDependencyFiles({ dep })
-        local dep_title = tostring(dep.name or dep.id or 'dependency')
-        local status = dep_missing > 0 and 'не установлена' or 'установлена'
-        local color = dep_missing > 0 and imgui.ImVec4(1.00, 0.68, 0.35, 1.00) or imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
-        imgui.TextColored(color, ui(dep_title .. ' - ' .. status))
-    end
-
-    local locked = managerIsOutdated()
-    if missing > 0 and not locked and not busy then
-        local label = ui 'Установить зависимости скрипта'
-        if imgui.Button(label, buttonSize(label, 300)) then
-            installDependenciesForScript(item)
-        end
-    elseif missing == 0 then
-        imgui.TextDisabled(ui 'Все зависимости скрипта установлены.')
-    elseif locked then
-        imgui.TextDisabled(ui 'Сначала обновите Modio Manager.')
-    elseif busy then
-        imgui.TextDisabled(ui 'Установка будет доступна после завершения текущей операции.')
-    end
-end
-
-function dependenciesButtonLabel()
-    local deps = allDependencies()
-    if #deps == 0 then return '' end
-
-    local missing = countMissingDependencies(deps)
-    if show_dependencies_panel then
-        return ui 'Скрыть зависимости'
-    end
-    if missing > 0 then
-        return ui('Зависимости: не хватает ' .. tostring(missing))
-    end
-    return ui 'Зависимости'
-end
-
-function drawDependenciesPanel()
-    local deps = allDependencies()
-    if #deps == 0 then return end
-
-    imgui.Spacing()
-    imgui.Separator()
-    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui 'Зависимости')
-
-    local missing_total = countMissingDependencies(deps)
-    if missing_total > 0 then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.68, 0.35, 1.00), ui('Нужно установить: ' .. tostring(missing_total)))
-    else
-        imgui.TextColored(imgui.ImVec4(0.55, 0.82, 0.62, 1.00), ui 'Все зависимости установлены.')
-    end
-
-    for _, dep in ipairs(deps) do
-        local missing = countMissingDependencyFiles({ dep })
-        local title = tostring(dep.name or dep.id or 'dependency')
-        local status = missing > 0 and 'не установлена' or 'установлена'
-        local color = missing > 0 and imgui.ImVec4(1.00, 0.68, 0.35, 1.00) or imgui.ImVec4(0.55, 0.82, 0.62, 1.00)
-
-        imgui.Spacing()
-        imgui.TextColored(imgui.ImVec4(0.930, 0.950, 0.980, 1.00), ui(title))
-        imgui.SameLine(230)
-        imgui.TextColored(color, ui(status))
-
-        if missing > 0 and not managerIsOutdated() and not busy then
-            local action_text = ui 'Установить'
-            local action = action_text .. '##dep_action_' .. tostring(dep.id or title)
-            imgui.SameLine(410)
-            if imgui.Button(action, buttonSize(action_text, 160)) then
-                installDependency(dep)
-            end
-        end
-
-        local users = scriptsUsingDependency(dep)
-        if #users > 0 then
-            imgui.TextDisabled(ui 'Нужна для:')
-            imgui.SameLine()
-            for index, script_item in ipairs(users) do
-                if index > 1 then
-                    imgui.SameLine()
-                    imgui.TextDisabled(ui ',')
-                    imgui.SameLine()
-                end
-
-                local link_label = ui(tostring(script_item.name or script_item.id or script_item.file) .. '##dep_' .. tostring(dep.id) .. '_' .. tostring(script_item.id or index))
-                if imgui.SmallButton(link_label) then
-                    selectScript(script_item)
-                end
-            end
-        end
-    end
-
-    if managerIsOutdated() then
-        imgui.TextDisabled(ui 'Сначала обновите Modio Manager, затем устанавливайте зависимости.')
-    elseif busy then
-        imgui.TextDisabled(ui 'Установка зависимостей будет доступна после завершения текущей операции.')
-    else
-        imgui.Spacing()
-        local missing_label = ui 'Установить все недостающие'
-        if missing_total > 0 then
-            if imgui.Button(missing_label, buttonSize(missing_label, 190)) then
-                installAllDependencies(false)
-            end
-        end
-
-    end
-
-    imgui.Separator()
 end
 
 function drawScriptChangelog(item)
@@ -1053,280 +919,6 @@ function updateManager()
     end)
 end
 
-function resolveScriptDependencies(item)
-    local result = {}
-    if type(item) ~= 'table' or type(item.dependencies) ~= 'table' then return result end
-
-    for _, ref in ipairs(item.dependencies) do
-        local id = type(ref) == 'table' and tostring(ref.id or '') or tostring(ref or '')
-        local dep = dependencyById(id)
-        if dep then
-            result[#result + 1] = dep
-        end
-    end
-
-    return result
-end
-
-function allDependencies()
-    if type(manifest.dependencies) ~= 'table' then return {} end
-    return manifest.dependencies
-end
-
-function scriptsUsingDependency(dep)
-    local result = {}
-    local dep_id = tostring(type(dep) == 'table' and dep.id or dep or '')
-    if dep_id == '' then return result end
-
-    for _, item in ipairs(manifest.scripts or {}) do
-        if type(item.dependencies) == 'table' then
-            for _, ref in ipairs(item.dependencies) do
-                local id = type(ref) == 'table' and tostring(ref.id or '') or tostring(ref or '')
-                if id == dep_id then
-                    result[#result + 1] = item
-                    break
-                end
-            end
-        end
-    end
-
-    return result
-end
-
-function selectScript(target)
-    local target_id = tostring(type(target) == 'table' and (target.id or target.file or target.name) or '')
-    if target_id == '' then return end
-
-    for index, item in ipairs(manifest.scripts or {}) do
-        local id = tostring(item.id or item.file or item.name or '')
-        if id == target_id then
-            selected = index
-            markScriptSeen(item)
-            return
-        end
-    end
-end
-
-function dependencyById(id)
-    id = tostring(id or '')
-    if id == '' or type(manifest.dependencies) ~= 'table' then return nil end
-
-    for _, dep in ipairs(manifest.dependencies) do
-        if tostring(dep.id or '') == id then
-            return dep
-        end
-    end
-    return nil
-end
-
-function dependencyFiles(dep)
-    if type(dep) ~= 'table' or type(dep.files) ~= 'table' then return {} end
-    return dep.files
-end
-
-function countDependencyFiles(deps)
-    local total = 0
-    for _, dep in ipairs(deps or {}) do
-        total = total + #dependencyFiles(dep)
-    end
-    return total
-end
-
-function countMissingDependencyFiles(deps)
-    local missing = 0
-    for _, dep in ipairs(deps or {}) do
-        for _, file in ipairs(dependencyFiles(dep)) do
-            if not doesFileExist(dependencyTargetPath(dep, file)) then
-                missing = missing + 1
-            end
-        end
-    end
-    return missing
-end
-
-function countMissingDependencies(deps)
-    local missing = 0
-    for _, dep in ipairs(deps or {}) do
-        if countMissingDependencyFiles({ dep }) > 0 then
-            missing = missing + 1
-        end
-    end
-    return missing
-end
-
-function dependencyFilePath(file)
-    if type(file) == 'table' then
-        return tostring(file.path or file.file or file.name or '')
-    end
-    return tostring(file or '')
-end
-
-function dependencySourcePath(file)
-    if type(file) == 'table' then
-        return tostring(file.source or file.path or file.file or file.name or '')
-    end
-    return tostring(file or '')
-end
-
-function dependencyTargetRelativePath(dep, file)
-    local target = dependencyFilePath(file):gsub('/', '\\')
-    local dir = tostring(dep.target_dir or ''):gsub('/', '\\')
-    if dir == '' then return target end
-    return dir .. '\\' .. target
-end
-
-function dependencyTargetPath(dep, file)
-    return workdir .. '\\' .. dependencyTargetRelativePath(dep, file)
-end
-
-function dependencySourceUrl(dep, file)
-    if type(file) == 'table' and type(file.url) == 'string' and file.url ~= '' then
-        return file.url
-    end
-
-    local source = dependencySourcePath(file):gsub('\\', '/')
-    local base = tostring(dep.url_base or '')
-    if base == '' then
-        local source_dir = tostring(dep.source_dir or dep.target_dir or ''):gsub('\\', '/')
-        base = RAW_BASE_URL
-        if source_dir ~= '' then
-            base = base .. '/' .. source_dir
-        end
-    end
-
-    return base .. '/' .. source
-end
-
-function installDependenciesForScript(item)
-    local deps = resolveScriptDependencies(item)
-    if #deps == 0 then
-        msg('Для выбранного скрипта зависимости не указаны в manifest.json.', WARN)
-        return
-    end
-
-    installDependencies(deps, item)
-end
-
-function installDependency(dep)
-    if type(dep) ~= 'table' then return end
-    installDependencies({ dep }, nil)
-end
-
-function installAllDependencies()
-    local deps = allDependencies()
-    if #deps == 0 then
-        msg('В manifest.json нет зависимостей.', WARN)
-        return
-    end
-
-    installDependencies(deps, nil)
-end
-
-function installDependencies(deps, item)
-    if busy then return end
-
-    local queue = {}
-    local stamp = tostring(os.time())
-    for _, dep in ipairs(deps) do
-        for _, file in ipairs(dependencyFiles(dep)) do
-            local target = dependencyTargetPath(dep, file)
-            if not doesFileExist(target) then
-                queue[#queue + 1] = {
-                    dep = dep,
-                    file = file,
-                    target = target,
-                    url = dependencySourceUrl(dep, file),
-                    tmp = tmp_dir .. '\\dependency_' .. stamp .. '_' .. tostring(#queue + 1) .. '.download'
-                }
-            end
-        end
-    end
-
-    if #queue == 0 then
-        msg('Все зависимости уже установлены.', OK)
-        return
-    end
-
-    busy = true
-    busy_text = 'Устанавливаю зависимости...'
-    last_error = ''
-    downloadDependencyQueue(item, queue, 1, 0)
-end
-
-function downloadDependencyQueue(item, queue, index, failed)
-    if index > #queue then
-        if failed > 0 then
-            busy = false
-            busy_text = ''
-            refreshLocalState()
-            last_error = 'Не удалось установить зависимости.'
-            msg(last_error, ERR)
-        else
-            installDownloadedDependencies(item, queue)
-        end
-        return
-    end
-
-    local entry = queue[index]
-    busy_text = 'Скачиваю зависимости: ' .. tostring(index) .. '/' .. tostring(#queue)
-    ensureDir(tmp_dir)
-
-    downloadUrlToFile(cacheBustUrl(entry.url), entry.tmp, function(id, status)
-        if status == dl_status.STATUSEX_ENDDOWNLOAD then
-            local next_failed = failed
-            if not doesFileExist(entry.tmp) then
-                next_failed = next_failed + 1
-            end
-            downloadDependencyQueue(item, queue, index + 1, next_failed)
-        end
-    end)
-end
-
-function installDownloadedDependencies(item, queue)
-    busy_text = 'Запускаю установку зависимостей...'
-
-    local stamp = tostring(os.time())
-    local script_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.ps1'
-    local done_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.done'
-    local fail_path = tmp_dir .. '\\install_dependencies_' .. stamp .. '.fail'
-    local lines = {
-        "$ErrorActionPreference = 'Stop'",
-        "Start-Sleep -Milliseconds 1200",
-        "try {"
-    }
-
-    for _, entry in ipairs(queue) do
-        lines[#lines + 1] = "  New-Item -ItemType Directory -Force -LiteralPath " .. psQuote(parentDir(entry.target)) .. " | Out-Null"
-        lines[#lines + 1] = "  Copy-Item -LiteralPath " .. psQuote(entry.tmp) .. " -Destination " .. psQuote(entry.target) .. " -Force"
-    end
-    lines[#lines + 1] = "  Set-Content -LiteralPath " .. psQuote(done_path) .. " -Value 'ok' -Encoding ASCII"
-    lines[#lines + 1] = "} catch {"
-    lines[#lines + 1] = "  Set-Content -LiteralPath " .. psQuote(fail_path) .. " -Value ($_.Exception.Message) -Encoding UTF8"
-    lines[#lines + 1] = "}"
-
-    local ok, err = writeTextFile(script_path, table.concat(lines, "\r\n"))
-    if not ok then
-        busy = false
-        busy_text = ''
-        last_error = 'Не удалось подготовить установку зависимостей: ' .. tostring(err)
-        msg(last_error, ERR)
-        return
-    end
-
-    local command = 'cmd /c start "" /min powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ' .. cmdQuote(script_path)
-    local exit_code = os.execute(command)
-    busy = false
-    busy_text = ''
-    refreshLocalState()
-
-    if exit_code == true or exit_code == 0 then
-        msg('Установка зависимостей запущена. Если Lua перезагрузится, откройте /modio через пару секунд.', OK)
-    else
-        last_error = 'Не удалось запустить установку зависимостей.'
-        msg(last_error, ERR)
-    end
-end
-
 function installOrUpdate(item, mode)
     if busy or not item or not item.url or item.url == '' then return end
     busy = true
@@ -1527,28 +1119,6 @@ function replaceFile(tmp, target)
     return true
 end
 
-function writeTextFile(path, text)
-    ensureParentDir(path)
-    local f, err = io.open(path, 'w')
-    if not f then return false, err end
-    f:write(text or '')
-    f:close()
-    return true
-end
-
-function cmdQuote(value)
-    return '"' .. tostring(value or ''):gsub('"', '\\"') .. '"'
-end
-
-function psQuote(value)
-    return "'" .. tostring(value or ''):gsub("'", "''") .. "'"
-end
-
-function parentDir(path)
-    local normalized = tostring(path or ''):gsub('/', '\\')
-    return normalized:match('^(.*)\\[^\\]+$') or normalized
-end
-
 function loadCachedManifest()
     if doesFileExist(cache_manifest_path) then
         local loaded = loadManifestFromFile(cache_manifest_path, false) == true
@@ -1620,35 +1190,6 @@ end
 function ensureDir(path)
     if not doesDirectoryExist(path) then
         createDirectory(path)
-    end
-end
-
-function ensureParentDir(path)
-    local normalized = tostring(path or ''):gsub('/', '\\')
-    local parent = normalized:match('^(.*)\\[^\\]+$')
-    if parent and parent ~= '' then
-        ensureDirTree(parent)
-    end
-end
-
-function ensureDirTree(path)
-    local normalized = tostring(path or ''):gsub('/', '\\')
-    if normalized == '' or doesDirectoryExist(normalized) then return end
-
-    local prefix = ''
-    local rest = normalized
-    local drive = normalized:match('^%a:\\')
-    if drive then
-        prefix = drive
-        rest = normalized:sub(#drive + 1)
-    end
-
-    local current = prefix
-    for part in rest:gmatch('[^\\]+') do
-        current = current == '' and part or (current .. '\\' .. part)
-        if not doesDirectoryExist(current) then
-            createDirectory(current)
-        end
     end
 end
 
