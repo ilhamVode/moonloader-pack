@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.3'
+local MANAGER_VERSION = '1.5.4'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -18,6 +18,7 @@ local new = imgui.new
 local window = new.bool(false)
 
 local MANIFEST_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json'
+local LOCAL_REFRESH_INTERVAL = 2.0
 local PREFIX = '[ModioManager]'
 local CHAT = 0x52C7EA
 local OK = 0x77DD77
@@ -42,6 +43,7 @@ local filter_modio_only = false
 local show_forbidden = false
 local show_manager_changelog = false
 local script_changelog_open = {}
+local last_local_refresh_clock = 0
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -51,10 +53,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.3',
+        version = '1.5.4',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5.4',
+                date = '2026-06-14',
+                changes = {
+                    'добавлена автоматическая перепроверка локального состояния скриптов в открытом окне',
+                    'ручное удаление или подмена файла через проводник теперь отображаются без перезапуска менеджера'
+                }
+            },
             {
                 version = '1.5.3',
                 date = '2026-06-14',
@@ -390,6 +400,17 @@ function cacheBustUrl(url)
     return url .. sep .. 'modio_ts=' .. tostring(os.time())
 end
 
+function refreshLocalStateIfNeeded(force)
+    local now = os.clock()
+    if not force and (now - last_local_refresh_clock) < LOCAL_REFRESH_INTERVAL then
+        return
+    end
+    if busy or checking then return end
+
+    refreshLocalState()
+    last_local_refresh_clock = now
+end
+
 function main()
     while not isSampAvailable() do wait(0) end
 
@@ -400,11 +421,11 @@ function main()
 
     sampRegisterChatCommand('modio', function()
         window[0] = not window[0]
-        if window[0] then refreshLocalState() end
+        if window[0] then refreshLocalStateIfNeeded(true) end
     end)
     sampRegisterChatCommand('mscripts', function()
         window[0] = not window[0]
-        if window[0] then refreshLocalState() end
+        if window[0] then refreshLocalStateIfNeeded(true) end
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
@@ -430,6 +451,7 @@ imgui.OnFrame(
         imgui.SetNextWindowSizeConstraints(imgui.ImVec2(1040, 650), imgui.ImVec2(math.max(1060, sx - 40), math.max(680, sy - 40)))
 
         if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
+            refreshLocalStateIfNeeded(false)
             drawHeader()
             imgui.Separator()
 
