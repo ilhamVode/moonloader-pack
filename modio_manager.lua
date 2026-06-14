@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.5.5'
+local MANAGER_VERSION = '1.5.6'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -55,10 +55,18 @@ local manifest = {
     notes = 'Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.',
     manager = {
         file = 'modio_manager.lua',
-        version = '1.5.5',
+        version = '1.5.6',
         updated_at = '2026-06-14',
         url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
         changelog = {
+            {
+                version = '1.5.6',
+                date = '2026-06-14',
+                changes = {
+                    'в список скриптов добавлена красная отметка для запрещенных скриптов',
+                    'в верхней части менеджера показывается предупреждение, если установлен хотя бы один рискованный скрипт'
+                }
+            },
             {
                 version = '1.5.5',
                 date = '2026-06-14',
@@ -518,6 +526,7 @@ function drawHeader()
     if manifest.notes and #manifest.notes > 0 then
         imgui.TextWrapped(ui(manifest.notes))
     end
+    drawInstalledForbiddenWarning()
 
     if busy or checking then
         imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.35, 1.00), ui(busy_text ~= '' and busy_text or 'Идет операция...'))
@@ -556,6 +565,15 @@ function drawHeader()
     end
 
     drawForbiddenDeleteConfirmation()
+end
+
+function drawInstalledForbiddenWarning()
+    if not hasInstalledForbiddenScripts() then return end
+
+    imgui.TextColored(
+        imgui.ImVec4(1.00, 0.36, 0.36, 1.00),
+        ui 'В сборке установлены скрипты, за которые можно получить бан.'
+    )
 end
 
 function drawFilters()
@@ -670,6 +688,10 @@ function drawScriptListItem(index, item, st)
 
     local after = imgui.GetCursorPos()
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 8))
+    if item.forbidden then
+        imgui.TextColored(imgui.ImVec4(1.00, 0.28, 0.28, 1.00), ui '!')
+        imgui.SameLine()
+    end
     imgui.Text(ui(item.name or item.id or 'script'))
 
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 31))
@@ -677,6 +699,18 @@ function drawScriptListItem(index, item, st)
 
     imgui.SetCursorPos(after)
     imgui.Spacing()
+end
+
+function hasInstalledForbiddenScripts()
+    for _, item in ipairs(manifest.scripts or {}) do
+        if item.forbidden then
+            local st = runtime[item.id] or inspectLocal(item)
+            if st.installed then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 function isModioScript(item)
