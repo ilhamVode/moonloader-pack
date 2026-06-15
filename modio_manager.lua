@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.5'
+local MANAGER_VERSION = '1.7.6'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -74,7 +74,7 @@ local manifest = {
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
     updated_at = '-',
-    notes = 'Каталог скриптов загружается из GitHub manifest.json и хранится локально в moonloader/config/modio_manager/manifest_cache.json.',
+    notes = 'Каталог скриптов загружается из GitHub manifest.json. Локальный кеш используется только как fallback, если GitHub временно недоступен.',
     manager = {
         file = 'modio_manager.lua',
         version = MANAGER_VERSION,
@@ -85,7 +85,7 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-14',
                 changes = {
-                    'Убрано двойное выделение в списке скриптов: осталась только мягкая кастомная подсветка'
+                    'Кеш manifest_cache.json больше не загружается на старте и используется только как fallback при ошибке загрузки GitHub-манифеста'
                 }
             }
         }
@@ -133,7 +133,6 @@ function main()
 
     ensureDir(config_dir)
     ensureDir(tmp_dir)
-    loadCachedManifest()
     loadSeenScripts()
     refreshLocalState()
 
@@ -906,7 +905,14 @@ function checkRemoteManifest(silent)
                     msg('Манифест обновлен.', OK)
                 end
             else
-                if not silent then
+                local cached = loadCachedManifest()
+                if cached then
+                    refreshLocalState()
+                    last_check_text = 'GitHub manifest недоступен, показан локальный fallback-кеш.'
+                    if not silent then
+                        msg('GitHub manifest недоступен, открыт локальный кеш.', WARN)
+                    end
+                elseif not silent then
                     last_error = err or 'Не удалось прочитать manifest.json'
                     msg(last_error, ERR)
                 end
@@ -1187,7 +1193,7 @@ function loadCachedManifest()
     if doesFileExist(cache_manifest_path) then
         local loaded = loadManifestFromFile(cache_manifest_path, false) == true
         if loaded then
-            last_check_text = 'Показан локальный кеш, проверяю свежий манифест с GitHub.'
+            last_check_text = 'Показан локальный fallback-кеш.'
         end
         return loaded
     end
