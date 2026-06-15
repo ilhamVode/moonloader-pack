@@ -356,6 +356,7 @@
       "file": "lavaka.lua",
       "version": "1.0",
       "updated_at": "2026-06-13",
+      "hidden": false,
       "author": "ModioZodio",
       "description": "Помощник установки лавки через интерактивное CEF-меню Arizona RP. Скрипт не кликает вслепую: он отправляет запрос, ждет ответ игры, выполняет действие установки и выключается после результата.",
       "commands": [
@@ -384,17 +385,16 @@
           ]
         }
       ],
-      "status": "actual",
-      "hidden": false
-    },
+      "status": "actual"
+    }
     {
       "id": "ctrllkm",
       "name": "CtrlLKM",
       "file": "ctrllkm.lua",
       "version": "1.1",
       "updated_at": "2026-06-15",
-      "author": "ModioZodio",
       "hidden": false,
+      "author": "ModioZodio",
       "description": "Helper для автоматического Ctrl + ЛКМ. Подходит для действий, где нужно удерживать Ctrl и часто нажимать левую кнопку мыши.",
       "commands": [
         "/ctrllkm - включить или выключить Ctrl + ЛКМ helper"
@@ -439,6 +439,7 @@
       "file": "FPSFix.lua",
       "version": "1.1",
       "updated_at": "2026-06-14",
+      "hidden": false,
       "author": "JustFedot / ModioZodio",
       "forbidden": true,
       "warning": "Есть возможность получить бан. Используйте только если понимаете риск.",
@@ -477,8 +478,7 @@
           ]
         }
       ],
-      "status": "0",
-      "hidden": false
+      "status": "0"
     },
     {
       "id": "infozz",
@@ -486,6 +486,7 @@
       "file": "infozz.lua",
       "version": "1.7.3",
       "updated_at": "2026-06-13",
+      "hidden": false,
       "author": "Codex / ModioZodio",
       "description": "Внутриигровой TXT-справочник для SA:MP. Помогает хранить и быстро искать заметки, инструкции, цены, команды и любые текстовые материалы.",
       "commands": [
@@ -511,8 +512,7 @@
           ]
         }
       ],
-      "status": "actual",
-      "hidden": false
+      "status": "actual"
     },
     {
       "id": "autoopenroulettes",
@@ -520,6 +520,7 @@
       "file": "AutoOpenRoulettes.lua",
       "version": "2.4",
       "updated_at": "2026-06-13",
+      "hidden": false,
       "author": "CaJlaT",
       "description": "Автоматическое открытие поддерживаемых рулеток Arizona RP через CEF-окно CrateRoulette. Скрипт запускает открытие, забирает приз и выходит из окна рулетки.",
       "commands": [
@@ -546,8 +547,7 @@
           ]
         }
       ],
-      "status": "0",
-      "hidden": false
+      "status": "0"
     },
     {
       "id": "gribi",
@@ -555,6 +555,7 @@
       "file": "Gribi.lua",
       "version": "без версии",
       "updated_at": "2026-06-13",
+      "hidden": false,
       "author": "vlaDICK2288",
       "forbidden": true,
       "warning": "Есть возможность получить бан. Скрипт рендерит игровые объекты и может считаться запрещенным помощником.",
@@ -583,8 +584,7 @@
           ]
         }
       ],
-      "status": "0",
-      "hidden": false
+      "status": "0"
     },
     {
       "id": "bfishing",
@@ -592,6 +592,7 @@
       "file": "bFishing.lua",
       "version": "1.0",
       "updated_at": "2026-06-14",
+      "hidden": false,
       "author": "bakhusse",
       "forbidden": true,
       "warning": "Есть возможность получить бан. Скрипт автоматизирует рыбалку и CEF-мини-игру, используйте только если понимаете риск.",
@@ -620,8 +621,7 @@
           ]
         }
       ],
-      "status": "0",
-      "hidden": false
+      "status": "0"
     },
     {
       "id": "adoklad",
@@ -629,6 +629,7 @@
       "file": "doklad.lua",
       "version": "1.0",
       "updated_at": "2026-06-14",
+      "hidden": false,
       "author": "Caps",
       "description": "Скрипт для автоматических докладов в рацию на посту для армий Arizona RP. Отправляет заданный доклад через выбранный интервал и помогает не забывать регулярные сообщения на посту.",
       "commands": [
@@ -657,8 +658,7 @@
           ]
         }
       ],
-      "status": "0",
-      "hidden": false
+      "status": "0"
     }
   ]
 }
