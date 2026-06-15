@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.16'
+local MANAGER_VERSION = '1.7.17'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -84,9 +84,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Warning-иконка запрещенных скриптов стала более гладкой',
-                    'Острые углы заменены на компактный круглый бейдж с восклицательным знаком',
-                    'Переключатели фильтров стали визуально мягче'
+                    'Warning-иконка снова стала треугольной, но без кривого текстового символа',
+                    'Переключатели фильтров перерисованы как более гладкий iOS-style pill'
                 }
             }
         }
@@ -355,15 +354,16 @@ function drawSwitch(id, label, value, active_color)
     local draw = imgui.GetWindowDrawList()
     local radius_track = size.y / 2
     local border = value and imgui.ImVec4(math.min(active_color.x + 0.18, 1), math.min(active_color.y + 0.18, 1), math.min(active_color.z + 0.18, 1), 0.72) or imgui.ImVec4(0.46, 0.52, 0.60, 0.42)
-    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), radius_track, 15)
-    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), radius_track, 15, 1.0)
-    draw:AddRectFilled(
-        imgui.ImVec2(pos.x + 2, pos.y + 2),
-        imgui.ImVec2(pos.x + size.x - 2, pos.y + size.y * 0.48),
-        colorU32(imgui.ImVec4(1.00, 1.00, 1.00, value and 0.08 or 0.04)),
-        radius_track,
-        15
-    )
+    local left = imgui.ImVec2(pos.x + radius_track, pos.y + radius_track)
+    local right = imgui.ImVec2(pos.x + size.x - radius_track, pos.y + radius_track)
+    draw:AddRectFilled(imgui.ImVec2(left.x, pos.y), imgui.ImVec2(right.x, pos.y + size.y), colorU32(bg), 0, 0)
+    draw:AddCircleFilled(left, radius_track, colorU32(bg), 48)
+    draw:AddCircleFilled(right, radius_track, colorU32(bg), 48)
+    draw:AddLine(imgui.ImVec2(left.x, pos.y), imgui.ImVec2(right.x, pos.y), colorU32(border), 1.0)
+    draw:AddLine(imgui.ImVec2(left.x, pos.y + size.y), imgui.ImVec2(right.x, pos.y + size.y), colorU32(border), 1.0)
+    draw:AddCircle(left, radius_track, colorU32(border), 48, 1.0)
+    draw:AddCircle(right, radius_track, colorU32(border), 48, 1.0)
+    draw:AddRectFilled(imgui.ImVec2(left.x, pos.y + 2), imgui.ImVec2(right.x, pos.y + size.y * 0.44), colorU32(imgui.ImVec4(1.00, 1.00, 1.00, value and 0.07 or 0.035)), 0, 0)
 
     local radius = 9.5
     local knob_x = value and (pos.x + size.x - radius - 3.5) or (pos.x + radius + 3.5)
@@ -573,17 +573,24 @@ function drawWarningIcon(size)
     size = size or 16
     local pos = imgui.GetCursorScreenPos()
     local draw = imgui.GetWindowDrawList()
-    local red = imgui.ImVec4(0.86, 0.18, 0.18, 1.00)
-    local red_soft = imgui.ImVec4(1.00, 0.34, 0.30, 0.92)
-    local red_shadow = imgui.ImVec4(0.50, 0.04, 0.04, 0.28)
-    local white = imgui.ImVec4(1.00, 1.00, 1.00, 0.96)
+    local red = colorU32(imgui.ImVec4(0.92, 0.18, 0.16, 1.00))
+    local red_border = colorU32(imgui.ImVec4(1.00, 0.50, 0.42, 0.95))
+    local shadow = colorU32(imgui.ImVec4(0.42, 0.02, 0.02, 0.24))
+    local white = colorU32(imgui.ImVec4(1.00, 1.00, 1.00, 0.98))
 
-    local center = imgui.ImVec2(pos.x + size * 0.5, pos.y + size * 0.5)
-    local radius = size * 0.43
-    draw:AddCircleFilled(imgui.ImVec2(center.x, center.y + 1), radius, colorU32(red_shadow), 28)
-    draw:AddCircleFilled(center, radius, colorU32(red), 32)
-    draw:AddCircle(center, radius, colorU32(red_soft), 32, 1.0)
-    draw:AddText(imgui.ImVec2(pos.x + size * 0.40, pos.y + size * 0.10), colorU32(white), '!')
+    local p1 = imgui.ImVec2(pos.x + size * 0.50, pos.y + 1.0)
+    local p2 = imgui.ImVec2(pos.x + size - 1.0, pos.y + size - 1.5)
+    local p3 = imgui.ImVec2(pos.x + 1.0, pos.y + size - 1.5)
+    draw:AddTriangleFilled(imgui.ImVec2(p1.x, p1.y + 1.0), imgui.ImVec2(p2.x, p2.y + 1.0), imgui.ImVec2(p3.x, p3.y + 1.0), shadow)
+    draw:AddTriangleFilled(p1, p2, p3, red)
+    draw:AddTriangle(p1, p2, p3, red_border, 1.1)
+
+    local bar_w = math.max(2.0, size * 0.13)
+    local bar_h = size * 0.34
+    local bar_x = pos.x + size * 0.5 - bar_w / 2
+    local bar_y = pos.y + size * 0.36
+    draw:AddRectFilled(imgui.ImVec2(bar_x, bar_y), imgui.ImVec2(bar_x + bar_w, bar_y + bar_h), white, bar_w / 2, 15)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + size * 0.5, pos.y + size * 0.80), size * 0.075, white, 18)
 
     imgui.Dummy(imgui.ImVec2(size, size))
 end
