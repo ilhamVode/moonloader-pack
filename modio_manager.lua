@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.11'
+local MANAGER_VERSION = '1.7.12'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,8 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Выровнена геометрия бейджа актуальности',
-                    'Убран лишний пустой отступ справа внутри статусной плашки'
+                    'Ручная проверка обновлений всегда запрашивает свежий GitHub manifest без fallback-кеша',
+                    'Статус 1 в manifest.json теперь считается неизвестным, статус 0 - актуальным'
                 }
             }
         }
@@ -115,7 +115,8 @@ function cacheBustUrl(url)
     url = tostring(url or '')
     if url == '' then return url end
     local sep = url:find('?', 1, true) and '&' or '?'
-    return url .. sep .. 'modio_ts=' .. tostring(os.time())
+    local token = tostring(os.time()) .. '_' .. tostring(math.floor(os.clock() * 1000000))
+    return url .. sep .. 'modio_ts=' .. token
 end
 
 function refreshLocalStateIfNeeded(force)
@@ -147,7 +148,7 @@ function main()
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
-    checkRemoteManifest(true)
+    checkRemoteManifest(true, true)
 
     while true do
         checkRemoteManifestIfNeeded()
@@ -278,7 +279,7 @@ function drawHeader()
 
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if imgui.Button(ui 'Проверить обновления', check_size) then
-        checkRemoteManifest(false)
+        checkRemoteManifest(false, false)
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
@@ -933,7 +934,7 @@ function scriptStatusValue(item)
     local status = type(item) == 'table' and item.status or nil
     local value = type(status) == 'table' and tostring(status.official or ''):lower() or tostring(status or ''):lower()
     if value == 'actual' or value == 'ok' or value == 'active' or value == '0' then return 'actual' end
-    if value == 'outdated' or value == 'broken' or value == 'inactive' or value == '1' then return 'outdated' end
+    if value == 'outdated' or value == 'broken' or value == 'inactive' then return 'outdated' end
     return 'unknown'
 end
 
@@ -1010,19 +1011,23 @@ function checkRemoteManifestIfNeeded()
     if os.time() < next_remote_check_at then return end
     if checking or busy then return end
 
-    checkRemoteManifest(true)
+    checkRemoteManifest(true, true)
 end
 
-function checkRemoteManifest(silent)
-    if checking or busy then return end
+function checkRemoteManifest(silent, allow_cache_fallback)
+    if checking or busy then
+        if not silent then msg('Проверка уже выполняется.', WARN) end
+        return
+    end
     silent = silent == true
+    allow_cache_fallback = allow_cache_fallback ~= false
     checking = true
-    busy_text = 'Проверяю манифест...'
+    busy_text = 'Проверяю GitHub manifest...'
     if not silent then
         last_error = ''
     end
 
-    local tmp = tmp_dir .. '\\manifest_' .. os.time() .. '.json'
+    local tmp = tmp_dir .. '\\manifest_' .. tostring(os.time()) .. '_' .. tostring(math.floor(os.clock() * 1000000)) .. '.json'
     downloadUrlToFile(cacheBustUrl(MANIFEST_URL), tmp, function(id, status)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             checking = false
@@ -1038,7 +1043,7 @@ function checkRemoteManifest(silent)
                     msg('Манифест обновлен.', OK)
                 end
             else
-                local cached = loadCachedManifest()
+                local cached = allow_cache_fallback and loadCachedManifest()
                 if cached then
                     refreshLocalState()
                     last_check_text = 'GitHub manifest недоступен, показан локальный fallback-кеш.'
