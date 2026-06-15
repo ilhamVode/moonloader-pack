@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.4'
+local MANAGER_VERSION = '1.7.5'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,7 +85,7 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-14',
                 changes = {
-                    'Обновлен визуальный стиль окна: мягкая прозрачность, спокойные hover-состояния и более читаемый список скриптов'
+                    'Убрано двойное выделение в списке скриптов: осталась только мягкая кастомная подсветка'
                 }
             }
         }
@@ -439,10 +439,14 @@ function drawScriptListItem(index, item, st)
     local screen_pos = imgui.GetCursorScreenPos()
     local size = imgui.ImVec2(0, 58)
 
+    imgui.PushStyleColor(imgui.Col.Header, imgui.ImVec4(0, 0, 0, 0))
+    imgui.PushStyleColor(imgui.Col.HeaderHovered, imgui.ImVec4(0, 0, 0, 0))
+    imgui.PushStyleColor(imgui.Col.HeaderActive, imgui.ImVec4(0, 0, 0, 0))
     if imgui.Selectable(ui('##script_' .. id), selected == index, 0, size) then
         selected = index
         markScriptSeen(item)
     end
+    imgui.PopStyleColor(3)
     local hovered = imgui.IsItemHovered()
     drawScriptListItemBg(screen_pos, size, selected == index, hovered, isForbiddenScript(item))
 
