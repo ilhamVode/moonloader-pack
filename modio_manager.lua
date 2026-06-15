@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.6'
+local MANAGER_VERSION = '1.7.7'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,7 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-14',
                 changes = {
-                    'Кеш manifest_cache.json больше не загружается на старте и используется только как fallback при ошибке загрузки GitHub-манифеста'
+                    'Добавлены официальные статусы скриптов из manifest.json: актуально, неизвестно, неактуально',
+                    'Список скриптов сортируется по статусу и показывает компактный статусный бейдж'
                 }
             }
         }
@@ -417,19 +418,36 @@ function drawScriptList()
 
     ensureSelectedVisible()
 
-    local list = manifest.scripts or {}
+    local list = sortedVisibleScripts()
     local shown = 0
-    for i, item in ipairs(list) do
-        if isScriptVisible(item) then
-            local st = runtime[item.id] or inspectLocal(item)
-            drawScriptListItem(i, item, st)
-            shown = shown + 1
-        end
+    for _, entry in ipairs(list) do
+        local item = entry.item
+        local st = runtime[item.id] or inspectLocal(item)
+        drawScriptListItem(entry.index, item, st)
+        shown = shown + 1
     end
 
     if shown == 0 then
         imgui.TextDisabled(ui 'Нет скриптов по выбранным фильтрам.')
     end
+end
+
+function sortedVisibleScripts()
+    local result = {}
+    for i, item in ipairs(manifest.scripts or {}) do
+        if isScriptVisible(item) then
+            result[#result + 1] = { index = i, item = item }
+        end
+    end
+
+    table.sort(result, function(a, b)
+        local ap = scriptStatusPriority(a.item)
+        local bp = scriptStatusPriority(b.item)
+        if ap ~= bp then return ap < bp end
+        return tostring(a.item.name or a.item.id or ''):lower() < tostring(b.item.name or b.item.id or ''):lower()
+    end)
+
+    return result
 end
 
 function drawScriptListItem(index, item, st)
@@ -460,12 +478,24 @@ function drawScriptListItem(index, item, st)
         imgui.SameLine()
         drawNewBadge()
     end
+    drawCompactStatusBadge(item)
 
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 31))
     imgui.TextColored(listVersionColor(st), ui(statusLine(item, st)))
 
     imgui.SetCursorPos(after)
     imgui.Spacing()
+end
+
+function drawCompactStatusBadge(item)
+    local label = scriptStatusText(item)
+    local text_size = imgui.CalcTextSize(ui(label))
+    local width = text_size.x + 18
+    local avail = imgui.GetContentRegionAvail().x
+    if avail > width + 12 then
+        imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
+        imgui.TextColored(scriptStatusColor(item), ui(label))
+    end
 end
 
 function drawScriptListItemBg(pos, size, active, hovered, forbidden)
@@ -602,6 +632,7 @@ function drawDetails()
         imgui.Spacing()
     end
     infoRow('Автор', item.author or '-')
+    statusInfoRow(item)
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
     infoRow('Версия на сайте', versionText(item.version))
     infoRow('Последнее обновление на сайте', item.updated_at or '-')
@@ -834,6 +865,41 @@ function drawStatusBadge(st)
     else
         imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), ui 'Статус: установлена последняя версия')
     end
+end
+
+function scriptStatusValue(item)
+    local status = type(item) == 'table' and item.status or nil
+    local value = type(status) == 'table' and tostring(status.official or ''):lower() or tostring(status or ''):lower()
+    if value == 'actual' or value == 'ok' or value == 'active' then return 'actual' end
+    if value == 'outdated' or value == 'broken' or value == 'inactive' then return 'outdated' end
+    return 'unknown'
+end
+
+function scriptStatusText(item)
+    local value = scriptStatusValue(item)
+    if value == 'actual' then return 'актуально' end
+    if value == 'outdated' then return 'неактуально' end
+    return 'неизвестно'
+end
+
+function scriptStatusColor(item)
+    local value = scriptStatusValue(item)
+    if value == 'actual' then return imgui.ImVec4(0.48, 0.82, 0.58, 1.00) end
+    if value == 'outdated' then return imgui.ImVec4(0.92, 0.42, 0.42, 1.00) end
+    return imgui.ImVec4(0.92, 0.76, 0.42, 1.00)
+end
+
+function scriptStatusPriority(item)
+    local value = scriptStatusValue(item)
+    if value == 'actual' then return 1 end
+    if value == 'unknown' then return 2 end
+    return 3
+end
+
+function statusInfoRow(item)
+    imgui.TextDisabled(ui 'Актуальность')
+    imgui.SameLine(160)
+    imgui.TextColored(scriptStatusColor(item), ui(scriptStatusText(item)))
 end
 
 function statusLine(item, st)
