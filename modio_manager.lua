@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.21'
+local MANAGER_VERSION = '1.7.22'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -82,6 +82,14 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
+                date = '2026-06-15',
+                changes = {
+                    'Исправлено удаление запрещенных скриптов: теперь они корректно выгружаются из памяти',
+                    'Функция deleteForbiddenScripts() теперь использует модульное удаление как deleteScript()'
+                }
+            },
+            {
+                version = '1.7.21',
                 date = '2026-06-15',
                 changes = {
                     'Manifest и ссылки обновлений переведены на GitHub raw/HEAD',
@@ -858,11 +866,16 @@ function deleteForbiddenScripts()
         if isForbiddenScript(item) then
             local path = getScriptPath(item)
             if doesFileExist(path) then
-                local ok = os.remove(path)
-                if ok then
-                    deleted = deleted + 1
-                else
+                if item.file == thisScript().filename then
                     failed = failed + 1
+                else
+                    unloadLoadedScript(item, path)
+                    local ok = os.remove(path)
+                    if ok then
+                        deleted = deleted + 1
+                    else
+                        failed = failed + 1
+                    end
                 end
             end
         end
@@ -872,7 +885,7 @@ function deleteForbiddenScripts()
     ensureSelectedVisible()
 
     if failed > 0 then
-        last_error = 'Не удалось удалить запрещенных скриптов: ' .. tostring(failed)
+        last_error = 'Не удалось удалить запрещенные скрипты: ' .. tostring(failed)
         msg(last_error, ERR)
     else
         msg('Удалено запрещенных скриптов: ' .. tostring(deleted), WARN)
