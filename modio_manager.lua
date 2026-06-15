@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.10'
+local MANAGER_VERSION = '1.7.11'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,8 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Шапка карточки скрипта стала одной строкой: название слева, статус справа',
-                    'Техническое имя файла убрано из верхней части карточки'
+                    'Выровнена геометрия бейджа актуальности',
+                    'Убран лишний пустой отступ справа внутри статусной плашки'
                 }
             }
         }
@@ -497,23 +497,27 @@ function drawCompactStatusBadge(item)
 end
 
 function scriptStatusBadgeWidth(item, extra)
-    local label = scriptStatusText(item)
-    local text_size = imgui.CalcTextSize(ui(label))
-    return text_size.x + (extra or 28) + 18
+    return statusPillSize(item, 0.82).x + (extra or 0)
 end
 
-function statusPillSize(item, scale)
+function statusPillMetrics(item, scale)
     scale = scale or 1.0
     local label = ui(scriptStatusText(item))
     local text_size = imgui.CalcTextSize(label)
-    return imgui.ImVec2(text_size.x + 28 * scale + 18, math.max(22, 24 * scale))
+    local text_x = 20 * scale
+    local right_pad = 11 * scale
+    local size = imgui.ImVec2(text_size.x + text_x + right_pad, math.max(20, 23 * scale))
+    return label, text_size, size, 10 * scale, text_x, 3.8 * scale
+end
+
+function statusPillSize(item, scale)
+    local _, _, size = statusPillMetrics(item, scale)
+    return size
 end
 
 function drawStatusPill(item, id, scale)
     scale = scale or 1.0
-    local label = ui(scriptStatusText(item))
-    local text_size = imgui.CalcTextSize(label)
-    local size = statusPillSize(item, scale)
+    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale)
     local width = size.x
     local height = size.y
     local pos = imgui.GetCursorScreenPos()
@@ -524,26 +528,24 @@ function drawStatusPill(item, id, scale)
     local after = imgui.GetCursorPos()
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(bg), height / 2, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(border), height / 2, 15, 1.0)
-    draw:AddCircleFilled(imgui.ImVec2(pos.x + 11 * scale, pos.y + height / 2), 4 * scale, colorU32(dot), 18)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + height / 2), dot_radius, colorU32(dot), 18)
 
-    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + 21 * scale, pos.y + (height - text_size.y) / 2 - 1))
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + text_x, pos.y + (height - text_size.y) / 2 - 1))
     imgui.TextColored(scriptStatusColor(item), label)
     imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
 end
 
 function drawStatusPillAt(item, pos, scale)
     scale = scale or 1.0
-    local label = ui(scriptStatusText(item))
-    local text_size = imgui.CalcTextSize(label)
-    local size = statusPillSize(item, scale)
+    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale)
     local draw = imgui.GetWindowDrawList()
     local bg, border, dot = scriptStatusPalette(item)
 
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), size.y / 2, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), size.y / 2, 15, 1.0)
-    draw:AddCircleFilled(imgui.ImVec2(pos.x + 11 * scale, pos.y + size.y / 2), 4 * scale, colorU32(dot), 18)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + size.y / 2), dot_radius, colorU32(dot), 18)
     draw:AddText(
-        imgui.ImVec2(pos.x + 21 * scale, pos.y + (size.y - text_size.y) / 2 - 1),
+        imgui.ImVec2(pos.x + text_x, pos.y + (size.y - text_size.y) / 2 - 1),
         colorU32(scriptStatusColor(item)),
         label
     )
