@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.9'
+local MANAGER_VERSION = '1.7.10'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,8 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Убран вводящий в заблуждение текст "актуальная версия" из списка скриптов',
-                    'Исправлена разметка бейджа актуальности в карточке скрипта'
+                    'Шапка карточки скрипта стала одной строкой: название слева, статус справа',
+                    'Техническое имя файла убрано из верхней части карточки'
                 }
             }
         }
@@ -502,14 +502,21 @@ function scriptStatusBadgeWidth(item, extra)
     return text_size.x + (extra or 28) + 18
 end
 
+function statusPillSize(item, scale)
+    scale = scale or 1.0
+    local label = ui(scriptStatusText(item))
+    local text_size = imgui.CalcTextSize(label)
+    return imgui.ImVec2(text_size.x + 28 * scale + 18, math.max(22, 24 * scale))
+end
+
 function drawStatusPill(item, id, scale)
     scale = scale or 1.0
     local label = ui(scriptStatusText(item))
     local text_size = imgui.CalcTextSize(label)
-    local height = math.max(22, 24 * scale)
-    local width = text_size.x + 28 * scale + 18
+    local size = statusPillSize(item, scale)
+    local width = size.x
+    local height = size.y
     local pos = imgui.GetCursorScreenPos()
-    local size = imgui.ImVec2(width, height)
     local draw = imgui.GetWindowDrawList()
     local bg, border, dot = scriptStatusPalette(item)
 
@@ -522,6 +529,24 @@ function drawStatusPill(item, id, scale)
     imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + 21 * scale, pos.y + (height - text_size.y) / 2 - 1))
     imgui.TextColored(scriptStatusColor(item), label)
     imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
+end
+
+function drawStatusPillAt(item, pos, scale)
+    scale = scale or 1.0
+    local label = ui(scriptStatusText(item))
+    local text_size = imgui.CalcTextSize(label)
+    local size = statusPillSize(item, scale)
+    local draw = imgui.GetWindowDrawList()
+    local bg, border, dot = scriptStatusPalette(item)
+
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), size.y / 2, 15)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), size.y / 2, 15, 1.0)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + 11 * scale, pos.y + size.y / 2), 4 * scale, colorU32(dot), 18)
+    draw:AddText(
+        imgui.ImVec2(pos.x + 21 * scale, pos.y + (size.y - text_size.y) / 2 - 1),
+        colorU32(scriptStatusColor(item)),
+        label
+    )
 end
 
 function drawScriptListItemBg(pos, size, active, hovered, forbidden)
@@ -647,10 +672,19 @@ function drawDetails()
 
     local st = runtime[item.id] or inspectLocal(item)
     local title = ui(item.name or item.id)
-    local filename = ui(item.file or '-')
+    local title_size = imgui.CalcTextSize(title)
+    local pill_size = statusPillSize(item, 1.0)
+    local row_pos = imgui.GetCursorScreenPos()
+    local row_width = imgui.GetContentRegionAvail().x
+    local row_height = math.max(title_size.y, pill_size.y)
+
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), title)
-    imgui.TextDisabled(filename)
-    drawStatusPill(item, 'details_' .. tostring(item.id or item.file or item.name), 1.0)
+    drawStatusPillAt(
+        item,
+        imgui.ImVec2(row_pos.x + math.max(0, row_width - pill_size.x), row_pos.y + (row_height - pill_size.y) / 2),
+        1.0
+    )
+    imgui.SetCursorScreenPos(imgui.ImVec2(row_pos.x, row_pos.y + row_height + imgui.GetStyle().ItemSpacing.y))
     imgui.Spacing()
 
     imgui.Separator()
