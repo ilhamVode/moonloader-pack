@@ -1,6 +1,6 @@
 script_name('CtrlLkmFlood')
 script_author('ModioZodio')
-script_version('1.0')
+script_version('1.1')
 script_properties('work-in-pause')
 
 local ffi = require 'ffi'
@@ -19,6 +19,7 @@ typedef intptr_t LPARAM;
 typedef intptr_t LRESULT;
 typedef void* HHOOK;
 typedef void* HINSTANCE;
+typedef void* HWND;
 
 typedef struct {
     DWORD vkCode;
@@ -35,6 +36,9 @@ LRESULT CallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam);
 int UnhookWindowsHookEx(HHOOK hhk);
 void keybd_event(BYTE bVk, BYTE bScan, DWORD dwFlags, ULONG_PTR dwExtraInfo);
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
+HWND GetForegroundWindow(void);
+DWORD GetWindowThreadProcessId(HWND hWnd, DWORD *lpdwProcessId);
+DWORD GetCurrentProcessId(void);
 DWORD GetTickCount(void);
 ]]
 
@@ -46,6 +50,7 @@ local LLKHF_INJECTED = 0x10
 local VK_CONTROL = 0x11
 local VK_LCONTROL = 0xA2
 local VK_RCONTROL = 0xA3
+local VK_ESCAPE = 0x1B
 
 local KEYEVENTF_KEYUP = 0x0002
 local MOUSEEVENTF_LEFTDOWN = 0x0002
@@ -60,6 +65,7 @@ local minDelayMs = 30
 local nextClickAt = 0
 local hook = nil
 local hookCallback = nil
+local processId = ffi.C.GetCurrentProcessId()
 local legendaryPrizeText = u8:decode('и выиграл легендарный приз')
 
 function main()
@@ -124,6 +130,11 @@ function processFlood()
         return
     end
 
+    if not isGameWindowActive() then
+        stopFlood('выключен: игра не активна')
+        return
+    end
+
     if isUiBlockingInput() then
         releaseCtrl()
         return
@@ -150,6 +161,14 @@ function isUiBlockingInput()
     if sampIsDialogActive and sampIsDialogActive() then return true end
     if sampIsScoreboardOpen and sampIsScoreboardOpen() then return true end
     return false
+end
+
+function isGameWindowActive()
+    local fg = ffi.C.GetForegroundWindow()
+    if fg == nil or fg == ffi.NULL then return false end
+    local pid = ffi.new('DWORD[1]')
+    ffi.C.GetWindowThreadProcessId(fg, pid)
+    return pid[0] == processId
 end
 
 function holdCtrl()
@@ -180,8 +199,12 @@ function installKeyboardHook()
             local flags = tonumber(info.flags)
             local injected = bit.band(flags, LLKHF_INJECTED) ~= 0
 
-            if not injected and (vk == VK_CONTROL or vk == VK_LCONTROL or vk == VK_RCONTROL) then
-                physicalCtrlPressed = true
+            if not injected then
+                if vk == VK_ESCAPE then
+                    stopFlood('выключен: нажата ESC')
+                elseif vk == VK_CONTROL or vk == VK_LCONTROL or vk == VK_RCONTROL then
+                    physicalCtrlPressed = true
+                end
             end
         end
 
