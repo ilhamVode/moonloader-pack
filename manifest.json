@@ -345,7 +345,7 @@
           ]
         }
       ],
-      "status": "unknown"
+      "status": "0"
     },
     {
       "id": "infozz",
@@ -412,7 +412,7 @@
           ]
         }
       ],
-      "status": "unknown"
+      "status": "0"
     },
     {
       "id": "gribi",
@@ -448,7 +448,7 @@
           ]
         }
       ],
-      "status": "unknown"
+      "status": "0"
     },
     {
       "id": "bfishing",
@@ -484,7 +484,7 @@
           ]
         }
       ],
-      "status": "unknown"
+      "status": "0"
     },
     {
       "id": "adoklad",
@@ -520,7 +520,7 @@
           ]
         }
       ],
-      "status": "unknown"
+      "status": "0"
     }
   ]
 }

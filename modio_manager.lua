@@ -932,8 +932,8 @@ end
 function scriptStatusValue(item)
     local status = type(item) == 'table' and item.status or nil
     local value = type(status) == 'table' and tostring(status.official or ''):lower() or tostring(status or ''):lower()
-    if value == 'actual' or value == 'ok' or value == 'active' then return 'actual' end
-    if value == 'outdated' or value == 'broken' or value == 'inactive' then return 'outdated' end
+    if value == 'actual' or value == 'ok' or value == 'active' or value == '0' then return 'actual' end
+    if value == 'outdated' or value == 'broken' or value == 'inactive' or value == '1' then return 'outdated' end
     return 'unknown'
 end
 
