@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.22'
+local MANAGER_VERSION = '1.7.23'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -82,6 +82,14 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
+                date = '2026-06-15',
+                changes = {
+                    'Кнопка гКВудалить запрещенныегК не отображается когда нет запрещенных скриптов',
+                    'При удалении когда запрещенных скриптов нет: вывод сообщения гУ вас нет запрещенных скриптовг'
+                }
+            },
+            {
+                version = '1.7.22',
                 date = '2026-06-15',
                 changes = {
                     'Исправлено удаление запрещенных скриптов: теперь они корректно выгружаются из памяти',
@@ -298,10 +306,12 @@ function drawHeader()
         show_manager_changelog = not show_manager_changelog
     end
 
-    local danger_size = buttonSize(ui 'Удалить запрещенные', 230)
-    sameLineIfFits(danger_size.x)
-    if dangerButton(ui 'Удалить запрещенные', danger_size) then
-        pending_delete_forbidden = true
+    if hasInstalledForbiddenScripts() then
+        local danger_size = buttonSize(ui 'Удалить запрещенные', 230)
+        sameLineIfFits(danger_size.x)
+        if dangerButton(ui 'Удалить запрещенные', danger_size) then
+            pending_delete_forbidden = true
+        end
     end
 
     if show_manager_changelog then
@@ -859,6 +869,11 @@ end
 
 function deleteForbiddenScripts()
     if busy then return end
+
+    if not hasInstalledForbiddenScripts() then
+        msg('У вас нет запрещенных скриптов.', WARN)
+        return
+    end
 
     local deleted = 0
     local failed = 0
