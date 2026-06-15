@@ -1,6 +1,6 @@
 script_name('InfoZZ')
 script_author('Codex')
-script_version('1.7.3')
+script_version('1.7.4')
 script_description('TXT справочник для SA:MP. Автор: Codex')
 
 require 'lib.moonloader'
@@ -8,6 +8,7 @@ require 'lib.moonloader'
 local ffi = require 'ffi'
 local imgui = require 'mimgui'
 local new = imgui.new
+local dl_status = require('moonloader').download_status
 local ok_encoding, encoding = pcall(require, 'encoding')
 local u8 = nil
 if ok_encoding then
@@ -25,9 +26,8 @@ local CHAT_WARN = 0xFFD166
 local CHAT_ERR = 0xFF6666
 local MAX_FILE_BYTES = 2 * 1024 * 1024
 local READ_CHUNK_BYTES = 16 * 1024
-local PYTHON_EXE = 'C:\\Users\\USER\\PycharmProjects\\PythonProject\\.venv\\Scripts\\pythonw.exe'
-local PYTHON_PROJECT_DIR = 'C:\\Users\\USER\\PycharmProjects\\PythonProject'
-local PYTHON_CONFIG = PYTHON_PROJECT_DIR .. '\\config.json'
+local REMOTE_CONFIG_BASE = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/config/infozz'
+local REMOTE_FILES_INDEX = REMOTE_CONFIG_BASE .. '/_files.txt'
 
 local window = new.bool(false)
 local notice_open = new.bool(true)
@@ -36,9 +36,10 @@ local ai_buffer = new.char[256]()
 local view_mode = 'txt'
 
 local config_dir = getWorkingDirectory() .. '\\config\\infozz'
-local PYTHON_STATUS_FILE = config_dir .. '\\_infozz_update_status.status'
+local REMOTE_STATUS_FILE = config_dir .. '\\_infozz_remote_status.status'
 local IMGUI_INI_FILE = config_dir .. '\\infozz_imgui.ini'
 local TITLES_CONFIG_FILE = config_dir .. '\\infozz_titles.cfg'
+local TMP_DIR = config_dir .. '\\_download'
 local files = {}
 local skipped_files = {}
 local title_overrides = {}
@@ -56,14 +57,14 @@ local loading_progress = 0
 local loading_total = 0
 local startup_notice_pending = true
 local config_dir_ready = false
-local forum_update_running = false
+local remote_update_running = false
 local need_rebuild_matches = true
 local need_scroll_to_match = false
 local startup_notice_until = 0
 local startup_font = nil
-local update_status_text = 'Статус форума: требуется обновление.'
+local update_status_text = 'База TXT: требуется загрузка с GitHub.'
 local update_status_color = nil
-local last_forum_status_raw = ''
+local last_remote_status_raw = ''
 local ai_answer = 'Задай вопрос по загруженным TXT.'
 local ai_results = {}
 local title_editor_open = new.bool(false)
@@ -111,8 +112,8 @@ function main()
         window[0] = not window[0]
     end)
 
-    chat('Author: ' .. AUTHOR, CHAT_INFO)
-    chat('/infozz - open TXT helper. Loading files in background...', CHAT_INFO)
+    chat('Автор: ' .. AUTHOR, CHAT_INFO)
+    chat('/infozz - открыть TXT-справочник. Файлы загружаются в фоне.', CHAT_INFO)
     show_startup_notice()
 
     while true do
@@ -240,9 +241,9 @@ function draw_startup_notice()
     local flags = imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove + imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoSavedSettings + imgui.WindowFlags.NoFocusOnAppearing
     notice_open[0] = true
     if imgui.Begin('InfoZZ startup notice', notice_open, flags) then
-        imgui.TextColored(colors.accent, 'InfoZZ loaded')
-        imgui.Text('Author: ' .. AUTHOR)
-        imgui.TextDisabled('/infozz - TXT helper')
+        imgui.TextColored(colors.accent, 'InfoZZ загружен')
+        imgui.Text('Автор: ' .. AUTHOR)
+        imgui.TextDisabled('/infozz - TXT справочник')
     end
     imgui.End()
 end
@@ -254,9 +255,9 @@ function draw_render_startup_notice()
     local x = sx - 320
     local y = sy - 92
     renderDrawBox(x - 12, y - 10, 300, 72, 0xC8101724)
-    renderFontDrawText(startup_font, 'InfoZZ loaded', x, y, 0xFF66CCFF)
-    renderFontDrawText(startup_font, 'Author: Codex', x, y + 20, 0xFFE8EEF8)
-    renderFontDrawText(startup_font, '/infozz - TXT helper', x, y + 40, 0xFF9AA7B7)
+    renderFontDrawText(startup_font, 'InfoZZ загружен', x, y, 0xFF66CCFF)
+    renderFontDrawText(startup_font, 'Автор: Codex', x, y + 20, 0xFFE8EEF8)
+    renderFontDrawText(startup_font, '/infozz - TXT справочник', x, y + 40, 0xFF9AA7B7)
 end
 
 function draw_header()
@@ -276,7 +277,7 @@ function draw_header()
 
     imgui.BeginGroup()
     imgui.TextColored(update_status_color, update_status_text)
-    imgui.TextDisabled('folder: ' .. config_dir)
+    imgui.TextDisabled('папка: ' .. config_dir)
     imgui.EndGroup()
 
     if region > 620 then
@@ -289,10 +290,10 @@ function draw_header()
         queue_txt_reload(false)
     end
     imgui.SameLine()
-    if forum_update_running then
-        styled_button('Форум...', imgui.ImVec2(178, button_h), colors.panel_hover, colors.panel_hover, colors.panel_hover)
-    elseif styled_button('Обновить с форума', imgui.ImVec2(178, button_h), colors.violet, imgui.ImVec4(0.650, 0.500, 1.000, 1.00), imgui.ImVec4(0.450, 0.280, 0.850, 1.00)) then
-        start_forum_update()
+    if remote_update_running then
+        styled_button('GitHub...', imgui.ImVec2(178, button_h), colors.panel_hover, colors.panel_hover, colors.panel_hover)
+    elseif styled_button('Скачать с GitHub', imgui.ImVec2(178, button_h), colors.violet, imgui.ImVec4(0.650, 0.500, 1.000, 1.00), imgui.ImVec4(0.450, 0.280, 0.850, 1.00)) then
+        start_remote_txt_update()
     end
 
     draw_subtle_line()
@@ -749,115 +750,36 @@ function queue_txt_reload(silent)
     pending_reload_silent = silent
 end
 
-function start_forum_update()
-    if forum_update_running then return end
-
-    ensure_dir(config_dir)
-    forum_update_running = true
-    update_status_text = 'Форум: обновление запущено...'
-    update_status_color = colors.yellow
-    chat('Starting Python forum update...', CHAT_INFO)
-    write_status_file('LAUNCHING')
-
-    lua_thread.create(function()
-        wait(0)
-        local command = string.format(
-            'cmd /c start "" /B "%s" "%s\\main.py" --update-once --config "%s"',
-            PYTHON_EXE,
-            PYTHON_PROJECT_DIR,
-            PYTHON_CONFIG
-        )
-        os.execute(command)
-        watch_forum_update_result()
-    end)
-end
-
-function watch_forum_update_result()
-    local started = os.time()
-    while forum_update_running do
-        wait(1000)
-        local status = read_status_file()
-
-        if status and status ~= last_forum_status_raw then
-            last_forum_status_raw = status
-            refresh_update_status()
-            if status:find('RUNNING|', 1, true) then
-                chat(update_status_text, CHAT_INFO)
-            end
-        end
-
-        if status and status:find('DONE', 1, true) then
-            forum_update_running = false
-            refresh_update_status()
-            chat(update_status_text, update_status_color == colors.success and CHAT_OK or update_status_color == colors.yellow and CHAT_WARN or CHAT_ERR)
-            chat('Reloading TXT...', CHAT_INFO)
-            queue_txt_reload(true)
-            return
-        end
-
-        if status and status:find('ERROR', 1, true) then
-            forum_update_running = false
-            refresh_update_status()
-            chat('Python update failed. Check parser_background.log.', CHAT_ERR)
-            return
-        end
-
-        if (status == 'LAUNCHING' or status == 'RUNNING') and os.time() - started > 8 then
-            forum_update_running = false
-            update_status_text = 'Форум: Python не запустился. Проверь путь к PythonProject.'
-            update_status_color = colors.danger
-            chat(update_status_text, CHAT_ERR)
-            return
-        end
-
-        if os.time() - started > 15 * 60 then
-            forum_update_running = false
-            chat('Python update timeout. Check parser_background.log.', CHAT_WARN)
-            return
-        end
-    end
-end
-
 function refresh_update_status()
     local status = read_status_file()
-    if not status or status == '' then
-        status = read_config_update_status()
-    end
 
     if status == 'LAUNCHING' then
-        update_status_text = 'Форум: обновление запускается...'
+        update_status_text = 'GitHub: загрузка запускается...'
         update_status_color = colors.yellow
         return
     end
 
     if not status or status == '' then
-        update_status_text = 'Статус форума: требуется обновление.'
+        update_status_text = 'База TXT: требуется загрузка с GitHub.'
         update_status_color = colors.danger
         return
     end
 
     if status == 'RUNNING' then
-        update_status_text = 'Статус форума: предыдущее обновление не завершилось.'
-        update_status_color = colors.danger
-        return
-    end
-
-    local running_index, running_total, running_file = status:match('^RUNNING|(%d+)|(%d+)|(.+)')
-    if running_index then
-        update_status_text = string.format('Форум: обновляю %s/%s - %s', running_index, running_total, running_file)
+        update_status_text = 'GitHub: загрузка TXT...'
         update_status_color = colors.yellow
         return
     end
 
     if status:find('ERROR', 1, true) then
-        update_status_text = 'Статус форума: ошибка обновления.'
+        update_status_text = 'GitHub: ошибка загрузки TXT.'
         update_status_color = colors.danger
         return
     end
 
     local tag, stamp, success, total = status:match('^(%w+)|([^|]+)|(%d+)|(%d+)')
     if tag ~= 'DONE' or not stamp then
-        update_status_text = 'Статус форума: требуется обновление.'
+        update_status_text = 'База TXT: требуется загрузка с GitHub.'
         update_status_color = colors.danger
         return
     end
@@ -866,7 +788,7 @@ function refresh_update_status()
     total = tonumber(total) or 0
     local age_seconds = seconds_since_stamp(stamp)
     local age_text = format_age(age_seconds)
-    update_status_text = string.format('Форум: %s, успешно %d/%d, %s', stamp, success, total, age_text)
+    update_status_text = string.format('GitHub: %s, скачано %d/%d, %s', stamp, success, total, age_text)
 
     if total > 0 and success < total then
         update_status_text = update_status_text .. ' - были ошибки'
@@ -881,6 +803,67 @@ function refresh_update_status()
         update_status_text = update_status_text .. ' - требуется обновление'
         update_status_color = colors.danger
     end
+end
+
+function start_remote_txt_update()
+    if remote_update_running then return end
+
+    ensure_dir(config_dir)
+    ensure_plain_dir(TMP_DIR)
+    remote_update_running = true
+    update_status_text = 'GitHub: загружаю список TXT...'
+    update_status_color = colors.yellow
+    last_remote_status_raw = ''
+    write_status_file('RUNNING')
+    chat('Загружаю TXT-базу с GitHub...', CHAT_INFO)
+
+    lua_thread.create(function()
+        wait(0)
+        local ok, err = pcall(download_remote_txt_worker)
+        remote_update_running = false
+        refresh_update_status()
+        if ok then
+            chat(update_status_text, update_status_color == colors.success and CHAT_OK or CHAT_WARN)
+            queue_txt_reload(true)
+        else
+            write_status_file('ERROR|' .. tostring(err))
+            refresh_update_status()
+            chat('Ошибка загрузки GitHub TXT: ' .. tostring(err), CHAT_ERR)
+        end
+    end)
+end
+
+function download_remote_txt_worker()
+    local list_tmp = TMP_DIR .. '\\_files.txt.download'
+    local ok, err = download_file_blocking(cache_bust_url(REMOTE_FILES_INDEX), list_tmp, 20000)
+    if not ok then error(err or 'не удалось скачать список файлов') end
+
+    local names = read_remote_file_list(list_tmp)
+    os.remove(list_tmp)
+    if #names == 0 then error('GitHub список TXT пуст') end
+
+    local success = 0
+    for index, name in ipairs(names) do
+        update_status_text = string.format('GitHub: %d/%d - %s', index, #names, name)
+        local tmp = TMP_DIR .. '\\' .. name .. '.download'
+        local target = config_dir .. '\\' .. name
+        local file_ok, file_err = download_file_blocking(cache_bust_url(REMOTE_CONFIG_BASE .. '/' .. url_encode_path(name)), tmp, 30000)
+        if file_ok then
+            os.remove(target)
+            local moved = os.rename(tmp, target)
+            if moved then
+                success = success + 1
+            else
+                os.remove(tmp)
+            end
+        else
+            os.remove(tmp)
+            table.insert(skipped_files, name .. ': ' .. tostring(file_err))
+        end
+        wait(0)
+    end
+
+    write_status_file(string.format('DONE|%s|%d|%d|GitHub', os.date('%Y-%m-%d %H:%M:%S'), success, #names))
 end
 
 function request_txt_reload(silent)
@@ -904,7 +887,7 @@ function request_txt_reload(silent)
             is_loading = false
             reload_after_loading = false
             last_load_message = 'Ошибка загрузки TXT.'
-            chat('Load error: ' .. tostring(err), CHAT_ERR)
+            chat('Ошибка загрузки TXT: ' .. tostring(err), CHAT_ERR)
         end
     end)
 end
@@ -963,13 +946,13 @@ function load_txt_files_worker(silent)
 
     if startup_notice_pending then
         startup_notice_pending = false
-        chat('Loaded files: ' .. tostring(#files), CHAT_OK)
+        chat('TXT загружены: ' .. tostring(#files), CHAT_OK)
     elseif not silent then
-        chat('Reloaded files: ' .. tostring(#files), CHAT_INFO)
+        chat('TXT перечитаны: ' .. tostring(#files), CHAT_INFO)
     end
 
     if #skipped_files > 0 then
-        chat('Skipped files: ' .. tostring(#skipped_files) .. '. Open /infozz for details.', CHAT_WARN)
+        chat('Пропущено TXT: ' .. tostring(#skipped_files) .. '. Подробности в /infozz.', CHAT_WARN)
     end
 
     if reload_after_loading then
@@ -1104,35 +1087,70 @@ function read_file(path)
 end
 
 function read_status_file()
-    local file = io.open(PYTHON_STATUS_FILE, 'rb')
+    local file = io.open(REMOTE_STATUS_FILE, 'rb')
     if not file then return nil end
     local content = file:read('*a')
     file:close()
     return content
 end
 
-function read_config_update_status()
-    local file = io.open(PYTHON_CONFIG, 'rb')
-    if not file then return nil end
-    local content = file:read('*a')
-    file:close()
-
-    local stamp = content:match('"last_update_at"%s*:%s*"([^"]*)"')
-    if not stamp or stamp == '' then return nil end
-
-    local success = content:match('"last_success_count"%s*:%s*(%d+)') or '0'
-    local total = content:match('"last_total"%s*:%s*(%d+)') or '0'
-    local status = content:match('"last_status"%s*:%s*"([^"]*)"') or ''
-    return string.format('DONE|%s|%s|%s|%s', stamp, success, total, status)
-end
-
 function write_status_file(text)
     ensure_dir(config_dir)
-    local file = io.open(PYTHON_STATUS_FILE, 'wb')
+    local file = io.open(REMOTE_STATUS_FILE, 'wb')
     if not file then return false end
     file:write(text)
     file:close()
     return true
+end
+
+function download_file_blocking(url, target, timeout_ms)
+    local done = false
+    local ok = false
+    local err = nil
+    local started = os.clock()
+
+    downloadUrlToFile(url, target, function(id, status)
+        if status == dl_status.STATUSEX_ENDDOWNLOAD then
+            ok = doesFileExist(target)
+            if not ok then err = 'файл не найден после загрузки' end
+            done = true
+        end
+    end)
+
+    while not done do
+        wait(50)
+        if (os.clock() - started) * 1000 > (timeout_ms or 30000) then
+            return false, 'таймаут загрузки'
+        end
+    end
+
+    return ok, err
+end
+
+function read_remote_file_list(path)
+    local result = {}
+    local file = io.open(path, 'rb')
+    if not file then return result end
+
+    for line in file:lines() do
+        line = trim(line:gsub('\\', '/'))
+        if line ~= '' and not line:find('%.%.', 1, true) and line:lower():match('%.txt$') then
+            table.insert(result, line)
+        end
+    end
+    file:close()
+    return result
+end
+
+function cache_bust_url(url)
+    local sep = url:find('?', 1, true) and '&' or '?'
+    return url .. sep .. 'v=' .. tostring(os.time()) .. tostring(math.floor(os.clock() * 1000000))
+end
+
+function url_encode_path(path)
+    return (path:gsub('([^%w%._%-%/])', function(ch)
+        return string.format('%%%02X', string.byte(ch))
+    end))
 end
 
 function split_lines_for_view(text)
@@ -1163,7 +1181,7 @@ function ensure_dir(path)
 
     if ok_lfs then
         if lfs.attributes(path, 'mode') ~= 'directory' then
-            chat('Config folder was not created: ' .. path, CHAT_ERR)
+            chat('Папка config не создана: ' .. path, CHAT_ERR)
             return false
         end
         config_dir_ready = true
@@ -1171,6 +1189,14 @@ function ensure_dir(path)
     end
 
     config_dir_ready = true
+    return true
+end
+
+function ensure_plain_dir(path)
+    os.execute(string.format('mkdir "%s" >nul 2>nul', path))
+    if ok_lfs then
+        return lfs.attributes(path, 'mode') == 'directory'
+    end
     return true
 end
 
