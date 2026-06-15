@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.14'
+local MANAGER_VERSION = '1.7.16'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -84,8 +84,9 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Локальный manifest_cache.json полностью убран из логики обновлений',
-                    'Менеджер больше не подставляет старый кеш вместо свежего GitHub manifest'
+                    'Warning-иконка запрещенных скриптов стала более гладкой',
+                    'Острые углы заменены на компактный круглый бейдж с восклицательным знаком',
+                    'Переключатели фильтров стали визуально мягче'
                 }
             }
         }
@@ -341,7 +342,7 @@ function drawFilters()
 end
 
 function drawSwitch(id, label, value, active_color)
-    local size = imgui.ImVec2(46, 24)
+    local size = imgui.ImVec2(48, 24)
     local pos = imgui.GetCursorScreenPos()
     local clicked = imgui.InvisibleButton(ui('##switch_' .. id), size)
     if clicked then value = not value end
@@ -352,11 +353,24 @@ function drawSwitch(id, label, value, active_color)
     if hovered and value then bg = imgui.ImVec4(math.min(active_color.x + 0.06, 1), math.min(active_color.y + 0.06, 1), math.min(active_color.z + 0.06, 1), 1.00) end
 
     local draw = imgui.GetWindowDrawList()
-    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), 12, 15)
+    local radius_track = size.y / 2
+    local border = value and imgui.ImVec4(math.min(active_color.x + 0.18, 1), math.min(active_color.y + 0.18, 1), math.min(active_color.z + 0.18, 1), 0.72) or imgui.ImVec4(0.46, 0.52, 0.60, 0.42)
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), radius_track, 15)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), radius_track, 15, 1.0)
+    draw:AddRectFilled(
+        imgui.ImVec2(pos.x + 2, pos.y + 2),
+        imgui.ImVec2(pos.x + size.x - 2, pos.y + size.y * 0.48),
+        colorU32(imgui.ImVec4(1.00, 1.00, 1.00, value and 0.08 or 0.04)),
+        radius_track,
+        15
+    )
 
-    local radius = 9
-    local knob_x = value and (pos.x + size.x - radius - 4) or (pos.x + radius + 4)
-    draw:AddCircleFilled(imgui.ImVec2(knob_x, pos.y + size.y / 2), radius, colorU32(imgui.ImVec4(0.94, 0.96, 0.98, 1.00)), 24)
+    local radius = 9.5
+    local knob_x = value and (pos.x + size.x - radius - 3.5) or (pos.x + radius + 3.5)
+    local knob = imgui.ImVec2(knob_x, pos.y + size.y / 2)
+    draw:AddCircleFilled(imgui.ImVec2(knob.x, knob.y + 1.1), radius, colorU32(imgui.ImVec4(0.00, 0.00, 0.00, 0.22)), 36)
+    draw:AddCircleFilled(knob, radius, colorU32(imgui.ImVec4(0.95, 0.97, 0.99, 1.00)), 40)
+    draw:AddCircle(knob, radius, colorU32(imgui.ImVec4(1.00, 1.00, 1.00, 0.70)), 40, 1.0)
 
     imgui.SameLine()
     imgui.Text(ui(label))
@@ -474,7 +488,7 @@ function drawScriptListItem(index, item, st)
     local after = imgui.GetCursorPos()
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 8))
     if isForbiddenScript(item) then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.28, 0.28, 1.00), ui '!')
+        drawWarningIcon(16)
         imgui.SameLine()
     end
     imgui.Text(ui(item.name or item.id or 'script'))
@@ -553,6 +567,25 @@ function drawStatusPillAt(item, pos, scale)
         colorU32(scriptStatusColor(item)),
         label
     )
+end
+
+function drawWarningIcon(size)
+    size = size or 16
+    local pos = imgui.GetCursorScreenPos()
+    local draw = imgui.GetWindowDrawList()
+    local red = imgui.ImVec4(0.86, 0.18, 0.18, 1.00)
+    local red_soft = imgui.ImVec4(1.00, 0.34, 0.30, 0.92)
+    local red_shadow = imgui.ImVec4(0.50, 0.04, 0.04, 0.28)
+    local white = imgui.ImVec4(1.00, 1.00, 1.00, 0.96)
+
+    local center = imgui.ImVec2(pos.x + size * 0.5, pos.y + size * 0.5)
+    local radius = size * 0.43
+    draw:AddCircleFilled(imgui.ImVec2(center.x, center.y + 1), radius, colorU32(red_shadow), 28)
+    draw:AddCircleFilled(center, radius, colorU32(red), 32)
+    draw:AddCircle(center, radius, colorU32(red_soft), 32, 1.0)
+    draw:AddText(imgui.ImVec2(pos.x + size * 0.40, pos.y + size * 0.10), colorU32(white), '!')
+
+    imgui.Dummy(imgui.ImVec2(size, size))
 end
 
 function drawScriptListItemBg(pos, size, active, hovered, forbidden)
