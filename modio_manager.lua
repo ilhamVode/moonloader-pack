@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.8'
+local MANAGER_VERSION = '1.7.9'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,8 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Статусы актуальности перерисованы как аккуратные бейджи, а не обычный текст',
-                    'Бейдж актуальности перенесен в заголовок карточки скрипта'
+                    'Убран вводящий в заблуждение текст "актуальная версия" из списка скриптов',
+                    'Исправлена разметка бейджа актуальности в карточке скрипта'
                 }
             }
         }
@@ -514,13 +514,14 @@ function drawStatusPill(item, id, scale)
     local bg, border, dot = scriptStatusPalette(item)
 
     imgui.InvisibleButton(ui('##status_pill_' .. tostring(id or label)), size)
+    local after = imgui.GetCursorPos()
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(bg), height / 2, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(border), height / 2, 15, 1.0)
     draw:AddCircleFilled(imgui.ImVec2(pos.x + 11 * scale, pos.y + height / 2), 4 * scale, colorU32(dot), 18)
 
     imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + 21 * scale, pos.y + (height - text_size.y) / 2 - 1))
     imgui.TextColored(scriptStatusColor(item), label)
-    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + width, pos.y))
+    imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
 end
 
 function drawScriptListItemBg(pos, size, active, hovered, forbidden)
@@ -648,10 +649,9 @@ function drawDetails()
     local title = ui(item.name or item.id)
     local filename = ui(item.file or '-')
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), title)
-    sameLineIfFits(textWidth(filename) + 8)
     imgui.TextDisabled(filename)
-    sameLineIfFits(scriptStatusBadgeWidth(item, 30))
     drawStatusPill(item, 'details_' .. tostring(item.id or item.file or item.name), 1.0)
+    imgui.Spacing()
 
     imgui.Separator()
     if isForbiddenScript(item) then
@@ -935,15 +935,15 @@ end
 
 function statusLine(item, st)
     if not st.installed then
-        return 'не установлен | на сайте: ' .. versionText(item.version)
+        return 'версия: ' .. versionText(item.version)
     end
     if st.no_version then
         return 'установлен | версия не указана'
     end
     if st.outdated then
-        return 'обновить: ' .. st.local_version .. ' -> ' .. versionText(item.version)
+        return 'версия: ' .. st.local_version .. ' -> ' .. versionText(item.version)
     end
-    return 'актуальная версия: ' .. st.local_version
+    return 'версия: ' .. st.local_version
 end
 
 function listVersionColor(st)

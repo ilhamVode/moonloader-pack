@@ -7,10 +7,18 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.8",
+    "version": "1.7.9",
     "updated_at": "2026-06-14",
     "url": "https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.7.9",
+        "date": "2026-06-15",
+        "changes": [
+          "в списке скриптов строка версии больше не называется актуальностью",
+          "исправлено наложение бейджа актуальности на заголовок и строки карточки скрипта"
+        ]
+      },
       {
         "version": "1.7.8",
         "date": "2026-06-15",
