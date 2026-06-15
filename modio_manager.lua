@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.13'
+local MANAGER_VERSION = '1.7.14'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -48,7 +48,6 @@ local ERR = 0xFF6666
 local workdir = getWorkingDirectory()
 local config_dir = workdir .. '\\config\\modio_manager'
 local tmp_dir = config_dir .. '\\tmp'
-local cache_manifest_path = config_dir .. '\\manifest_cache.json'
 local seen_scripts_path = config_dir .. '\\seen_scripts.json'
 local imgui_ini_path = config_dir .. '\\imgui.ini'
 
@@ -74,7 +73,7 @@ local manifest = {
     owner = 'ModioZodio',
     homepage = 'https://github.com/ilhamVode/moonloader-pack',
     updated_at = '-',
-    notes = 'Каталог скриптов загружается из GitHub manifest.json. Локальный кеш используется только как fallback, если GitHub временно недоступен.',
+    notes = 'Каталог скриптов загружается только из GitHub manifest.json.',
     manager = {
         file = 'modio_manager.lua',
         version = MANAGER_VERSION,
@@ -85,8 +84,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Скрипты ModioZodio снова имеют главный приоритет в списке',
-                    'Статус актуальности сортирует только внутри своей авторской группы'
+                    'Локальный manifest_cache.json полностью убран из логики обновлений',
+                    'Менеджер больше не подставляет старый кеш вместо свежего GitHub manifest'
                 }
             }
         }
@@ -148,7 +147,7 @@ function main()
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
-    checkRemoteManifest(true, true)
+    checkRemoteManifest(true)
 
     while true do
         checkRemoteManifestIfNeeded()
@@ -279,7 +278,7 @@ function drawHeader()
 
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if imgui.Button(ui 'Проверить обновления', check_size) then
-        checkRemoteManifest(false, false)
+        checkRemoteManifest(false)
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
@@ -1015,16 +1014,15 @@ function checkRemoteManifestIfNeeded()
     if os.time() < next_remote_check_at then return end
     if checking or busy then return end
 
-    checkRemoteManifest(true, true)
+    checkRemoteManifest(true)
 end
 
-function checkRemoteManifest(silent, allow_cache_fallback)
+function checkRemoteManifest(silent)
     if checking or busy then
         if not silent then msg('Проверка уже выполняется.', WARN) end
         return
     end
     silent = silent == true
-    allow_cache_fallback = allow_cache_fallback ~= false
     checking = true
     busy_text = 'Проверяю GitHub manifest...'
     if not silent then
@@ -1040,24 +1038,15 @@ function checkRemoteManifest(silent, allow_cache_fallback)
             local ok, err = loadManifestFromFile(tmp, true)
             os.remove(tmp)
             if ok then
-                saveManifestCache()
                 refreshLocalState()
                 last_check_text = 'Последняя проверка: ' .. os.date('%d.%m.%Y %H:%M:%S')
                 if not silent then
                     msg('Манифест обновлен.', OK)
                 end
             else
-                local cached = allow_cache_fallback and loadCachedManifest()
-                if cached then
-                    refreshLocalState()
-                    last_check_text = 'GitHub manifest недоступен, показан локальный fallback-кеш.'
-                    if not silent then
-                        msg('GitHub manifest недоступен, открыт локальный кеш.', WARN)
-                    end
-                elseif not silent then
-                    last_error = err or 'Не удалось прочитать manifest.json'
-                    msg(last_error, ERR)
-                end
+                last_error = err or 'Не удалось прочитать свежий GitHub manifest'
+                last_check_text = 'GitHub manifest не обновлен.'
+                if not silent then msg(last_error, ERR) end
             end
         end
     end)
@@ -1331,17 +1320,6 @@ function replaceFile(tmp, target)
     return true
 end
 
-function loadCachedManifest()
-    if doesFileExist(cache_manifest_path) then
-        local loaded = loadManifestFromFile(cache_manifest_path, false) == true
-        if loaded then
-            last_check_text = 'Показан локальный fallback-кеш.'
-        end
-        return loaded
-    end
-    return false
-end
-
 function loadSeenScripts()
     seen_scripts = {}
     if not doesFileExist(seen_scripts_path) then return end
@@ -1383,13 +1361,6 @@ function loadManifestFromFile(path, strict)
     selected = math.min(selected, #(manifest.scripts or {}))
     if selected < 1 then selected = 1 end
     return true
-end
-
-function saveManifestCache()
-    local f = io.open(cache_manifest_path, 'w')
-    if not f then return end
-    f:write(encodeJson(manifest))
-    f:close()
 end
 
 function saveSeenScripts()
