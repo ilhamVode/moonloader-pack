@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.12'
+local MANAGER_VERSION = '1.7.13'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -85,8 +85,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Ручная проверка обновлений всегда запрашивает свежий GitHub manifest без fallback-кеша',
-                    'Статус 1 в manifest.json теперь считается неизвестным, статус 0 - актуальным'
+                    'Скрипты ModioZodio снова имеют главный приоритет в списке',
+                    'Статус актуальности сортирует только внутри своей авторской группы'
                 }
             }
         }
@@ -442,6 +442,10 @@ function sortedVisibleScripts()
     end
 
     table.sort(result, function(a, b)
+        local am = isModioScript(a.item)
+        local bm = isModioScript(b.item)
+        if am ~= bm then return am end
+
         local ap = scriptStatusPriority(a.item)
         local bp = scriptStatusPriority(b.item)
         if ap ~= bp then return ap < bp end
