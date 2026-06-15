@@ -521,24 +521,25 @@ function drawScriptListItem(index, item, st)
 end
 
 function drawCompactStatusBadge(item)
-    local label = ui(scriptStatusText(item))
+    local st = runtime[item.id] or inspectLocal(item)
+    local label = ui(scriptStatusText(item, st))
     if label == '' then return end
 
-    local width = scriptStatusBadgeWidth(item, 16)
+    local width = scriptStatusBadgeWidth(item, 16, st)
     local avail = imgui.GetContentRegionAvail().x
     if avail <= width + 12 then return end
 
     imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
-    drawStatusPill(item, 'list_' .. tostring(item.id or item.file or item.name), 0.82)
+    drawStatusPill(item, 'list_' .. tostring(item.id or item.file or item.name), 0.82, st)
 end
 
-function scriptStatusBadgeWidth(item, extra)
-    return statusPillSize(item, 0.82).x + (extra or 0)
+function scriptStatusBadgeWidth(item, extra, st)
+    return statusPillSize(item, 0.82, st).x + (extra or 0)
 end
 
-function statusPillMetrics(item, scale)
+function statusPillMetrics(item, scale, st)
     scale = scale or 1.0
-    local label = ui(scriptStatusText(item))
+    local label = ui(scriptStatusText(item, st))
     local text_size = imgui.CalcTextSize(label)
     local text_x = 20 * scale
     local right_pad = 11 * scale
@@ -546,19 +547,20 @@ function statusPillMetrics(item, scale)
     return label, text_size, size, 10 * scale, text_x, 3.8 * scale
 end
 
-function statusPillSize(item, scale)
-    local _, _, size = statusPillMetrics(item, scale)
+function statusPillSize(item, scale, st)
+    local _, _, size = statusPillMetrics(item, scale, st)
     return size
 end
 
-function drawStatusPill(item, id, scale)
+function drawStatusPill(item, id, scale, st)
     scale = scale or 1.0
-    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale)
+    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale, st)
+    if label == '' then return end
     local width = size.x
     local height = size.y
     local pos = imgui.GetCursorScreenPos()
     local draw = imgui.GetWindowDrawList()
-    local bg, border, dot = scriptStatusPalette(item)
+    local bg, border, dot = scriptStatusPalette(item, st)
 
     imgui.InvisibleButton(ui('##status_pill_' .. tostring(id or label)), size)
     local after = imgui.GetCursorPos()
@@ -567,24 +569,24 @@ function drawStatusPill(item, id, scale)
     draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + height / 2), dot_radius, colorU32(dot), 18)
 
     imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + text_x, pos.y + (height - text_size.y) / 2 - 1))
-    imgui.TextColored(scriptStatusColor(item), label)
+    imgui.TextColored(scriptStatusColor(item, st), label)
     imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
 end
 
-function drawStatusPillAt(item, pos, scale)
+function drawStatusPillAt(item, st, pos, scale)
     scale = scale or 1.0
-    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale)
+    local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale, st)
     if label == '' then return end
 
     local draw = imgui.GetWindowDrawList()
-    local bg, border, dot = scriptStatusPalette(item)
+    local bg, border, dot = scriptStatusPalette(item, st)
 
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), size.y / 2, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), size.y / 2, 15, 1.0)
     draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + size.y / 2), dot_radius, colorU32(dot), 18)
     draw:AddText(
         imgui.ImVec2(pos.x + text_x, pos.y + (size.y - text_size.y) / 2 - 1),
-        colorU32(scriptStatusColor(item)),
+        colorU32(scriptStatusColor(item, st)),
         label
     )
 end
@@ -747,6 +749,7 @@ function drawDetails()
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), title)
     drawStatusPillAt(
         item,
+        st,
         imgui.ImVec2(row_pos.x + math.max(0, row_width - pill_size.x), row_pos.y + (row_height - pill_size.y) / 2),
         1.0
     )
@@ -1011,22 +1014,26 @@ function scriptStatusValue(item)
     return 'unknown'
 end
 
-function scriptStatusText(item)
+function scriptStatusText(item, st)
+    if st and st.outdated then return 'update' end
     local value = scriptStatusValue(item)
-    if value == 'actual' then return '' end
     if value == 'outdated' then return 'update' end
     return ''
 end
 
-function scriptStatusColor(item)
+function scriptStatusColor(item, st)
+    if st and st.outdated then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     local value = scriptStatusValue(item)
     if value == 'actual' then return imgui.ImVec4(0.63, 0.90, 0.68, 1.00) end
     if value == 'outdated' then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     return imgui.ImVec4(0.94, 0.80, 0.52, 1.00)
 end
 
-function scriptStatusPalette(item)
+function scriptStatusPalette(item, st)
     local value = scriptStatusValue(item)
+    if st and st.outdated then
+        return imgui.ImVec4(0.18, 0.18, 0.18, 0.88), imgui.ImVec4(0.45, 0.45, 0.45, 0.72), imgui.ImVec4(0.80, 0.80, 0.80, 1.00)
+    end
     if value == 'actual' then
         return imgui.ImVec4(0.12, 0.24, 0.17, 0.88), imgui.ImVec4(0.35, 0.68, 0.43, 0.72), imgui.ImVec4(0.50, 0.88, 0.58, 1.00)
     end
