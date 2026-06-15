@@ -385,6 +385,7 @@
       "version": "1.1",
       "updated_at": "2026-06-15",
       "author": "ModioZodio",
+      "hidden": false,
       "description": "Helper для автоматического Ctrl + ЛКМ. Подходит для действий, где нужно удерживать Ctrl и часто нажимать левую кнопку мыши.",
       "commands": [
         "/ctrllkm - включить или выключить Ctrl + ЛКМ helper"

@@ -692,6 +692,10 @@ function scriptId(item)
     return tostring(type(item) == 'table' and (item.id or item.file or item.name) or ''):lower()
 end
 
+function isScriptHidden(item)
+    return type(item) == 'table' and item.hidden == true
+end
+
 function isForbiddenScript(item)
     return type(item) == 'table' and item.forbidden == true
 end
@@ -704,6 +708,9 @@ function forbiddenWarning(item)
 end
 
 function isScriptVisible(item)
+    if isScriptHidden(item) then
+        return false
+    end
     if filter_modio_only and not isModioScript(item) then
         return false
     end
