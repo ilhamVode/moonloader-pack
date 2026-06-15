@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.23'
+local MANAGER_VERSION = '1.7.24'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -521,6 +521,9 @@ function drawScriptListItem(index, item, st)
 end
 
 function drawCompactStatusBadge(item)
+    local label = ui(scriptStatusText(item))
+    if label == '' then return end
+
     local width = scriptStatusBadgeWidth(item, 16)
     local avail = imgui.GetContentRegionAvail().x
     if avail <= width + 12 then return end
@@ -571,6 +574,8 @@ end
 function drawStatusPillAt(item, pos, scale)
     scale = scale or 1.0
     local label, text_size, size, dot_x, text_x, dot_radius = statusPillMetrics(item, scale)
+    if label == '' then return end
+
     local draw = imgui.GetWindowDrawList()
     local bg, border, dot = scriptStatusPalette(item)
 
@@ -1008,15 +1013,15 @@ end
 
 function scriptStatusText(item)
     local value = scriptStatusValue(item)
-    if value == 'actual' then return 'актуально' end
-    if value == 'outdated' then return 'неактуально' end
-    return 'неизвестно'
+    if value == 'actual' then return '' end
+    if value == 'outdated' then return 'update' end
+    return ''
 end
 
 function scriptStatusColor(item)
     local value = scriptStatusValue(item)
     if value == 'actual' then return imgui.ImVec4(0.63, 0.90, 0.68, 1.00) end
-    if value == 'outdated' then return imgui.ImVec4(0.96, 0.58, 0.58, 1.00) end
+    if value == 'outdated' then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     return imgui.ImVec4(0.94, 0.80, 0.52, 1.00)
 end
 
@@ -1026,7 +1031,7 @@ function scriptStatusPalette(item)
         return imgui.ImVec4(0.12, 0.24, 0.17, 0.88), imgui.ImVec4(0.35, 0.68, 0.43, 0.72), imgui.ImVec4(0.50, 0.88, 0.58, 1.00)
     end
     if value == 'outdated' then
-        return imgui.ImVec4(0.28, 0.13, 0.13, 0.88), imgui.ImVec4(0.76, 0.34, 0.34, 0.72), imgui.ImVec4(0.96, 0.48, 0.48, 1.00)
+        return imgui.ImVec4(0.18, 0.18, 0.18, 0.88), imgui.ImVec4(0.45, 0.45, 0.45, 0.72), imgui.ImVec4(0.80, 0.80, 0.80, 1.00)
     end
     return imgui.ImVec4(0.27, 0.22, 0.12, 0.88), imgui.ImVec4(0.74, 0.58, 0.28, 0.70), imgui.ImVec4(0.94, 0.74, 0.36, 1.00)
 end
