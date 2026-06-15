@@ -1,7 +1,7 @@
 script_name('InfoZZ')
 script_author('Codex')
-script_version('1.7.4')
-script_description('TXT справочник для SA:MP. Автор: Codex')
+script_version('1.7.4.1')
+script_description('TXT справочник для SA:MP. Пока заточен под сервер [01] Phoenix. Автор: Codex')
 
 require 'lib.moonloader'
 
@@ -20,6 +20,7 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 
 local PREFIX = '[InfoZZ]'
 local AUTHOR = 'Codex'
+local TARGET_SERVER = '[01] Phoenix'
 local CHAT_INFO = 0x66CCFF
 local CHAT_OK = 0x77DD77
 local CHAT_WARN = 0xFFD166
@@ -268,6 +269,8 @@ function draw_header()
     imgui.TextColored(colors.success, tostring(#files) .. ' TXT')
     imgui.SameLine()
     imgui.TextDisabled('loaded: ' .. loaded_at_text)
+    imgui.SameLine()
+    imgui.TextColored(colors.yellow, 'сервер: ' .. TARGET_SERVER)
 
     local button_h = 34
     local region = imgui.GetContentRegionAvail().x
