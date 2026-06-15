@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.17'
+local MANAGER_VERSION = '1.7.18'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -36,7 +36,7 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 local new = imgui.new
 local window = new.bool(false)
 
-local MANIFEST_URL = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/manifest.json'
+local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local PREFIX = '[ModioManager]'
@@ -78,14 +78,14 @@ local manifest = {
         file = 'modio_manager.lua',
         version = MANAGER_VERSION,
         updated_at = '-',
-        url = 'https://raw.githubusercontent.com/ilhamVode/moonloader-pack/main/modio_manager.lua',
+        url = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua',
         changelog = {
             {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Warning-иконка снова стала треугольной, но без кривого текстового символа',
-                    'Переключатели фильтров перерисованы как более гладкий iOS-style pill'
+                    'GitHub manifest переведен на raw/refs/heads/main, чтобы меньше зависеть от старого raw.githubusercontent кеша',
+                    'Ссылки обновлений в manifest.json переведены на тот же формат'
                 }
             }
         }
