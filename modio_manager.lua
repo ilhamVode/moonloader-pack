@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.28'
+local MANAGER_VERSION = '1.7.29'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -82,10 +82,18 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
+                date = '2026-06-16',
+                changes = {
+                    'Проведена ревизия manifest.json, README.md и связей менеджера со скриптами',
+                    'Исправлены битые строки во встроенной истории менеджера'
+                }
+            },
+            {
+                version = '1.7.28',
                 date = '2026-06-15',
                 changes = {
-                    'Кнопка гКВудалить запрещенныегК не отображается когда нет запрещенных скриптов',
-                    'При удалении когда запрещенных скриптов нет: вывод сообщения гУ вас нет запрещенных скриптовг'
+                    'Добавлен флаг hidden:false для всех скриптов',
+                    'Зафиксирована версия менеджера 1.7.28 в manifest и manager.lua'
                 }
             },
             {

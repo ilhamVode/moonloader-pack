@@ -3,14 +3,23 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-14 22:00 MSK",
+  "updated_at": "2026-06-16 00:00 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.28",
-    "updated_at": "2026-06-15",
+    "version": "1.7.29",
+    "updated_at": "2026-06-16",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.7.29",
+        "date": "2026-06-16",
+        "changes": [
+          "проведена ревизия manifest.json, README.md и связей менеджера со скриптами",
+          "исправлены битые строки во встроенной истории менеджера",
+          "README.md приведен к текущему составу скриптов и актуальному URL manifest"
+        ]
+      },
       {
         "version": "1.7.28",
         "date": "2026-06-15",
