@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.7'
+local MANAGER_VERSION = '1.7.8'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -83,10 +83,10 @@ local manifest = {
         changelog = {
             {
                 version = MANAGER_VERSION,
-                date = '2026-06-14',
+                date = '2026-06-15',
                 changes = {
-                    'Добавлены официальные статусы скриптов из manifest.json: актуально, неизвестно, неактуально',
-                    'Список скриптов сортируется по статусу и показывает компактный статусный бейдж'
+                    'Статусы актуальности перерисованы как аккуратные бейджи, а не обычный текст',
+                    'Бейдж актуальности перенесен в заголовок карточки скрипта'
                 }
             }
         }
@@ -488,14 +488,39 @@ function drawScriptListItem(index, item, st)
 end
 
 function drawCompactStatusBadge(item)
+    local width = scriptStatusBadgeWidth(item, 16)
+    local avail = imgui.GetContentRegionAvail().x
+    if avail <= width + 12 then return end
+
+    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
+    drawStatusPill(item, 'list_' .. tostring(item.id or item.file or item.name), 0.82)
+end
+
+function scriptStatusBadgeWidth(item, extra)
     local label = scriptStatusText(item)
     local text_size = imgui.CalcTextSize(ui(label))
-    local width = text_size.x + 18
-    local avail = imgui.GetContentRegionAvail().x
-    if avail > width + 12 then
-        imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
-        imgui.TextColored(scriptStatusColor(item), ui(label))
-    end
+    return text_size.x + (extra or 28) + 18
+end
+
+function drawStatusPill(item, id, scale)
+    scale = scale or 1.0
+    local label = ui(scriptStatusText(item))
+    local text_size = imgui.CalcTextSize(label)
+    local height = math.max(22, 24 * scale)
+    local width = text_size.x + 28 * scale + 18
+    local pos = imgui.GetCursorScreenPos()
+    local size = imgui.ImVec2(width, height)
+    local draw = imgui.GetWindowDrawList()
+    local bg, border, dot = scriptStatusPalette(item)
+
+    imgui.InvisibleButton(ui('##status_pill_' .. tostring(id or label)), size)
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(bg), height / 2, 15)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + width, pos.y + height), colorU32(border), height / 2, 15, 1.0)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + 11 * scale, pos.y + height / 2), 4 * scale, colorU32(dot), 18)
+
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + 21 * scale, pos.y + (height - text_size.y) / 2 - 1))
+    imgui.TextColored(scriptStatusColor(item), label)
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + width, pos.y))
 end
 
 function drawScriptListItemBg(pos, size, active, hovered, forbidden)
@@ -625,6 +650,8 @@ function drawDetails()
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), title)
     sameLineIfFits(textWidth(filename) + 8)
     imgui.TextDisabled(filename)
+    sameLineIfFits(scriptStatusBadgeWidth(item, 30))
+    drawStatusPill(item, 'details_' .. tostring(item.id or item.file or item.name), 1.0)
 
     imgui.Separator()
     if isForbiddenScript(item) then
@@ -632,7 +659,6 @@ function drawDetails()
         imgui.Spacing()
     end
     infoRow('Автор', item.author or '-')
-    statusInfoRow(item)
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
     infoRow('Версия на сайте', versionText(item.version))
     infoRow('Последнее обновление на сайте', item.updated_at or '-')
@@ -884,9 +910,20 @@ end
 
 function scriptStatusColor(item)
     local value = scriptStatusValue(item)
-    if value == 'actual' then return imgui.ImVec4(0.48, 0.82, 0.58, 1.00) end
-    if value == 'outdated' then return imgui.ImVec4(0.92, 0.42, 0.42, 1.00) end
-    return imgui.ImVec4(0.92, 0.76, 0.42, 1.00)
+    if value == 'actual' then return imgui.ImVec4(0.63, 0.90, 0.68, 1.00) end
+    if value == 'outdated' then return imgui.ImVec4(0.96, 0.58, 0.58, 1.00) end
+    return imgui.ImVec4(0.94, 0.80, 0.52, 1.00)
+end
+
+function scriptStatusPalette(item)
+    local value = scriptStatusValue(item)
+    if value == 'actual' then
+        return imgui.ImVec4(0.12, 0.24, 0.17, 0.88), imgui.ImVec4(0.35, 0.68, 0.43, 0.72), imgui.ImVec4(0.50, 0.88, 0.58, 1.00)
+    end
+    if value == 'outdated' then
+        return imgui.ImVec4(0.28, 0.13, 0.13, 0.88), imgui.ImVec4(0.76, 0.34, 0.34, 0.72), imgui.ImVec4(0.96, 0.48, 0.48, 1.00)
+    end
+    return imgui.ImVec4(0.27, 0.22, 0.12, 0.88), imgui.ImVec4(0.74, 0.58, 0.28, 0.70), imgui.ImVec4(0.94, 0.74, 0.36, 1.00)
 end
 
 function scriptStatusPriority(item)
@@ -894,12 +931,6 @@ function scriptStatusPriority(item)
     if value == 'actual' then return 1 end
     if value == 'unknown' then return 2 end
     return 3
-end
-
-function statusInfoRow(item)
-    imgui.TextDisabled(ui 'Актуальность')
-    imgui.SameLine(160)
-    imgui.TextColored(scriptStatusColor(item), ui(scriptStatusText(item)))
 end
 
 function statusLine(item, st)
