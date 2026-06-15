@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.20'
+local MANAGER_VERSION = '1.7.21'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -36,7 +36,7 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 local new = imgui.new
 local window = new.bool(false)
 
-local MANIFEST_URL = 'https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/manifest.json'
+local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local PREFIX = '[ModioManager]'
@@ -78,14 +78,14 @@ local manifest = {
         file = 'modio_manager.lua',
         version = MANAGER_VERSION,
         updated_at = '-',
-        url = 'https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/modio_manager.lua',
+        url = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua',
         changelog = {
             {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'Manifest и ссылки обновлений переведены на jsDelivr для более свежей отдачи main-ветки',
-                    'Исправлена отрисовка iOS-переключателей: убраны внутренние дуги на стыках'
+                    'Manifest и ссылки обновлений переведены на GitHub raw/HEAD',
+                    'raw/HEAD стабильнее отдает свежие manifest и modio_manager.lua в текущей схеме'
                 }
             }
         }
