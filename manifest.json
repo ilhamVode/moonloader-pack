@@ -366,8 +366,8 @@
       "id": "ctrllkm",
       "name": "CtrlLKM",
       "file": "ctrllkm.lua",
-      "version": "1.0",
-      "updated_at": "2026-06-13",
+      "version": "1.1",
+      "updated_at": "2026-06-15",
       "author": "ModioZodio",
       "description": "Helper для автоматического Ctrl + ЛКМ. Подходит для действий, где нужно удерживать Ctrl и часто нажимать левую кнопку мыши.",
       "commands": [
@@ -384,6 +384,15 @@
       "notes": "Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.",
       "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/ctrllkm.lua",
       "changelog": [
+        {
+          "version": "1.1",
+          "date": "2026-06-15",
+          "changes": [
+            "остановка флуда при неактивном окне игры",
+            "остановка флуда по нажатию ESC",
+            "усилена защита от застревания Ctrl при отключении"
+          ]
+        },
         {
           "version": "1.0",
           "date": "2026-06-13",
