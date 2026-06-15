@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.18'
+local MANAGER_VERSION = '1.7.20'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -36,7 +36,7 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 local new = imgui.new
 local window = new.bool(false)
 
-local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/manifest.json'
+local MANIFEST_URL = 'https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local PREFIX = '[ModioManager]'
@@ -78,14 +78,14 @@ local manifest = {
         file = 'modio_manager.lua',
         version = MANAGER_VERSION,
         updated_at = '-',
-        url = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua',
+        url = 'https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/modio_manager.lua',
         changelog = {
             {
                 version = MANAGER_VERSION,
                 date = '2026-06-15',
                 changes = {
-                    'GitHub manifest переведен на raw/refs/heads/main, чтобы меньше зависеть от старого raw.githubusercontent кеша',
-                    'Ссылки обновлений в manifest.json переведены на тот же формат'
+                    'Manifest и ссылки обновлений переведены на jsDelivr для более свежей отдачи main-ветки',
+                    'Исправлена отрисовка iOS-переключателей: убраны внутренние дуги на стыках'
                 }
             }
         }
@@ -359,10 +359,7 @@ function drawSwitch(id, label, value, active_color)
     draw:AddRectFilled(imgui.ImVec2(left.x, pos.y), imgui.ImVec2(right.x, pos.y + size.y), colorU32(bg), 0, 0)
     draw:AddCircleFilled(left, radius_track, colorU32(bg), 48)
     draw:AddCircleFilled(right, radius_track, colorU32(bg), 48)
-    draw:AddLine(imgui.ImVec2(left.x, pos.y), imgui.ImVec2(right.x, pos.y), colorU32(border), 1.0)
-    draw:AddLine(imgui.ImVec2(left.x, pos.y + size.y), imgui.ImVec2(right.x, pos.y + size.y), colorU32(border), 1.0)
-    draw:AddCircle(left, radius_track, colorU32(border), 48, 1.0)
-    draw:AddCircle(right, radius_track, colorU32(border), 48, 1.0)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), radius_track, 15, 1.0)
     draw:AddRectFilled(imgui.ImVec2(left.x, pos.y + 2), imgui.ImVec2(right.x, pos.y + size.y * 0.44), colorU32(imgui.ImVec4(1.00, 1.00, 1.00, value and 0.07 or 0.035)), 0, 0)
 
     local radius = 9.5

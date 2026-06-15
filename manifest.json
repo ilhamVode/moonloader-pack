@@ -7,10 +7,26 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.18",
+    "version": "1.7.20",
     "updated_at": "2026-06-15",
-    "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
+    "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.7.20",
+        "date": "2026-06-15",
+        "changes": [
+          "manifest и ссылки обновлений переведены на jsDelivr для более свежей отдачи main-ветки",
+          "исправлена отрисовка iOS-переключателей: убраны внутренние дуги на стыках"
+        ]
+      },
+      {
+        "version": "1.7.19",
+        "date": "2026-06-15",
+        "changes": [
+          "manifest и ссылки обновлений переведены на jsDelivr для более свежей отдачи main-ветки",
+          "убран неудачный raw/refs/heads/main как основной источник manifest"
+        ]
+      },
       {
         "version": "1.7.18",
         "date": "2026-06-15",
@@ -306,7 +322,7 @@
         "защита от ложных сообщений игроков: реакция только на системные подсказки и ошибки"
       ],
       "notes": "Фоновый CEF-перехват убран специально: так скрипт не вмешивается в другие CEF-окна игры, например /time.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/lavaka.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/lavaka.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -342,7 +358,7 @@
         "без повторяющихся подсказок в чат во время работы"
       ],
       "notes": "Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/ctrllkm.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/ctrllkm.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -380,7 +396,7 @@
         "автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже"
       ],
       "notes": "Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/FPSFix.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/FPSFix.lua",
       "changelog": [
         {
           "version": "1.1",
@@ -423,7 +439,7 @@
         "обновление списка файлов без перезапуска игры"
       ],
       "notes": "Подходит как личная база знаний прямо в игре: команды, шпаргалки, заметки, инструкции и справочники.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/infozz.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/infozz.lua",
       "changelog": [
         {
           "version": "1.7.3",
@@ -457,7 +473,7 @@
         "логирует полученные призы в текстовый файл за текущую дату"
       ],
       "notes": "Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/AutoOpenRoulettes.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/AutoOpenRoulettes.lua",
       "changelog": [
         {
           "version": "2.4",
@@ -492,7 +508,7 @@
         "переключение одной командой без дополнительного окна"
       ],
       "notes": "В оригинальном файле нет script_version, поэтому версия отображается как \"без версии\". Автор указан из сообщения загрузки скрипта: vlaDICK2288.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/Gribi.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/Gribi.lua",
       "changelog": [
         {
           "version": "без версии",
@@ -529,7 +545,7 @@
         "сохранение настроек в moonloader/config/bFishing.json"
       ],
       "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/bFishing.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/bFishing.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -566,7 +582,7 @@
         "сохранение настроек в doklad_settings.ini"
       ],
       "notes": "Требования: MoonLoader, SAMP.Lua, mimgui, inicfg, encoding. В исходном описании автор не указан; в pack добавлены script_name и script_version для менеджера.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/doklad.lua",
+      "url": "https://cdn.jsdelivr.net/gh/ilhamVode/moonloader-pack@main/scripts/doklad.lua",
       "changelog": [
         {
           "version": "1.0",
