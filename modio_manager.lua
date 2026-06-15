@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.26'
+local MANAGER_VERSION = '1.7.27'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -1017,9 +1017,9 @@ end
 function scriptStatusText(item, st)
     if st and st.outdated then return 'update' end
     local value = scriptStatusValue(item)
-    if value == 'actual' then return 'actual' end
+    if value == 'actual' then return 'актуально' end
     if value == 'outdated' then return 'update' end
-    if value == 'unknown' then return 'unknown' end
+    if value == 'unknown' then return 'неизвестно' end
     return ''
 end
 
