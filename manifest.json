@@ -7,10 +7,18 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.27",
+    "version": "1.7.28",
     "updated_at": "2026-06-15",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.7.28",
+        "date": "2026-06-15",
+        "changes": [
+          "Добавлен флаг hidden:false для всех скриптов",
+          "Зафиксирована версия менеджера 1.7.28 в manifest и manager.lua"
+        ]
+      },
       {
         "version": "1.7.27",
         "date": "2026-06-15",
@@ -376,7 +384,8 @@
           ]
         }
       ],
-      "status": "actual"
+      "status": "actual",
+      "hidden": false
     },
     {
       "id": "ctrllkm",
@@ -468,7 +477,8 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "0",
+      "hidden": false
     },
     {
       "id": "infozz",
@@ -501,7 +511,8 @@
           ]
         }
       ],
-      "status": "actual"
+      "status": "actual",
+      "hidden": false
     },
     {
       "id": "autoopenroulettes",
@@ -535,7 +546,8 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "0",
+      "hidden": false
     },
     {
       "id": "gribi",
@@ -571,7 +583,8 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "0",
+      "hidden": false
     },
     {
       "id": "bfishing",
@@ -607,7 +620,8 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "0",
+      "hidden": false
     },
     {
       "id": "adoklad",
@@ -643,7 +657,8 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "0",
+      "hidden": false
     }
   ]
 }
