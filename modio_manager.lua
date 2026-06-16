@@ -426,15 +426,17 @@ function drawHeader()
     if last_error ~= '' then
         imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
+    -- buttons area in header: fixed-height child so its presence won't push content down
+    imgui.BeginChild('header_buttons', imgui.ImVec2(0, 48), false)
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if managerButton(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
-    -- show_forbidden switch placed below the "Проверить обновления" button
-    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
+
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
+
     local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
     local manager_history_size = buttonSize(manager_history_label, 210)
     sameLineIfFits(manager_history_size.x)
@@ -449,6 +451,7 @@ function drawHeader()
             pending_delete_forbidden = true
         end
     end
+    imgui.EndChild()
 
     if show_manager_changelog then
         drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
@@ -623,9 +626,11 @@ end
 
 function drawScriptList()
     -- Header is outside the scrolling child, so the word 'Скрипты' never leaves the top.
+    -- Filters row placed above the list so it stays visually attached to the list
     imgui.Spacing()
     filter_modio_only = drawSwitch('filter_modio_only', 'Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
     imgui.SameLine()
+    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
     imgui.Spacing()
     imgui.TextDisabled(ui 'Скрипты')
     imgui.Separator()
