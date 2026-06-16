@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3'
+local MANAGER_VERSION = '1.8.4'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -129,11 +129,11 @@ local manifest = {
     scripts = {},
     news = {
         {
-            title = 'Modio Manager 1.8.3',
+            title = 'Modio Manager 1.8.4',
             date = '2026-06-16',
             parts = {
-                { text = 'Перемещены переключатели фильтров ближе к списку и описанию выбранного скрипта. ', color = '#9CCBFF' },
-                { text = 'Увеличено место блока новостей и скорректированы отступы интерфейса.', color = '#FFD166' }
+                { text = "Вернул переключатель 'Показывать запрещенные' под кнопкой 'Проверить обновления'. ", color = '#9CCBFF' },
+                { text = 'Мелкие правки интерфейса: размер блока новостей и ширина списка.', color = '#FFD166' }
             }
         }
     }
@@ -430,6 +430,8 @@ function drawHeader()
     if managerButton(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
+    -- show_forbidden switch placed below the "Проверить обновления" button
+    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
@@ -1026,8 +1028,6 @@ function drawDetailsBody(item, st)
         imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(forbiddenWarning(item)))
         imgui.Spacing()
     end
-    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
-    imgui.Spacing()
     infoRow('Автор', item.author or '-')
     infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
     infoRow('Версия на сайте', versionText(item.version))
