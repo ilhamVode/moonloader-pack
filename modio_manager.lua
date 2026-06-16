@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.0'
+local MANAGER_VERSION = '1.8.1'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -12,6 +12,7 @@ local encoding = require 'encoding'
 encoding.default = 'CP1251'
 local u8 = encoding.UTF8
 local keys = require 'vkeys'
+local ok_fa, fa = pcall(require, 'fAwesome6')
 
 -- Helpers for mimgui labels and button sizing.
 -- Without these aliases the script crashes on ui(...) and buttonSize(...).
@@ -21,12 +22,12 @@ end
 
 function buttonSize(label, min_width, height)
     min_width = min_width or 120
-    height = height or 34
+    height = height or 36
 
     local width = min_width
     local ok, size = pcall(imgui.CalcTextSize, label)
     if ok and size and size.x then
-        width = math.max(min_width, size.x + 24)
+        width = math.max(min_width, size.x + 28)
     end
 
     return imgui.ImVec2(width, height)
@@ -89,10 +90,10 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Список скриптов получил плавное наведение, мягкий glow и небольшой живой сдвиг строки',
-                    'Плашка NEW приведена к размеру и стилю статусных pill-плашек',
-                    'Когда скрипт новый, статусная плашка в списке скрывается, чтобы интерфейс не шумел',
-                    'ESC и крестик закрывают окно менеджера плавным fade-out'
+                    'Кнопки менеджера рисуются вручную с нормальным центрированием текста',
+                    'ESC закрывает окно менеджера и больше не уводит игру в AFK-меню',
+                    'NEW-плашка упрощена и получила опциональную иконку fAwesome6 без обязательной зависимости',
+                    'Статусные плашки в списке двигаются вместе со строкой при наведении'
                 }
             },
             {
@@ -180,11 +181,23 @@ function main()
 
     while true do
         checkRemoteManifestIfNeeded()
-        if window[0] and window_target and wasKeyPressed(keys.VK_ESCAPE) then
-            setManagerWindowOpen(false)
-        end
         wait(0)
     end
+end
+
+function onWindowMessage(msg, wparam, lparam)
+    if msg == 0x0100 and wparam == keys.VK_ESCAPE and window[0] then
+        if window_target then setManagerWindowOpen(false) end
+        consumeWindowMessage(true, true)
+    end
+end
+
+local function uiIcon(name, fallback)
+    if ok_fa and type(fa) == 'function' then
+        local ok, result = pcall(fa, name)
+        if ok and type(result) == 'string' and result ~= '' then return result end
+    end
+    return fallback or ''
 end
 
 function toggleManagerWindow()
@@ -359,7 +372,7 @@ function drawHeader()
     drawFilters()
 
     local check_size = buttonSize(ui 'Проверить обновления', 220)
-    if imgui.Button(ui 'Проверить обновления', check_size) then
+    if managerButton(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
     if managerIsOutdated() then
@@ -368,7 +381,7 @@ function drawHeader()
     local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
     local manager_history_size = buttonSize(manager_history_label, 210)
     sameLineIfFits(manager_history_size.x)
-    if imgui.Button(manager_history_label, manager_history_size) then
+    if managerButton(manager_history_label, manager_history_size) then
         show_manager_changelog = not show_manager_changelog
     end
 
@@ -458,13 +471,69 @@ function drawSwitch(id, label, value, active_color)
     return value
 end
 
-function dangerButton(label, size)
-    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.55, 0.15, 0.16, 1.00))
-    imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.72, 0.20, 0.22, 1.00))
-    imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.42, 0.10, 0.11, 1.00))
-    local clicked = imgui.Button(label, size)
-    imgui.PopStyleColor(3)
+function managerButton(label, size, variant, opts)
+    opts = opts or {}
+    variant = variant or 'primary'
+    size = size or buttonSize(label, 120)
+    size = imgui.ImVec2(size.x, math.max(size.y, 34))
+
+    local pos = imgui.GetCursorScreenPos()
+    local draw = imgui.GetWindowDrawList()
+    local clicked = imgui.InvisibleButton(
+        ui('##manager_button_' .. tostring(label) .. '_' .. tostring(math.floor(pos.x)) .. '_' .. tostring(math.floor(pos.y))),
+        size
+    )
+    local hovered = imgui.IsItemHovered()
+    local active = imgui.IsItemActive()
+    local pulse = opts.pulse or 0
+
+    local bg, border, text
+    if variant == 'danger' then
+        bg = active and imgui.ImVec4(0.42, 0.10, 0.11, 0.96)
+            or hovered and imgui.ImVec4(0.66, 0.20, 0.21, 0.92)
+            or imgui.ImVec4(0.50, 0.15, 0.16, 0.82)
+        border = imgui.ImVec4(0.95, 0.42, 0.38, hovered and 0.62 or 0.38)
+        text = imgui.ImVec4(1.00, 0.94, 0.94, 1.00)
+    elseif variant == 'update' then
+        bg = active and imgui.ImVec4(0.50, 0.12, 0.10, 0.98)
+            or hovered and imgui.ImVec4(0.70, 0.23, 0.16, 0.94)
+            or imgui.ImVec4(0.48 + pulse * 0.08, 0.15, 0.12, 0.88)
+        border = imgui.ImVec4(1.00, 0.47 + pulse * 0.16, 0.24, 0.62)
+        text = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
+    else
+        bg = active and imgui.ImVec4(0.30, 0.35, 0.90, 0.96)
+            or hovered and imgui.ImVec4(0.40, 0.45, 1.00, 0.88)
+            or imgui.ImVec4(0.35, 0.40, 0.95, 0.76)
+        border = imgui.ImVec4(0.58, 0.66, 1.00, hovered and 0.52 or 0.28)
+        text = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
+    end
+
+    if opts.glow then
+        draw:AddRectFilled(
+            imgui.ImVec2(pos.x - 4, pos.y - 4),
+            imgui.ImVec2(pos.x + size.x + 4, pos.y + size.y + 4),
+            colorU32(opts.glow),
+            10,
+            15
+        )
+    end
+
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), 8, 15)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), 8, 15, 1.0)
+
+    local text_size = imgui.CalcTextSize(label)
+    local text_x = pos.x + (size.x - text_size.x) / 2
+    local text_y = pos.y + (size.y - text_size.y) / 2 - 1
+    local after = imgui.GetCursorPos()
+    imgui.SetCursorScreenPos(imgui.ImVec2(text_x, text_y))
+    imgui.TextColored(text, label)
+    imgui.SetCursorPos(after)
+
     return clicked
+end
+
+function dangerButton(label, size)
+    return managerButton(label, size, 'danger')
 end
 
 function drawManagerUpdateButton()
@@ -479,19 +548,10 @@ function drawManagerUpdateButton()
     local glow = imgui.ImVec4(1.00, 0.22 + pulse * 0.12, 0.10, 0.20 + pulse * 0.18)
     local border = imgui.ImVec4(1.00, 0.46 + pulse * 0.18, 0.22, 0.65)
 
-    draw:AddRectFilled(
-        imgui.ImVec2(pos.x - 4, pos.y - 4),
-        imgui.ImVec2(pos.x + size.x + 4, pos.y + size.y + 4),
-        colorU32(glow),
-        9,
-        15
-    )
-
-    imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.46 + pulse * 0.10, 0.15, 0.12, 1.00))
-    imgui.PushStyleColor(imgui.Col.ButtonHovered, imgui.ImVec4(0.68, 0.22, 0.16, 1.00))
-    imgui.PushStyleColor(imgui.Col.ButtonActive, imgui.ImVec4(0.55, 0.12, 0.10, 1.00))
-    local clicked = imgui.Button(label, size)
-    imgui.PopStyleColor(3)
+    local clicked = managerButton(label, size, 'update', {
+        pulse = pulse,
+        glow = glow
+    })
 
     draw:AddRect(
         imgui.ImVec2(pos.x - 1, pos.y - 1),
@@ -579,9 +639,9 @@ function drawScriptListItem(index, item, st)
     end
     imgui.Text(ui(item.name or item.id or 'script'))
     if is_new then
-        drawCompactNewBadge(item)
+        drawCompactNewBadge(item, text_offset)
     else
-        drawCompactStatusBadge(item)
+        drawCompactStatusBadge(item, text_offset)
     end
 
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + text_offset, pos.y + 31))
@@ -602,7 +662,8 @@ function updateListItemAnimation(id, active, hovered)
     return current
 end
 
-function drawCompactStatusBadge(item)
+function drawCompactStatusBadge(item, offset_x)
+    offset_x = offset_x or 0
     local st = runtime[item.id] or inspectLocal(item)
     local label = ui(scriptStatusText(item, st))
     if label == '' then return end
@@ -611,16 +672,17 @@ function drawCompactStatusBadge(item)
     local avail = imgui.GetContentRegionAvail().x
     if avail <= width + 12 then return end
 
-    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
+    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8 + offset_x)
     drawStatusPill(item, 'list_' .. tostring(item.id or item.file or item.name), 0.82, st)
 end
 
-function drawCompactNewBadge(item)
+function drawCompactNewBadge(item, offset_x)
+    offset_x = offset_x or 0
     local width = newBadgeSize(0.82).x + 16
     local avail = imgui.GetContentRegionAvail().x
     if avail <= width + 12 then return end
 
-    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
+    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8 + offset_x)
     drawNewBadge('list_' .. tostring(item.id or item.file or item.name), 0.82)
 end
 
@@ -760,12 +822,12 @@ end
 
 function newBadgeMetrics(scale)
     scale = scale or 1.0
-    local label = ui 'NEW'
+    local icon = uiIcon('SPARKLES', '')
+    local label = ui((icon ~= '' and (icon .. '  ') or '') .. 'NEW')
     local text_size = imgui.CalcTextSize(label)
-    local text_x = 20 * scale
-    local right_pad = 11 * scale
-    local size = imgui.ImVec2(text_size.x + text_x + right_pad, math.max(20, 23 * scale))
-    return label, text_size, size, 10 * scale, text_x, 3.8 * scale
+    local pad_x = 10 * scale
+    local size = imgui.ImVec2(text_size.x + pad_x * 2, math.max(20, 23 * scale))
+    return label, text_size, size, pad_x
 end
 
 function newBadgeSize(scale)
@@ -775,21 +837,18 @@ end
 
 function drawNewBadge(id, scale)
     scale = scale or 1.0
-    local label, text_size, size, dot_x, text_x, dot_radius = newBadgeMetrics(scale)
+    local label, text_size, size = newBadgeMetrics(scale)
     local pos = imgui.GetCursorScreenPos()
     local draw = imgui.GetWindowDrawList()
-    local pulse = (math.sin(os.clock() * 4.0) + 1) * 0.5
-    local bg = imgui.ImVec4(0.115, 0.275, 0.485, 0.74 + pulse * 0.08)
-    local border = imgui.ImVec4(0.410, 0.730, 1.000, 0.55 + pulse * 0.18)
-    local dot = imgui.ImVec4(0.610, 0.880, 1.000, 0.95)
+    local bg = imgui.ImVec4(0.16, 0.30, 0.54, 0.84)
+    local border = imgui.ImVec4(0.46, 0.68, 1.00, 0.48)
 
-    imgui.InvisibleButton(ui('##new_badge_' .. tostring(id or label)), size)
+    imgui.Dummy(size)
     local after = imgui.GetCursorPos()
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), size.y / 2, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), size.y / 2, 15, 1.0)
-    draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + size.y / 2), dot_radius, colorU32(dot), 18)
 
-    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + text_x, pos.y + (size.y - text_size.y) / 2 - 1))
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + (size.x - text_size.x) / 2, pos.y + (size.y - text_size.y) / 2 - 1))
     imgui.TextColored(imgui.ImVec4(0.930, 0.980, 1.000, 1.00), label)
     imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
 end
@@ -912,7 +971,7 @@ function drawDetails()
 
     if not st.installed then
         local install_size = buttonSize(ui 'Установить', 190)
-        if imgui.Button(ui 'Установить', install_size) then
+        if managerButton(ui 'Установить', install_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем устанавливайте скрипты.', WARN)
             elseif busy then
@@ -923,7 +982,7 @@ function drawDetails()
         end
     elseif st.outdated then
         local update_size = buttonSize(ui 'Обновить', 190)
-        if imgui.Button(ui 'Обновить', update_size) then
+        if managerButton(ui 'Обновить', update_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем обновляйте скрипты.', WARN)
             elseif busy then
@@ -939,12 +998,12 @@ function drawDetails()
             sameLineIfFits(170)
         end
         local delete_size = buttonSize(ui 'Удалить', 170)
-        if imgui.Button(ui 'Удалить', delete_size) then
+        if managerButton(ui 'Удалить', delete_size, 'danger') then
             pending_delete_id = item.id
         end
     elseif st.installed then
         local delete_size = buttonSize(ui 'Удалить', 170)
-        if imgui.Button(ui 'Удалить', delete_size) then
+        if managerButton(ui 'Удалить', delete_size, 'danger') then
             msg('Удаление недоступно, пока идет другая операция.', WARN)
         end
     end
@@ -974,13 +1033,13 @@ function drawDeleteConfirmation(item, st)
     imgui.TextWrapped(ui('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
 
     local confirm_size = buttonSize(ui 'Да, удалить', 170)
-    if imgui.Button(ui 'Да, удалить', confirm_size) then
+    if managerButton(ui 'Да, удалить', confirm_size, 'danger') then
         pending_delete_id = nil
         deleteScript(item)
     end
     local cancel_size = buttonSize(ui 'Отмена', 130)
     sameLineIfFits(cancel_size.x)
-    if imgui.Button(ui 'Отмена', cancel_size) then
+    if managerButton(ui 'Отмена', cancel_size) then
         pending_delete_id = nil
     end
 end
@@ -999,7 +1058,7 @@ function drawForbiddenDeleteConfirmation()
     end
     local cancel_size = buttonSize(ui 'Отмена', 130)
     sameLineIfFits(cancel_size.x)
-    if imgui.Button(ui 'Отмена', cancel_size) then
+    if managerButton(ui 'Отмена', cancel_size) then
         pending_delete_forbidden = false
     end
 end
@@ -1069,7 +1128,7 @@ function drawScriptChangelog(item)
     imgui.Spacing()
     local opened = script_changelog_open[id] == true
     local label = opened and ui 'Скрыть историю версий' or ui 'Показать историю версий'
-    if imgui.Button(label, buttonSize(label, 220)) then
+    if managerButton(label, buttonSize(label, 220)) then
         script_changelog_open[id] = not opened
     end
     if script_changelog_open[id] then
