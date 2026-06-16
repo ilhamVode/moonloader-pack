@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.4'
+local MANAGER_VERSION = '1.8.2'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -129,11 +129,11 @@ local manifest = {
     scripts = {},
     news = {
         {
-            title = 'Modio Manager 1.8.4',
+            title = 'Modio Manager 1.8.2',
             date = '2026-06-16',
             parts = {
-                { text = "Вернул переключатель 'Показывать запрещенные' под кнопкой 'Проверить обновления'. ", color = '#9CCBFF' },
-                { text = 'Мелкие правки интерфейса: размер блока новостей и ширина списка.', color = '#FFD166' }
+                { text = 'Появился блок новостей прямо в менеджере. ', color = '#9CCBFF' },
+                { text = 'Если GitHub временно не отвечает, менеджер покажет локальную копию manifest и попробует снова через 5 минут.', color = '#FFD166' }
             }
         }
     }
