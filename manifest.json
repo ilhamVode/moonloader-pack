@@ -3,21 +3,21 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-16 00:00 MSK",
+  "updated_at": "2026-06-16 11:36 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.29",
+    "version": "1.7.30",
     "updated_at": "2026-06-16",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
       {
-        "version": "1.7.29",
+        "version": "1.7.30",
         "date": "2026-06-16",
         "changes": [
-          "проведена ревизия связей менеджера со свежим manifest.json",
-          "исправлены битые строки во встроенной истории менеджера",
-          "уточнена fallback-история менеджера без лишних пунктов про документацию"
+          "добавлены Arenda Helper и News Helper в каталог",
+          "менеджер распознает SCRIPT_VERSION в чужих скриптах без script_version(...)",
+          "UI стал мягче: обновлены поверхности, скругления и выделение строк списка"
         ]
       },
       {
@@ -689,6 +689,78 @@
           "changes": [
             "добавлено описание команд и логики авто-докладов",
             "в копию pack добавлены script_name и script_version для корректной проверки актуальности"
+          ]
+        }
+      ],
+      "status": "0"
+    },
+    {
+      "id": "arendahelper",
+      "name": "Arenda Helper",
+      "file": "arenda.lua",
+      "version": "V9.0",
+      "updated_at": "2026-06-16",
+      "hidden": false,
+      "author": "Baretti",
+      "description": "Помощник сдачи аксессуаров и предметов в аренду на серверах Arizona RP. Позволяет быстро настроить ID предмета, цену, срок аренды и запускать сдачу через удобное mimgui-окно.",
+      "commands": [
+        "/arenda - открыть главное меню управления"
+      ],
+      "usage": "Откройте /arenda, выберите режим аренды, укажите ID предмета, цену и срок. Для массовой сдачи можно заранее собрать сет аксессуаров и запускать его в пару кликов.",
+      "features": [
+        "режимы аренды по дням, по часам, до ближайшего рестарта и на максимальный срок",
+        "система сетов для групп аксессуаров",
+        "автоматизация диалогов инвентаря",
+        "показ ID предметов прямо в инвентаре",
+        "тихий режим для уменьшения сообщений в чате",
+        "сохранение настроек в config/arenda.json"
+      ],
+      "notes": "Требования: MoonLoader 0.26, mimgui, samp.events, vkeys, fAwesome6, jsoncfg. Автор указан из SCRIPT_META: Baretti.",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/arenda.lua",
+      "changelog": [
+        {
+          "version": "V9.0",
+          "date": "2026-06-16",
+          "changes": [
+            "скрипт добавлен в Modio Pack",
+            "описаны режимы аренды, система сетов, тихий режим и требования",
+            "менеджер научен распознавать SCRIPT_VERSION, чтобы версия Arenda Helper отображалась корректно"
+          ]
+        }
+      ],
+      "status": "0"
+    },
+    {
+      "id": "newshelper",
+      "name": "News Helper",
+      "file": "NewsHelper.lua",
+      "version": "4.3",
+      "updated_at": "2026-06-16",
+      "hidden": false,
+      "author": "fa1ser",
+      "description": "Помощник для сотрудников СМИ на Arizona RP. Упрощает редакцию объявлений, эфиры, собеседования, экзамены и ведет статистику работы.",
+      "commands": [
+        "/rnh - открыть меню News Helper"
+      ],
+      "usage": "Откройте /rnh и выберите нужный раздел: редакция объявлений, статистика, эфиры, собеседование, экзамены или настройки. Скрипт также умеет искать похожие объявления среди уже отредактированных.",
+      "features": [
+        "помощь в редакции объявлений: автозамены, окно помощи и горячие клавиши",
+        "статистика заработка и количества отредактированных объявлений",
+        "разделы для эфиров, собеседований и экзаменов",
+        "поиск похожих объявлений по истории редакции",
+        "автоматическое скачивание нужного шрифта",
+        "настраиваемая тема интерфейса"
+      ],
+      "notes": "Требования: MoonLoader, mimgui, samp.events, fAwesome6, memory, mimgui_hotkeys, encoding. Автор указан из script_author: fa1ser.",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/NewsHelper.lua",
+      "changelog": [
+        {
+          "version": "4.3",
+          "date": "2026-06-16",
+          "changes": [
+            "скрипт добавлен в Modio Pack",
+            "описаны разделы для СМИ, команда /rnh и требования",
+            "сохранена оригинальная версия 4.3 из script_version"
           ]
         }
       ],

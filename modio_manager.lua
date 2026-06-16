@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.29'
+local MANAGER_VERSION = '1.7.30'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -84,9 +84,9 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Проведена ревизия связей менеджера со свежим manifest.json',
-                    'Исправлены битые строки во встроенной истории менеджера',
-                    'Уточнена fallback-история менеджера без лишних пунктов про документацию'
+                    'Добавлены Arenda Helper и News Helper в каталог',
+                    'Менеджер распознает SCRIPT_VERSION в чужих скриптах без script_version(...)',
+                    'UI стал мягче: обновлены поверхности, скругления и выделение строк списка'
                 }
             },
             {
@@ -228,39 +228,39 @@ imgui.OnFrame(
 
 function applyStyle()
     local style = imgui.GetStyle()
-    style.Alpha = 0.97
-    style.WindowRounding = 9
-    style.ChildRounding = 8
-    style.FrameRounding = 7
-    style.PopupRounding = 7
-    style.GrabRounding = 7
-    style.ScrollbarRounding = 8
+    style.Alpha = 0.985
+    style.WindowRounding = 12
+    style.ChildRounding = 10
+    style.FrameRounding = 8
+    style.PopupRounding = 10
+    style.GrabRounding = 8
+    style.ScrollbarRounding = 10
     style.WindowBorderSize = 1
     style.ChildBorderSize = 1
     style.FrameBorderSize = 0
-    style.WindowPadding = imgui.ImVec2(16, 15)
-    style.FramePadding = imgui.ImVec2(11, 7)
-    style.ItemSpacing = imgui.ImVec2(9, 8)
-    style.ItemInnerSpacing = imgui.ImVec2(8, 6)
+    style.WindowPadding = imgui.ImVec2(17, 16)
+    style.FramePadding = imgui.ImVec2(12, 8)
+    style.ItemSpacing = imgui.ImVec2(10, 9)
+    style.ItemInnerSpacing = imgui.ImVec2(8, 7)
     style.ScrollbarSize = 13
 
     local c = style.Colors
-    c[imgui.Col.WindowBg] = imgui.ImVec4(0.060, 0.070, 0.090, 0.94)
-    c[imgui.Col.ChildBg] = imgui.ImVec4(0.095, 0.110, 0.140, 0.88)
-    c[imgui.Col.PopupBg] = imgui.ImVec4(0.070, 0.082, 0.105, 0.96)
-    c[imgui.Col.Border] = imgui.ImVec4(0.260, 0.330, 0.430, 0.72)
+    c[imgui.Col.WindowBg] = imgui.ImVec4(0.055, 0.066, 0.088, 0.96)
+    c[imgui.Col.ChildBg] = imgui.ImVec4(0.088, 0.106, 0.142, 0.90)
+    c[imgui.Col.PopupBg] = imgui.ImVec4(0.065, 0.078, 0.104, 0.98)
+    c[imgui.Col.Border] = imgui.ImVec4(0.250, 0.320, 0.420, 0.58)
     c[imgui.Col.BorderShadow] = imgui.ImVec4(0.000, 0.000, 0.000, 0.00)
-    c[imgui.Col.FrameBg] = imgui.ImVec4(0.130, 0.165, 0.220, 0.95)
-    c[imgui.Col.FrameBgHovered] = imgui.ImVec4(0.170, 0.230, 0.315, 0.98)
-    c[imgui.Col.FrameBgActive] = imgui.ImVec4(0.205, 0.285, 0.390, 1.00)
-    c[imgui.Col.Button] = imgui.ImVec4(0.135, 0.260, 0.455, 0.95)
-    c[imgui.Col.ButtonHovered] = imgui.ImVec4(0.185, 0.350, 0.610, 1.00)
-    c[imgui.Col.ButtonActive] = imgui.ImVec4(0.100, 0.215, 0.385, 1.00)
-    c[imgui.Col.Header] = imgui.ImVec4(0.155, 0.250, 0.385, 0.88)
-    c[imgui.Col.HeaderHovered] = imgui.ImVec4(0.205, 0.330, 0.505, 0.95)
-    c[imgui.Col.HeaderActive] = imgui.ImVec4(0.135, 0.245, 0.410, 1.00)
-    c[imgui.Col.TitleBg] = imgui.ImVec4(0.055, 0.070, 0.100, 0.96)
-    c[imgui.Col.TitleBgActive] = imgui.ImVec4(0.080, 0.125, 0.185, 0.98)
+    c[imgui.Col.FrameBg] = imgui.ImVec4(0.125, 0.158, 0.214, 0.94)
+    c[imgui.Col.FrameBgHovered] = imgui.ImVec4(0.165, 0.222, 0.306, 0.98)
+    c[imgui.Col.FrameBgActive] = imgui.ImVec4(0.200, 0.278, 0.382, 1.00)
+    c[imgui.Col.Button] = imgui.ImVec4(0.150, 0.292, 0.515, 0.94)
+    c[imgui.Col.ButtonHovered] = imgui.ImVec4(0.215, 0.405, 0.705, 1.00)
+    c[imgui.Col.ButtonActive] = imgui.ImVec4(0.115, 0.245, 0.440, 1.00)
+    c[imgui.Col.Header] = imgui.ImVec4(0.145, 0.236, 0.368, 0.74)
+    c[imgui.Col.HeaderHovered] = imgui.ImVec4(0.195, 0.318, 0.492, 0.88)
+    c[imgui.Col.HeaderActive] = imgui.ImVec4(0.155, 0.286, 0.480, 0.96)
+    c[imgui.Col.TitleBg] = imgui.ImVec4(0.050, 0.064, 0.092, 0.98)
+    c[imgui.Col.TitleBgActive] = imgui.ImVec4(0.085, 0.135, 0.205, 0.99)
     c[imgui.Col.TitleBgCollapsed] = imgui.ImVec4(0.050, 0.060, 0.080, 0.90)
     c[imgui.Col.Separator] = imgui.ImVec4(0.300, 0.380, 0.500, 0.45)
     c[imgui.Col.SeparatorHovered] = imgui.ImVec4(0.400, 0.560, 0.760, 0.70)
@@ -273,8 +273,8 @@ function applyStyle()
     c[imgui.Col.ResizeGrip] = imgui.ImVec4(0.300, 0.450, 0.650, 0.28)
     c[imgui.Col.ResizeGripHovered] = imgui.ImVec4(0.420, 0.620, 0.880, 0.55)
     c[imgui.Col.ResizeGripActive] = imgui.ImVec4(0.520, 0.720, 1.000, 0.80)
-    c[imgui.Col.Text] = imgui.ImVec4(0.925, 0.945, 0.975, 1.00)
-    c[imgui.Col.TextDisabled] = imgui.ImVec4(0.575, 0.630, 0.705, 1.00)
+    c[imgui.Col.Text] = imgui.ImVec4(0.930, 0.948, 0.978, 1.00)
+    c[imgui.Col.TextDisabled] = imgui.ImVec4(0.600, 0.660, 0.740, 1.00)
 end
 
 function drawHeader()
@@ -634,19 +634,25 @@ function drawScriptListItemBg(pos, size, active, hovered, forbidden)
     if width <= 0 then width = 300 end
 
     local color
+    local border
     if active then
-        color = imgui.ImVec4(0.145, 0.260, 0.430, 0.72)
+        color = imgui.ImVec4(0.145, 0.260, 0.430, 0.78)
+        border = imgui.ImVec4(0.380, 0.660, 0.960, 0.34)
     elseif hovered then
-        color = imgui.ImVec4(0.160, 0.205, 0.275, 0.50)
+        color = imgui.ImVec4(0.155, 0.205, 0.280, 0.48)
+        border = imgui.ImVec4(0.360, 0.480, 0.650, 0.22)
     end
 
+    local min = imgui.ImVec2(pos.x + 2, pos.y + 2)
+    local max = imgui.ImVec2(pos.x + width - 2, pos.y + size.y - 2)
     draw:AddRectFilled(
-        imgui.ImVec2(pos.x + 2, pos.y + 2),
-        imgui.ImVec2(pos.x + width - 2, pos.y + size.y - 2),
+        min,
+        max,
         colorU32(color),
-        7,
+        9,
         15
     )
+    draw:AddRect(min, max, colorU32(border), 9, 15, 1.0)
 
     if active then
         local stripe = forbidden and imgui.ImVec4(1.00, 0.36, 0.36, 0.95) or imgui.ImVec4(0.38, 0.68, 1.00, 0.95)
@@ -655,6 +661,13 @@ function drawScriptListItemBg(pos, size, active, hovered, forbidden)
             imgui.ImVec2(pos.x + 5, pos.y + size.y - 8),
             colorU32(stripe),
             3,
+            15
+        )
+        draw:AddRectFilled(
+            imgui.ImVec2(pos.x + 5, pos.y + 8),
+            imgui.ImVec2(pos.x + 7, pos.y + size.y - 8),
+            colorU32(imgui.ImVec4(stripe.x, stripe.y, stripe.z, 0.18)),
+            2,
             15
         )
     end
@@ -1370,6 +1383,15 @@ function readScriptVersion(path)
     if var_name then
         local pattern1 = var_name .. "%s*=%s*['\"]([^'\"]+)['\"]"
         local version = text:match(pattern1)
+        if version then return version end
+    end
+
+    local named_version = text:match("SCRIPT_VERSION%s*=%s*['\"]([^'\"]+)['\"]")
+    if named_version then return named_version end
+
+    local meta_version = text:match("SCRIPT_META%s*=%s*%b{}")
+    if meta_version then
+        local version = meta_version:match("VERSION%s*=%s*['\"]([^'\"]+)['\"]")
         if version then return version end
     end
 
