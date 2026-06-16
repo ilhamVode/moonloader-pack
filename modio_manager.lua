@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.1'
+local MANAGER_VERSION = '1.8.2'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -44,6 +44,7 @@ local window_anim_clock = os.clock()
 local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
+local REMOTE_RETRY_AFTER_ERROR = 300
 local PREFIX = '[ModioManager]'
 local CHAT = 0x52C7EA
 local OK = 0x77DD77
@@ -54,6 +55,7 @@ local workdir = getWorkingDirectory()
 local config_dir = workdir .. '\\config\\modio_manager'
 local tmp_dir = config_dir .. '\\tmp'
 local seen_scripts_path = config_dir .. '\\seen_scripts.json'
+local manifest_cache_path = config_dir .. '\\manifest_cache.json'
 local imgui_ini_path = config_dir .. '\\imgui.ini'
 
 local selected = 1
@@ -73,6 +75,8 @@ local runtime = {}
 local list_item_anim = {}
 local last_local_refresh_clock = 0
 local next_remote_check_at = 0
+local using_cached_manifest = false
+local last_manifest_error = ''
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -90,10 +94,9 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Кнопки менеджера рисуются вручную с нормальным центрированием текста',
-                    'ESC закрывает окно менеджера и больше не уводит игру в AFK-меню',
-                    'NEW-плашка упрощена и получила опциональную иконку fAwesome6 без обязательной зависимости',
-                    'Статусные плашки в списке двигаются вместе со строкой при наведении'
+                    'При ошибке GitHub manifest менеджер временно использует локальную копию и повторяет проверку каждые 5 минут',
+                    'Добавлен блок новостей из manifest.json под списком и описанием скрипта',
+                    'Новости поддерживают цветные фрагменты через parts/color или inline-метки вида {#FFCC00}текст{/}'
                 }
             },
             {
@@ -122,7 +125,17 @@ local manifest = {
             }
         }
     },
-    scripts = {}
+    scripts = {},
+    news = {
+        {
+            title = 'Modio Manager 1.8.2',
+            date = '2026-06-16',
+            parts = {
+                { text = 'Добавлен блок новостей и аварийный fallback manifest. ', color = '#9CCBFF' },
+                { text = 'Если GitHub временно не отвечает, менеджер попробует снова через 5 минут.', color = '#FFD166' }
+            }
+        }
+    }
 }
 
 function textWidth(text)
@@ -365,6 +378,13 @@ function drawHeader()
         imgui.TextDisabled(ui(last_check_text))
     end
 
+    if using_cached_manifest then
+        imgui.TextColored(
+            imgui.ImVec4(1.00, 0.78, 0.36, 1.00),
+            ui 'GitHub временно недоступен: показана локальная копия manifest, повтор каждые 5 минут.'
+        )
+    end
+
     if last_error ~= '' then
         imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
@@ -585,6 +605,8 @@ function drawScriptList()
     if shown == 0 then
         imgui.TextDisabled(ui 'Нет скриптов по выбранным фильтрам.')
     end
+
+    drawNewsPanel('list', 2, 150)
 end
 
 function sortedVisibleScripts()
@@ -1023,6 +1045,7 @@ function drawDetails()
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
+    drawNewsPanel('details', 4, 170)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -1120,6 +1143,139 @@ function drawListSection(title, list)
     for _, line in ipairs(list) do
         imgui.TextWrapped(ui('- ' .. tostring(line)))
     end
+end
+
+function drawNewsPanel(id, limit, height)
+    local news = manifest.news
+    if type(news) ~= 'table' or #news == 0 then return end
+
+    imgui.Spacing()
+    imgui.PushStyleColor(imgui.Col.ChildBg, imgui.ImVec4(0.070, 0.088, 0.120, 0.78))
+    imgui.PushStyleColor(imgui.Col.Border, imgui.ImVec4(0.260, 0.360, 0.520, 0.42))
+    imgui.BeginChild(ui('news_panel_' .. tostring(id)), imgui.ImVec2(0, height or 160), true)
+
+    local icon = uiIcon('NEWSPAPER', '')
+    local title = (icon ~= '' and (icon .. '  ') or '') .. 'Новости'
+    imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(title))
+    imgui.Separator()
+
+    local count = 0
+    for _, item in ipairs(news) do
+        if type(item) == 'table' then
+            count = count + 1
+            if limit and count > limit then break end
+            drawNewsItem(item, count)
+        end
+    end
+
+    if count == 0 then
+        imgui.TextDisabled(ui 'Новостей пока нет.')
+    end
+
+    imgui.EndChild()
+    imgui.PopStyleColor(2)
+end
+
+function drawNewsItem(item, index)
+    if index > 1 then
+        imgui.Spacing()
+        imgui.Separator()
+    end
+
+    local title = tostring(item.title or 'Новость')
+    local date = tostring(item.date or '')
+    imgui.TextColored(imgui.ImVec4(0.92, 0.95, 1.00, 1.00), ui(title))
+    if date ~= '' then
+        imgui.SameLine()
+        imgui.TextDisabled(ui(date))
+    end
+
+    local lines = newsLines(item)
+    for _, line in ipairs(lines) do
+        if type(line) == 'table' then
+            drawColoredSegments(line)
+        else
+            local raw = tostring(line or '')
+            local segments = parseColorMarkup(raw)
+            if raw:find('{#%x%x%x%x%x%x}') then
+                drawColoredSegments(segments)
+            else
+                imgui.TextWrapped(ui(raw))
+            end
+        end
+    end
+end
+
+function newsLines(item)
+    if type(item.lines) == 'table' then return item.lines end
+    if type(item.text) == 'table' then return item.text end
+    if type(item.parts) == 'table' then return { item.parts } end
+    if type(item.text) == 'string' then return { item.text } end
+    return {}
+end
+
+function drawColoredSegments(segments)
+    local default_color = imgui.ImVec4(0.88, 0.91, 0.96, 1.00)
+    local drew = false
+    for _, part in ipairs(segments) do
+        local text = ''
+        local color = default_color
+        if type(part) == 'table' then
+            text = tostring(part.text or '')
+            color = parseHexColor(part.color, default_color)
+        else
+            text = tostring(part or '')
+        end
+
+        if text ~= '' then
+            if drew then imgui.SameLine(nil, 0) end
+            imgui.TextColored(color, ui(text))
+            drew = true
+        end
+    end
+end
+
+function parseColorMarkup(text)
+    local result = {}
+    local default_color = '#E1E8F5'
+    local current_color = default_color
+    local pos = 1
+
+    while pos <= #text do
+        local start_pos, end_pos, color = text:find('{#(%x%x%x%x%x%x)}', pos)
+        local reset_start, reset_end = text:find('{/}', pos, true)
+
+        if reset_start and (not start_pos or reset_start < start_pos) then
+            if reset_start > pos then
+                result[#result + 1] = { text = text:sub(pos, reset_start - 1), color = current_color }
+            end
+            current_color = default_color
+            pos = reset_end + 1
+        elseif start_pos then
+            if start_pos > pos then
+                result[#result + 1] = { text = text:sub(pos, start_pos - 1), color = current_color }
+            end
+            current_color = '#' .. color
+            pos = end_pos + 1
+        else
+            result[#result + 1] = { text = text:sub(pos), color = current_color }
+            break
+        end
+    end
+
+    if #result == 0 then
+        result[1] = { text = text, color = default_color }
+    end
+    return result
+end
+
+function parseHexColor(value, fallback)
+    local hex = tostring(value or ''):match('#?(%x%x%x%x%x%x)')
+    if not hex then return fallback end
+    local r = tonumber(hex:sub(1, 2), 16) or 255
+    local g = tonumber(hex:sub(3, 4), 16) or 255
+    local b = tonumber(hex:sub(5, 6), 16) or 255
+    return imgui.ImVec4(r / 255, g / 255, b / 255, 1.00)
 end
 
 function drawScriptChangelog(item)
@@ -1301,22 +1457,51 @@ function checkRemoteManifest(silent)
         if status == dl_status.STATUSEX_ENDDOWNLOAD then
             checking = false
             busy_text = ''
-            next_remote_check_at = os.time() + REMOTE_CHECK_INTERVAL
             local ok, err = loadManifestFromFile(tmp, true)
-            os.remove(tmp)
             if ok then
+                copyFile(tmp, manifest_cache_path)
+                os.remove(tmp)
+                using_cached_manifest = false
+                last_manifest_error = ''
+                last_error = ''
+                next_remote_check_at = os.time() + REMOTE_CHECK_INTERVAL
                 refreshLocalState()
                 last_check_text = 'Последняя проверка: ' .. os.date('%d.%m.%Y %H:%M:%S')
                 if not silent then
                     msg('Манифест обновлен.', OK)
                 end
             else
-                last_error = err or 'Не удалось прочитать свежий GitHub manifest'
-                last_check_text = 'GitHub manifest не обновлен.'
-                if not silent then msg(last_error, ERR) end
+                os.remove(tmp)
+                handleManifestFailure(err or 'Не удалось прочитать свежий GitHub manifest', silent)
             end
+        elseif status == dl_status.STATUS_ERROR then
+            os.remove(tmp)
+            handleManifestFailure('Не удалось загрузить GitHub manifest.', silent)
         end
     end)
+end
+
+function handleManifestFailure(reason, silent)
+    checking = false
+    busy_text = ''
+    last_manifest_error = tostring(reason or 'GitHub manifest временно недоступен.')
+    next_remote_check_at = os.time() + REMOTE_RETRY_AFTER_ERROR
+
+    local ok, err = loadManifestFromFile(manifest_cache_path, false)
+    if ok then
+        using_cached_manifest = true
+        last_error = ''
+        refreshLocalState()
+        last_check_text = 'GitHub недоступен, временно используется локальный manifest. Повтор через 5 минут.'
+        if not silent then
+            msg('GitHub manifest недоступен. Временно использую локальную копию, повторю через 5 минут.', WARN)
+        end
+    else
+        using_cached_manifest = false
+        last_error = last_manifest_error .. ' Локальной копии пока нет.'
+        last_check_text = 'GitHub manifest не обновлен. Повтор через 5 минут.'
+        if not silent then msg(last_error, ERR) end
+    end
 end
 
 function managerRemoteVersion()
@@ -1593,6 +1778,19 @@ function replaceFile(tmp, target)
     end
 
     if doesFileExist(backup) then os.remove(backup) end
+    return true
+end
+
+function copyFile(source, target)
+    local input = io.open(source, 'rb')
+    if not input then return false end
+    local data = input:read('*a') or ''
+    input:close()
+
+    local output = io.open(target, 'wb')
+    if not output then return false end
+    output:write(data)
+    output:close()
     return true
 end
 

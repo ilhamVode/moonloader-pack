@@ -3,14 +3,23 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-16 12:20 MSK",
+  "updated_at": "2026-06-16 12:45 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.1",
+    "version": "1.8.2",
     "updated_at": "2026-06-16",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.2",
+        "date": "2026-06-16",
+        "changes": [
+          "при ошибке GitHub manifest менеджер временно использует локальную копию и повторяет проверку каждые 5 минут",
+          "добавлен блок новостей из manifest.json под списком и описанием скрипта",
+          "новости поддерживают цветные фрагменты через parts/color или inline-метки вида {#FFCC00}текст{/}"
+        ]
+      },
       {
         "version": "1.8.1",
         "date": "2026-06-16",
@@ -369,6 +378,27 @@
       }
     ]
   },
+  "news": [
+    {
+      "title": "Modio Manager 1.8.2",
+      "date": "2026-06-16",
+      "parts": [
+        {
+          "text": "Появился блок новостей прямо в менеджере. ",
+          "color": "#9CCBFF"
+        },
+        {
+          "text": "Если GitHub временно не отвечает, менеджер покажет локальную копию manifest и попробует снова через 5 минут.",
+          "color": "#FFD166"
+        }
+      ]
+    },
+    {
+      "title": "Формат цветного текста",
+      "date": "пример",
+      "text": "Можно писать обычный текст, а можно выделять {#77DD77}важные куски цветом{/} прямо внутри строки."
+    }
+  ],
   "scripts": [
     {
       "id": "lavaka",
