@@ -1,5 +1,4 @@
 local MANAGER_VERSION = '1.8.2'
-local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -132,8 +131,8 @@ local manifest = {
             title = 'Modio Manager 1.8.2',
             date = '2026-06-16',
             parts = {
-                { text = 'Появился блок новостей прямо в менеджере. ', color = '#9CCBFF' },
-                { text = 'Если GitHub временно не отвечает, менеджер покажет локальную копию manifest и попробует снова через 5 минут.', color = '#FFD166' }
+                { text = 'Добавлен блок новостей и аварийный fallback manifest. ', color = '#9CCBFF' },
+                { text = 'Если GitHub временно не отвечает, менеджер попробует снова через 5 минут.', color = '#FFD166' }
             }
         }
     }
@@ -154,23 +153,6 @@ end
 
 function colorU32(color)
     return imgui.ColorConvertFloat4ToU32(color)
-end
-
--- Fixed layout helpers: outer panels must not scroll; only inner body areas scroll.
-local FALLBACK_WINDOW_FLAGS = {
-    NoScrollbar = 8,
-    NoScrollWithMouse = 16
-}
-
-function imguiWindowFlag(name)
-    local wf = imgui.WindowFlags
-    if wf and wf[name] ~= nil then return wf[name] end
-    return FALLBACK_WINDOW_FLAGS[name] or 0
-end
-
-function noOuterScrollFlags(flags)
-    flags = flags or 0
-    return flags + imguiWindowFlag('NoScrollbar') + imguiWindowFlag('NoScrollWithMouse')
 end
 
 function cacheBustUrl(url)
@@ -302,38 +284,20 @@ imgui.OnFrame(
 
         local was_open = window[0]
         imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
-
-        local main_flags = noOuterScrollFlags(imgui.WindowFlags.NoCollapse)
-        if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, main_flags) then
+        if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
             refreshLocalStateIfNeeded(false)
             drawHeader()
             imgui.Separator()
 
-            local avail_y = imgui.GetContentRegionAvail().y
-            local has_news = type(manifest.news) == 'table' and #manifest.news > 0
-            local news_h = 0
-            if has_news and avail_y > 360 then
-                news_h = math.min(185, math.max(130, avail_y * 0.30))
-            end
-
-            local middle_h = avail_y
-            if news_h > 0 then
-                middle_h = math.max(230, avail_y - news_h - imgui.GetStyle().ItemSpacing.y)
-            end
-
-            imgui.BeginChild('script_list_frame', imgui.ImVec2(300, middle_h), true, noOuterScrollFlags(0))
+            imgui.BeginChild('script_list', imgui.ImVec2(330, 0), true)
             drawScriptList()
             imgui.EndChild()
 
             imgui.SameLine()
 
-            imgui.BeginChild('script_details_frame', imgui.ImVec2(0, middle_h), true, noOuterScrollFlags(0))
+            imgui.BeginChild('script_details', imgui.ImVec2(0, 0), true)
             drawDetails()
             imgui.EndChild()
-
-            if news_h > 0 then
-                drawNewsPanel('bottom_fixed', 4, news_h)
-            end
         end
         imgui.End()
         imgui.PopStyleVar()
@@ -397,10 +361,8 @@ function applyStyle()
 end
 
 function drawHeader()
-    imgui.TextColored(
-        imgui.ImVec4(0.380, 0.680, 1.000, 1.00),
-        ui(tostring(manifest.name or 'ModioZodio MoonLoader Pack') .. ' | Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-'))
-    )
+    imgui.TextColored(imgui.ImVec4(0.380, 0.680, 1.000, 1.00), ui(manifest.name or 'ModioZodio MoonLoader Pack'))
+    imgui.TextDisabled(ui('Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-')))
     imgui.TextColored(managerVersionColor(), ui(managerStatusText()))
 
     imgui.TextDisabled(ui('Manifest: ' .. MANIFEST_URL))
@@ -426,17 +388,16 @@ function drawHeader()
     if last_error ~= '' then
         imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
     end
-    -- buttons area in header: fixed-height child so its presence won't push content down
-    imgui.BeginChild('header_buttons', imgui.ImVec2(0, 48), false)
+
+    drawFilters()
+
     local check_size = buttonSize(ui 'Проверить обновления', 220)
     if managerButton(ui 'Проверить обновления', check_size) then
         checkRemoteManifest(false)
     end
-
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
-
     local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
     local manager_history_size = buttonSize(manager_history_label, 210)
     sameLineIfFits(manager_history_size.x)
@@ -451,7 +412,6 @@ function drawHeader()
             pending_delete_forbidden = true
         end
     end
-    imgui.EndChild()
 
     if show_manager_changelog then
         drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
@@ -584,7 +544,10 @@ function managerButton(label, size, variant, opts)
     local text_size = imgui.CalcTextSize(label)
     local text_x = pos.x + (size.x - text_size.x) / 2
     local text_y = pos.y + (size.y - text_size.y) / 2 - 1
-    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(text), label)
+    local after = imgui.GetCursorPos()
+    imgui.SetCursorScreenPos(imgui.ImVec2(text_x, text_y))
+    imgui.TextColored(text, label)
+    imgui.SetCursorPos(after)
 
     return clicked
 end
@@ -625,20 +588,9 @@ function drawManagerUpdateButton()
 end
 
 function drawScriptList()
-    -- Header is outside the scrolling child, so the word 'Скрипты' never leaves the top.
-    -- Filters row placed above the list so it stays visually attached to the list
-    imgui.Spacing()
-    filter_modio_only = drawSwitch('filter_modio_only', 'Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
-    imgui.SameLine()
-    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
-    imgui.Spacing()
     imgui.TextDisabled(ui 'Скрипты')
     imgui.Separator()
 
-    local list_h = imgui.GetContentRegionAvail().y
-    if list_h < 80 then list_h = 80 end
-
-    imgui.BeginChild('script_list_scroll_body', imgui.ImVec2(0, list_h), false)
     ensureSelectedVisible()
 
     local list = sortedVisibleScripts()
@@ -654,7 +606,7 @@ function drawScriptList()
         imgui.TextDisabled(ui 'Нет скриптов по выбранным фильтрам.')
     end
 
-    imgui.EndChild()
+    drawNewsPanel('list', 2, 150)
 end
 
 function sortedVisibleScripts()
@@ -997,22 +949,9 @@ function drawDetails()
     end
 
     local st = runtime[item.id] or inspectLocal(item)
-    drawDetailsHeader(item, st)
-    imgui.Separator()
-
-    local body_h = imgui.GetContentRegionAvail().y
-    if body_h < 120 then body_h = 120 end
-
-    imgui.BeginChild('script_details_scroll_body', imgui.ImVec2(0, body_h), false)
-    drawDetailsBody(item, st)
-    imgui.EndChild()
-end
-
-function drawDetailsHeader(item, st)
-    -- Title/status row is outside the scrolling child, so it stays pinned at the top.
     local title = ui(item.name or item.id)
     local title_size = imgui.CalcTextSize(title)
-    local pill_size = statusPillSize(item, 1.0, st)
+    local pill_size = statusPillSize(item, 1.0)
     local row_pos = imgui.GetCursorScreenPos()
     local row_width = imgui.GetContentRegionAvail().x
     local row_height = math.max(title_size.y, pill_size.y)
@@ -1026,9 +965,8 @@ function drawDetailsHeader(item, st)
     )
     imgui.SetCursorScreenPos(imgui.ImVec2(row_pos.x, row_pos.y + row_height + imgui.GetStyle().ItemSpacing.y))
     imgui.Spacing()
-end
 
-function drawDetailsBody(item, st)
+    imgui.Separator()
     if isForbiddenScript(item) then
         imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(forbiddenWarning(item)))
         imgui.Spacing()
@@ -1107,6 +1045,7 @@ function drawDetailsBody(item, st)
     drawTextSection('Как пользоваться', item.usage)
     drawListSection('Особенности', item.features)
     drawTextSection('Важно', item.notes)
+    drawNewsPanel('details', 4, 170)
 end
 
 function drawDeleteConfirmation(item, st)
@@ -1210,20 +1149,16 @@ function drawNewsPanel(id, limit, height)
     local news = manifest.news
     if type(news) ~= 'table' or #news == 0 then return end
 
+    imgui.Spacing()
     imgui.PushStyleColor(imgui.Col.ChildBg, imgui.ImVec4(0.070, 0.088, 0.120, 0.78))
     imgui.PushStyleColor(imgui.Col.Border, imgui.ImVec4(0.260, 0.360, 0.520, 0.42))
-    imgui.BeginChild(ui('news_panel_' .. tostring(id)), imgui.ImVec2(0, height or 160), true, noOuterScrollFlags(0))
+    imgui.BeginChild(ui('news_panel_' .. tostring(id)), imgui.ImVec2(0, height or 160), true)
 
-    -- News title is fixed; only news items scroll.
     local icon = uiIcon('NEWSPAPER', '')
     local title = (icon ~= '' and (icon .. '  ') or '') .. 'Новости'
     imgui.TextColored(imgui.ImVec4(0.700, 0.850, 1.000, 1.00), ui(title))
     imgui.Separator()
 
-    local news_body_h = imgui.GetContentRegionAvail().y
-    if news_body_h < 50 then news_body_h = 50 end
-
-    imgui.BeginChild(ui('news_panel_scroll_body_' .. tostring(id)), imgui.ImVec2(0, news_body_h), false)
     local count = 0
     for _, item in ipairs(news) do
         if type(item) == 'table' then
@@ -1236,7 +1171,6 @@ function drawNewsPanel(id, limit, height)
     if count == 0 then
         imgui.TextDisabled(ui 'Новостей пока нет.')
     end
-    imgui.EndChild()
 
     imgui.EndChild()
     imgui.PopStyleColor(2)
