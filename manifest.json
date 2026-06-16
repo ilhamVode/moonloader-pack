@@ -3,21 +3,22 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-16 11:36 MSK",
+  "updated_at": "2026-06-16 12:05 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.7.30",
+    "version": "1.8.0",
     "updated_at": "2026-06-16",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
       {
-        "version": "1.7.30",
+        "version": "1.8.0",
         "date": "2026-06-16",
         "changes": [
-          "добавлены Arenda Helper и News Helper в каталог",
-          "менеджер распознает SCRIPT_VERSION в чужих скриптах без script_version(...)",
-          "UI стал мягче: обновлены поверхности, скругления и выделение строк списка"
+          "список скриптов получил плавное наведение, мягкий glow и небольшой живой сдвиг строки",
+          "плашка NEW приведена к размеру и стилю статусных pill-плашек",
+          "когда скрипт новый, статусная плашка в списке скрывается, чтобы интерфейс не шумел",
+          "ESC и крестик закрывают окно менеджера плавным fade-out"
         ]
       },
       {

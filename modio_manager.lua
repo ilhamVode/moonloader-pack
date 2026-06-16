@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.7.30'
+local MANAGER_VERSION = '1.8.0'
 
 script_name('ModioManager')
 script_author('ModioZodio')
@@ -11,6 +11,7 @@ local imgui = require 'mimgui'
 local encoding = require 'encoding'
 encoding.default = 'CP1251'
 local u8 = encoding.UTF8
+local keys = require 'vkeys'
 
 -- Helpers for mimgui labels and button sizing.
 -- Without these aliases the script crashes on ui(...) and buttonSize(...).
@@ -35,6 +36,9 @@ local ok_lfs, lfs = pcall(require, 'lfs')
 
 local new = imgui.new
 local window = new.bool(false)
+local window_target = false
+local window_alpha = 0.0
+local window_anim_clock = os.clock()
 
 local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
@@ -65,6 +69,7 @@ local show_manager_changelog = false
 local script_changelog_open = {}
 local seen_scripts = {}
 local runtime = {}
+local list_item_anim = {}
 local last_local_refresh_clock = 0
 local next_remote_check_at = 0
 local manifest = {
@@ -84,9 +89,10 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Добавлены Arenda Helper и News Helper в каталог',
-                    'Менеджер распознает SCRIPT_VERSION в чужих скриптах без script_version(...)',
-                    'UI стал мягче: обновлены поверхности, скругления и выделение строк списка'
+                    'Список скриптов получил плавное наведение, мягкий glow и небольшой живой сдвиг строки',
+                    'Плашка NEW приведена к размеру и стилю статусных pill-плашек',
+                    'Когда скрипт новый, статусная плашка в списке скрывается, чтобы интерфейс не шумел',
+                    'ESC и крестик закрывают окно менеджера плавным fade-out'
                 }
             },
             {
@@ -163,12 +169,10 @@ function main()
     refreshLocalState()
 
     sampRegisterChatCommand('modio', function()
-        window[0] = not window[0]
-        if window[0] then refreshLocalStateIfNeeded(true) end
+        toggleManagerWindow()
     end)
     sampRegisterChatCommand('mscripts', function()
-        window[0] = not window[0]
-        if window[0] then refreshLocalStateIfNeeded(true) end
+        toggleManagerWindow()
     end)
 
     msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
@@ -176,8 +180,50 @@ function main()
 
     while true do
         checkRemoteManifestIfNeeded()
+        if window[0] and window_target and wasKeyPressed(keys.VK_ESCAPE) then
+            setManagerWindowOpen(false)
+        end
         wait(0)
     end
+end
+
+function toggleManagerWindow()
+    setManagerWindowOpen(not (window[0] and window_target))
+end
+
+function setManagerWindowOpen(open)
+    open = open == true
+    if open then
+        window[0] = true
+        window_target = true
+        refreshLocalStateIfNeeded(true)
+    else
+        window_target = false
+    end
+end
+
+function updateManagerWindowAnimation()
+    local now = os.clock()
+    local delta = now - window_anim_clock
+    if delta < 0 then delta = 0 end
+    window_anim_clock = now
+
+    local target = window_target and 1.0 or 0.0
+    local duration = window_target and 0.16 or 0.20
+    local step = duration > 0 and (delta / duration) or 1.0
+
+    if target > window_alpha then
+        window_alpha = math.min(target, window_alpha + step)
+    elseif target < window_alpha then
+        window_alpha = math.max(target, window_alpha - step)
+    end
+
+    if not window_target and window_alpha <= 0.01 then
+        window_alpha = 0.0
+        window[0] = false
+    end
+
+    return window_alpha
 end
 
 function markScriptSeen(item)
@@ -201,12 +247,17 @@ end)
 imgui.OnFrame(
     function() return window[0] end,
     function()
+        local alpha = updateManagerWindowAnimation()
+        if alpha <= 0.01 and not window_target then return end
+
         local sx, sy = getScreenResolution()
         local start_w = math.min(math.max(sx * 0.80, 1180), sx - 80)
         local start_h = math.min(math.max(sy * 0.78, 700), sy - 80)
         imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
         imgui.SetNextWindowSizeConstraints(imgui.ImVec2(1040, 650), imgui.ImVec2(math.max(1060, sx - 40), math.max(680, sy - 40)))
 
+        local was_open = window[0]
+        imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
         if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, imgui.WindowFlags.NoCollapse) then
             refreshLocalStateIfNeeded(false)
             drawHeader()
@@ -223,6 +274,12 @@ imgui.OnFrame(
             imgui.EndChild()
         end
         imgui.End()
+        imgui.PopStyleVar()
+
+        if was_open and not window[0] and window_target then
+            window[0] = true
+            setManagerWindowOpen(false)
+        end
     end
 )
 
@@ -497,36 +554,52 @@ function drawScriptListItem(index, item, st)
     local pos = imgui.GetCursorPos()
     local screen_pos = imgui.GetCursorScreenPos()
     local size = imgui.ImVec2(0, 58)
+    local active = selected == index
 
     imgui.PushStyleColor(imgui.Col.Header, imgui.ImVec4(0, 0, 0, 0))
     imgui.PushStyleColor(imgui.Col.HeaderHovered, imgui.ImVec4(0, 0, 0, 0))
     imgui.PushStyleColor(imgui.Col.HeaderActive, imgui.ImVec4(0, 0, 0, 0))
-    if imgui.Selectable(ui('##script_' .. id), selected == index, 0, size) then
+    if imgui.Selectable(ui('##script_' .. id), active, 0, size) then
         selected = index
         markScriptSeen(item)
+        active = true
     end
     imgui.PopStyleColor(3)
     local hovered = imgui.IsItemHovered()
-    drawScriptListItemBg(screen_pos, size, selected == index, hovered, isForbiddenScript(item))
+    local progress = updateListItemAnimation(id, active, hovered)
+    drawScriptListItemBg(screen_pos, size, active, hovered, isForbiddenScript(item), progress)
 
     local after = imgui.GetCursorPos()
-    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 8))
+    local text_offset = progress * 4
+    local is_new = isScriptNew(item)
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + text_offset, pos.y + 8))
     if isForbiddenScript(item) then
         drawWarningIcon(16)
         imgui.SameLine()
     end
     imgui.Text(ui(item.name or item.id or 'script'))
-    if isScriptNew(item) then
-        imgui.SameLine()
-        drawNewBadge()
+    if is_new then
+        drawCompactNewBadge(item)
+    else
+        drawCompactStatusBadge(item)
     end
-    drawCompactStatusBadge(item)
 
-    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10, pos.y + 31))
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + text_offset, pos.y + 31))
     imgui.TextColored(listVersionColor(st), ui(statusLine(item, st)))
 
     imgui.SetCursorPos(after)
     imgui.Spacing()
+end
+
+function updateListItemAnimation(id, active, hovered)
+    local current = list_item_anim[id] or 0.0
+    local target = active and 1.0 or hovered and 0.68 or 0.0
+    local factor = target > current and 0.24 or 0.32
+    current = current + (target - current) * factor
+    if current < 0.004 then current = 0 end
+    if current > 0.996 then current = 1 end
+    list_item_anim[id] = current
+    return current
 end
 
 function drawCompactStatusBadge(item)
@@ -540,6 +613,15 @@ function drawCompactStatusBadge(item)
 
     imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
     drawStatusPill(item, 'list_' .. tostring(item.id or item.file or item.name), 0.82, st)
+end
+
+function drawCompactNewBadge(item)
+    local width = newBadgeSize(0.82).x + 16
+    local avail = imgui.GetContentRegionAvail().x
+    if avail <= width + 12 then return end
+
+    imgui.SameLine(imgui.GetWindowContentRegionMax().x - width - 8)
+    drawNewBadge('list_' .. tostring(item.id or item.file or item.name), 0.82)
 end
 
 function scriptStatusBadgeWidth(item, extra, st)
@@ -626,72 +708,90 @@ function drawWarningIcon(size)
     imgui.Dummy(imgui.ImVec2(size, size))
 end
 
-function drawScriptListItemBg(pos, size, active, hovered, forbidden)
-    if not active and not hovered then return end
+function drawScriptListItemBg(pos, size, active, hovered, forbidden, progress)
+    progress = progress or 0
+    if progress <= 0.01 then return end
 
     local draw = imgui.GetWindowDrawList()
     local width = imgui.GetContentRegionAvail().x
     if width <= 0 then width = 300 end
 
-    local color
-    local border
-    if active then
-        color = imgui.ImVec4(0.145, 0.260, 0.430, 0.78)
-        border = imgui.ImVec4(0.380, 0.660, 0.960, 0.34)
-    elseif hovered then
-        color = imgui.ImVec4(0.155, 0.205, 0.280, 0.48)
-        border = imgui.ImVec4(0.360, 0.480, 0.650, 0.22)
-    end
+    local accent = forbidden and imgui.ImVec4(1.00, 0.36, 0.36, 1.00) or imgui.ImVec4(0.38, 0.68, 1.00, 1.00)
+    local glow = imgui.ImVec4(accent.x, accent.y, accent.z, (active and 0.20 or 0.13) * progress)
+    local color = active and imgui.ImVec4(0.145, 0.265, 0.440, 0.56 + 0.24 * progress) or imgui.ImVec4(0.145, 0.195, 0.270, 0.26 + 0.28 * progress)
+    local border = imgui.ImVec4(accent.x, accent.y, accent.z, (active and 0.34 or 0.22) * progress)
+    local shift = progress * 4
 
-    local min = imgui.ImVec2(pos.x + 2, pos.y + 2)
-    local max = imgui.ImVec2(pos.x + width - 2, pos.y + size.y - 2)
+    local min = imgui.ImVec2(pos.x + 2 + shift, pos.y + 3)
+    local max = imgui.ImVec2(pos.x + width - 2 + shift, pos.y + size.y - 3)
+    draw:AddRectFilled(
+        imgui.ImVec2(min.x - 3, min.y - 3),
+        imgui.ImVec2(max.x + 3, max.y + 3),
+        colorU32(glow),
+        12,
+        15
+    )
     draw:AddRectFilled(
         min,
         max,
         colorU32(color),
-        9,
+        10,
         15
     )
-    draw:AddRect(min, max, colorU32(border), 9, 15, 1.0)
+    draw:AddRect(min, max, colorU32(border), 10, 15, 1.0)
 
     if active then
-        local stripe = forbidden and imgui.ImVec4(1.00, 0.36, 0.36, 0.95) or imgui.ImVec4(0.38, 0.68, 1.00, 0.95)
         draw:AddRectFilled(
-            imgui.ImVec2(pos.x + 2, pos.y + 8),
-            imgui.ImVec2(pos.x + 5, pos.y + size.y - 8),
-            colorU32(stripe),
+            imgui.ImVec2(min.x, pos.y + 9),
+            imgui.ImVec2(min.x + 3, pos.y + size.y - 9),
+            colorU32(imgui.ImVec4(accent.x, accent.y, accent.z, 0.95)),
             3,
             15
         )
         draw:AddRectFilled(
-            imgui.ImVec2(pos.x + 5, pos.y + 8),
-            imgui.ImVec2(pos.x + 7, pos.y + size.y - 8),
-            colorU32(imgui.ImVec4(stripe.x, stripe.y, stripe.z, 0.18)),
+            imgui.ImVec2(min.x + 3, pos.y + 9),
+            imgui.ImVec2(min.x + 6, pos.y + size.y - 9),
+            colorU32(imgui.ImVec4(accent.x, accent.y, accent.z, 0.18)),
             2,
             15
         )
     end
 end
 
-function drawNewBadge()
+function newBadgeMetrics(scale)
+    scale = scale or 1.0
     local label = ui 'NEW'
     local text_size = imgui.CalcTextSize(label)
-    local pad_x = 8
-    local pad_y = 3
-    local pos = imgui.GetCursorScreenPos()
-    local size = imgui.ImVec2(text_size.x + pad_x * 2, text_size.y + pad_y * 2)
-    local draw = imgui.GetWindowDrawList()
+    local text_x = 20 * scale
+    local right_pad = 11 * scale
+    local size = imgui.ImVec2(text_size.x + text_x + right_pad, math.max(20, 23 * scale))
+    return label, text_size, size, 10 * scale, text_x, 3.8 * scale
+end
 
-    draw:AddRectFilled(
-        pos,
-        imgui.ImVec2(pos.x + size.x, pos.y + size.y),
-        colorU32(imgui.ImVec4(0.18, 0.46, 0.82, 1.00)),
-        7,
-        15
-    )
-    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + pad_x, pos.y + pad_y - 1))
-    imgui.TextColored(imgui.ImVec4(0.94, 0.98, 1.00, 1.00), label)
-    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + size.x + 4, pos.y))
+function newBadgeSize(scale)
+    local _, _, size = newBadgeMetrics(scale)
+    return size
+end
+
+function drawNewBadge(id, scale)
+    scale = scale or 1.0
+    local label, text_size, size, dot_x, text_x, dot_radius = newBadgeMetrics(scale)
+    local pos = imgui.GetCursorScreenPos()
+    local draw = imgui.GetWindowDrawList()
+    local pulse = (math.sin(os.clock() * 4.0) + 1) * 0.5
+    local bg = imgui.ImVec4(0.115, 0.275, 0.485, 0.74 + pulse * 0.08)
+    local border = imgui.ImVec4(0.410, 0.730, 1.000, 0.55 + pulse * 0.18)
+    local dot = imgui.ImVec4(0.610, 0.880, 1.000, 0.95)
+
+    imgui.InvisibleButton(ui('##new_badge_' .. tostring(id or label)), size)
+    local after = imgui.GetCursorPos()
+    draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), size.y / 2, 15)
+    draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), size.y / 2, 15, 1.0)
+    draw:AddCircleFilled(imgui.ImVec2(pos.x + dot_x, pos.y + size.y / 2), dot_radius, colorU32(dot), 18)
+
+    imgui.SetCursorScreenPos(imgui.ImVec2(pos.x + text_x, pos.y + (size.y - text_size.y) / 2 - 1))
+    imgui.TextColored(imgui.ImVec4(0.930, 0.980, 1.000, 1.00), label)
+    imgui.SetCursorPos(imgui.ImVec2(after.x, after.y))
 end
 
 function hasInstalledForbiddenScripts()
