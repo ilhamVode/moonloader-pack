@@ -493,7 +493,7 @@
       "id": "infozz",
       "name": "InfoZZ",
       "file": "infozz.lua",
-      "version": "1.7.4.1",
+      "version": "1.7.4.2",
       "updated_at": "2026-06-16",
       "hidden": false,
       "author": "Codex / ModioZodio",
@@ -512,6 +512,13 @@
       "notes": "Python-парсер используется только разработчиком для подготовки TXT перед публикацией. Обычному игроку нужен только InfoZZ и доступ к GitHub. Важно: текущие материалы и структура справочника пока сделаны под [01] Phoenix.",
       "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/infozz.lua",
       "changelog": [
+        {
+          "version": "1.7.4.2",
+          "date": "2026-06-16",
+          "changes": [
+            "исправлена кодировка русского текста в render-уведомлении при запуске InfoZZ"
+          ]
+        },
         {
           "version": "1.7.4.1",
           "date": "2026-06-16",

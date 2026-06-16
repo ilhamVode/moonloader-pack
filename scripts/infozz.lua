@@ -1,6 +1,6 @@
 script_name('InfoZZ')
 script_author('Codex')
-script_version('1.7.4.1')
+script_version('1.7.4.2')
 script_description('TXT справочник для SA:MP. Пока заточен под сервер [01] Phoenix. Автор: Codex')
 
 require 'lib.moonloader'
@@ -256,9 +256,9 @@ function draw_render_startup_notice()
     local x = sx - 320
     local y = sy - 92
     renderDrawBox(x - 12, y - 10, 300, 72, 0xC8101724)
-    renderFontDrawText(startup_font, 'InfoZZ загружен', x, y, 0xFF66CCFF)
-    renderFontDrawText(startup_font, 'Автор: Codex', x, y + 20, 0xFFE8EEF8)
-    renderFontDrawText(startup_font, '/infozz - TXT справочник', x, y + 40, 0xFF9AA7B7)
+    renderFontDrawText(startup_font, render_text('InfoZZ загружен'), x, y, 0xFF66CCFF)
+    renderFontDrawText(startup_font, render_text('Автор: Codex'), x, y + 20, 0xFFE8EEF8)
+    renderFontDrawText(startup_font, render_text('/infozz - TXT справочник'), x, y + 40, 0xFF9AA7B7)
 end
 
 function draw_header()
@@ -1271,6 +1271,17 @@ function chat(text, color)
         end
         sampAddChatMessage(message, color or CHAT_INFO)
     end
+end
+
+function render_text(text)
+    text = tostring(text)
+    if not u8 then return text end
+
+    local ok, decoded = pcall(function()
+        return u8:decode(text)
+    end)
+    if ok and decoded then return decoded end
+    return text
 end
 
 function normalize_search_text(text)
