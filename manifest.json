@@ -7,6 +7,20 @@
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
     {
+      "title": "Modio Manager 1.8.3.2",
+      "date": "2026-06-19",
+      "parts": [
+        {
+          "text": "Исправлен минимальный размер основной области. ",
+          "color": "#9CCBFF"
+        },
+        {
+          "text": "Список и новости больше не должны обрезаться при сжатии окна.",
+          "color": "#FFD166"
+        }
+      ]
+    },
+    {
       "title": "Modio Manager 1.8.3.1",
       "date": "2026-06-19",
       "parts": [
@@ -74,10 +88,18 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.3.1",
+    "version": "1.8.3.2",
     "updated_at": "2026-06-19",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.3.2",
+        "date": "2026-06-19",
+        "changes": [
+          "Исправлен минимальный размер основной области",
+          "Окно держит новости и список без обрезки при сжатии"
+        ]
+      },
       {
         "version": "1.8.3.1",
         "date": "2026-06-19",

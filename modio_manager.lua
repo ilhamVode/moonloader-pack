@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3.1'
+local MANAGER_VERSION = '1.8.3.2'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -96,8 +96,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Окно больше не растягивается выше заполненного контента',
-                    'Новости расширяются только после заполнения основной части'
+                    'Исправлен минимальный размер основной области',
+                    'Окно держит новости и список без обрезки при сжатии'
                 }
             },
             {
@@ -129,11 +129,11 @@ local manifest = {
     scripts = {},
     news = {
         {
-            title = 'Modio Manager 1.8.3.1',
+            title = 'Modio Manager 1.8.3.2',
             date = '2026-06-16',
             parts = {
-                { text = 'Окно менеджера больше не растягивается в пустоту. ', color = '#9CCBFF' },
-                { text = 'Новости расширяются только после заполнения основной части.', color = '#FFD166' }
+                { text = 'Исправлен минимальный размер основной области. ', color = '#9CCBFF' },
+                { text = 'Список и новости больше не должны обрезаться при сжатии окна.', color = '#FFD166' }
             }
         }
     }
@@ -303,12 +303,15 @@ imgui.OnFrame(
         local min_w = 1040
         local start_w = math.min(math.max(sx * 0.80, 1180), sx - 80)
         local start_h = math.min(math.max(sy * 0.78, 700), max_h)
+        local layout_min_h = 650
         local layout_max_h = max_h
         if layout_window_extra_h > 0 then
-            layout_max_h = math.min(max_h, math.max(650, layout_window_extra_h + 515 + 300 + imgui.GetStyle().ItemSpacing.y))
+            local spacing_y = imgui.GetStyle().ItemSpacing.y
+            layout_min_h = math.min(max_h, math.max(650, layout_window_extra_h + 465 + 200 + spacing_y))
+            layout_max_h = math.min(max_h, math.max(layout_min_h, layout_window_extra_h + 515 + 300 + spacing_y))
         end
         imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
-        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(min_w, 650), imgui.ImVec2(max_w, layout_max_h))
+        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(min_w, layout_min_h), imgui.ImVec2(max_w, layout_max_h))
 
         local was_open = window[0]
         imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
