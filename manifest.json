@@ -3,9 +3,23 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-16 12:45 MSK",
+  "updated_at": "2026-06-19 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.3",
+      "date": "2026-06-19",
+      "parts": [
+        {
+          "text": "Обновлена компоновка окна: ",
+          "color": "#9CCBFF"
+        },
+        {
+          "text": "middle-часть растет до 515px, затем новости расширяются до 300px.",
+          "color": "#FFD166"
+        }
+      ]
+    },
     {
       "title": "Modio Manager | Твой скрипт в менеджере",
       "date": "2026-06-16",
@@ -46,10 +60,19 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.2",
-    "updated_at": "2026-06-16",
+    "version": "1.8.3",
+    "updated_at": "2026-06-19",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.3",
+        "date": "2026-06-19",
+        "changes": [
+          "Обновлена компоновка: сначала растет область списка и описания, затем новости расширяются до 300px",
+          "В строку версии перенесено время последней проверки, строка manifest убрана из шапки",
+          "Добавлена debug-версия менеджера для замеров интерфейса"
+        ]
+      },
       {
         "version": "1.8.2",
         "date": "2026-06-16",

@@ -1,7 +1,7 @@
 local MANAGER_VERSION = '1.8.3'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
-script_name('ModioManager')
+script_name('ModioManagerDebug')
 script_author('ModioZodio')
 script_version(MANAGER_VERSION)
 script_properties('work-in-pause')
@@ -46,7 +46,7 @@ local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/mani
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local REMOTE_RETRY_AFTER_ERROR = 300
-local PREFIX = '[ModioManager]'
+local PREFIX = '[ModioManagerDebug]'
 local CHAT = 0x52C7EA
 local OK = 0x77DD77
 local WARN = 0xFFD166
@@ -78,6 +78,15 @@ local last_local_refresh_clock = 0
 local next_remote_check_at = 0
 local using_cached_manifest = false
 local last_manifest_error = ''
+local debug_layout = {
+    avail_y = 0,
+    middle_h = 0,
+    news_h = 0,
+    list_w = 0,
+    details_w = 0,
+    window_w = 0,
+    window_h = 0
+}
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -203,14 +212,14 @@ function main()
     loadSeenScripts()
     refreshLocalState()
 
-    sampRegisterChatCommand('modio', function()
+    sampRegisterChatCommand('modiodebug', function()
         toggleManagerWindow()
     end)
-    sampRegisterChatCommand('mscripts', function()
+    sampRegisterChatCommand('mscriptsdebug', function()
         toggleManagerWindow()
     end)
 
-    msg('Менеджер скриптов загружен. Окно: /modio или /mscripts', OK)
+    msg('Debug-менеджер скриптов загружен. Окно: /modiodebug или /mscriptsdebug', OK)
     checkRemoteManifest(true)
 
     while true do
@@ -298,19 +307,16 @@ imgui.OnFrame(
         if alpha <= 0.01 and not window_target then return end
 
         local sx, sy = getScreenResolution()
-        local max_w = math.max(1060, sx - 40)
-        local max_h = math.max(680, sy - 40)
-        local min_w = 1040
         local start_w = math.min(math.max(sx * 0.80, 1180), sx - 80)
-        local start_h = math.min(math.max(sy * 0.78, 700), max_h)
+        local start_h = math.min(math.max(sy * 0.78, 700), sy - 80)
         imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
-        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(min_w, 650), imgui.ImVec2(max_w, max_h))
+        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(1040, 650), imgui.ImVec2(math.max(1060, sx - 40), math.max(680, sy - 40)))
 
         local was_open = window[0]
         imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
 
         local main_flags = noOuterScrollFlags(imgui.WindowFlags.NoCollapse)
-        if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, main_flags) then
+        if imgui.Begin(ui 'Modio Manager Debug | замеры интерфейса', window, main_flags) then
             refreshLocalStateIfNeeded(false)
             drawHeader()
             imgui.Separator()
@@ -344,8 +350,19 @@ imgui.OnFrame(
                 end
             end
 
+            local list_w = scriptListPanelWidth()
+            local spacing_x = imgui.GetStyle().ItemSpacing.x
+            local details_w = math.max(0, imgui.GetContentRegionAvail().x - list_w - spacing_x)
+            debug_layout.avail_y = avail_y
+            debug_layout.middle_h = middle_h
+            debug_layout.news_h = news_h
+            debug_layout.list_w = list_w
+            debug_layout.details_w = details_w
+            debug_layout.window_w = imgui.GetWindowSize().x
+            debug_layout.window_h = imgui.GetWindowSize().y
+
             imgui.PushStyleVarVec2(imgui.StyleVar.WindowPadding, imgui.ImVec2(8, 10))
-            imgui.BeginChild('script_list_frame', imgui.ImVec2(scriptListPanelWidth(), middle_h), true, noOuterScrollFlags(0))
+            imgui.BeginChild('script_list_frame', imgui.ImVec2(list_w, middle_h), true, noOuterScrollFlags(0))
             drawScriptList()
             imgui.EndChild()
             imgui.PopStyleVar()
@@ -359,6 +376,7 @@ imgui.OnFrame(
             if news_h > 0 then
                 drawNewsPanel('bottom_fixed', 4, news_h)
             end
+            drawDebugLayoutInfo()
         end
         imgui.End()
         imgui.PopStyleVar()
@@ -478,6 +496,41 @@ function drawHeader()
     end
 
     drawForbiddenDeleteConfirmation()
+end
+
+function drawDebugLayoutInfo()
+    local draw = imgui.GetWindowDrawList()
+    local win_pos = imgui.GetWindowPos()
+    local win_size = imgui.GetWindowSize()
+    local pad = 12
+    local line_h = imgui.GetTextLineHeightWithSpacing()
+    local box_w = 285
+    local box_h = line_h * 7 + 18
+    local pos = imgui.ImVec2(win_pos.x + win_size.x - box_w - pad, win_pos.y + 46)
+    local end_pos = imgui.ImVec2(pos.x + box_w, pos.y + box_h)
+
+    draw:AddRectFilled(pos, end_pos, colorU32(imgui.ImVec4(0.035, 0.050, 0.075, 0.86)), 8, 15)
+    draw:AddRect(pos, end_pos, colorU32(imgui.ImVec4(0.32, 0.56, 0.88, 0.58)), 8, 15, 1.1)
+
+    local x = pos.x + 12
+    local y = pos.y + 9
+    local title_color = colorU32(imgui.ImVec4(0.62, 0.80, 1.00, 1.00))
+    local text_color = colorU32(imgui.ImVec4(0.88, 0.92, 0.98, 1.00))
+    local hint_color = colorU32(imgui.ImVec4(1.00, 0.82, 0.42, 1.00))
+
+    draw:AddText(imgui.ImVec2(x, y), title_color, ui 'DEBUG layout')
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), text_color, ui(string.format('window: %.0f x %.0f', debug_layout.window_w, debug_layout.window_h)))
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), text_color, ui(string.format('avail_y: %.0f | middle_h: %.0f', debug_layout.avail_y, debug_layout.middle_h)))
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), hint_color, ui(string.format('news_h: %.0f', debug_layout.news_h)))
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), text_color, ui(string.format('list_w: %.0f | details_w: %.0f', debug_layout.list_w, debug_layout.details_w)))
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), text_color, ui 'Commands: /modiodebug, /mscriptsdebug')
+    y = y + line_h
+    draw:AddText(imgui.ImVec2(x, y), hint_color, ui 'Use news_h for final news size.')
 end
 
 function drawNewScriptsNotice()
@@ -1650,6 +1703,11 @@ function managerVersionColor()
 end
 
 function updateManager()
+    if true then
+        msg('Debug-версия не обновляет сама себя. Обновляйте основной modio_manager.lua.', WARN)
+        return
+    end
+
     if busy or checking then return end
 
     local manager = manifest.manager
