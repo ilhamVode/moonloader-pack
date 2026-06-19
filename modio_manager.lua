@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3'
+local MANAGER_VERSION = '1.8.3.1'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -78,6 +78,7 @@ local last_local_refresh_clock = 0
 local next_remote_check_at = 0
 local using_cached_manifest = false
 local last_manifest_error = ''
+local layout_window_extra_h = 0
 local manifest = {
     schema = 1,
     name = 'ModioZodio MoonLoader Pack',
@@ -95,9 +96,8 @@ local manifest = {
                 version = MANAGER_VERSION,
                 date = '2026-06-16',
                 changes = {
-                    'Область скриптов держит рабочую высоту, а новости расширяются до 300px после заполнения основной части',
-                    'В шапке убрана строка manifest и добавлено время последней проверки в строку версии',
-                    'Добавлена debug-версия менеджера для замеров layout'
+                    'Окно больше не растягивается выше заполненного контента',
+                    'Новости расширяются только после заполнения основной части'
                 }
             },
             {
@@ -129,11 +129,11 @@ local manifest = {
     scripts = {},
     news = {
         {
-            title = 'Modio Manager 1.8.3',
+            title = 'Modio Manager 1.8.3.1',
             date = '2026-06-16',
             parts = {
-                { text = 'Обновлена компоновка менеджера: ', color = '#9CCBFF' },
-                { text = 'middle-часть растет до 515px, затем новости расширяются до 300px.', color = '#FFD166' }
+                { text = 'Окно менеджера больше не растягивается в пустоту. ', color = '#9CCBFF' },
+                { text = 'Новости расширяются только после заполнения основной части.', color = '#FFD166' }
             }
         }
     }
@@ -303,8 +303,12 @@ imgui.OnFrame(
         local min_w = 1040
         local start_w = math.min(math.max(sx * 0.80, 1180), sx - 80)
         local start_h = math.min(math.max(sy * 0.78, 700), max_h)
+        local layout_max_h = max_h
+        if layout_window_extra_h > 0 then
+            layout_max_h = math.min(max_h, math.max(650, layout_window_extra_h + 515 + 300 + imgui.GetStyle().ItemSpacing.y))
+        end
         imgui.SetNextWindowSize(imgui.ImVec2(start_w, start_h), imgui.Cond.FirstUseEver)
-        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(min_w, 650), imgui.ImVec2(max_w, max_h))
+        imgui.SetNextWindowSizeConstraints(imgui.ImVec2(min_w, 650), imgui.ImVec2(max_w, layout_max_h))
 
         local was_open = window[0]
         imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
@@ -316,6 +320,7 @@ imgui.OnFrame(
             imgui.Separator()
 
             local avail_y = imgui.GetContentRegionAvail().y
+            layout_window_extra_h = math.max(0, imgui.GetWindowSize().y - avail_y)
             local has_news = type(manifest.news) == 'table' and #manifest.news > 0
             local spacing_y = imgui.GetStyle().ItemSpacing.y
             local news_h = 0
