@@ -153,7 +153,10 @@ function sameLineIfFits(width)
 end
 
 function colorU32(color)
-    return imgui.ColorConvertFloat4ToU32(color)
+    local alpha = window_alpha
+    if not alpha or alpha < 0 then alpha = 1.0 end
+    if alpha > 1 then alpha = 1.0 end
+    return imgui.ColorConvertFloat4ToU32(imgui.ImVec4(color.x, color.y, color.z, color.w * alpha))
 end
 
 -- Fixed layout helpers: outer panels must not scroll; only inner body areas scroll.
