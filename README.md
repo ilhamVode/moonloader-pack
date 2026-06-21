@@ -12,9 +12,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ilhamVode/moonloader-pack/blob/main/modio_manager.lua">
-    <img src="https://img.shields.io/badge/⬇%20СКАЧАТЬ-modio_manager.lua-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download">
+  <a href="https://github.com/ilhamVode/moonloader-pack/releases/latest/download/modio_manager.lua">
+    <img src="https://img.shields.io/github/v/release/ilhamVode/moonloader-pack?style=for-the-badge&label=СКАЧАТЬ&color=2ea44f" alt="Download">
   </a>
+  <br>
+  <sub>или напрямую: <a href="https://raw.githubusercontent.com/ilhamVode/moonloader-pack/refs/heads/main/modio_manager.lua">modio_manager.lua</a> (правой кнопкой → Сохранить как...)</sub>
 </p>
 
 ---
@@ -30,7 +32,7 @@
 
 ## 🚀 Быстрый старт
 
-1. **Скачай** [`modio_manager.lua`](https://github.com/ilhamVode/moonloader-pack/blob/main/modio_manager.lua) — открой страницу и нажми **Download raw file**
+1. **Скачай** [`modio_manager.lua`](https://github.com/ilhamVode/moonloader-pack/releases/latest/download/modio_manager.lua) — нажми на кнопку выше или открой [страницу релизов](https://github.com/ilhamVode/moonloader-pack/releases/latest)
 2. **Перемести** файл в папку `GTA San Andreas\moonloader\`
 3. **Запусти игру** (или перезагрузи MoonLoader: `Ctrl+R`)
 4. **Открой менеджер** командой в чате:
