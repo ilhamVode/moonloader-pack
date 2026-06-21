@@ -14,7 +14,7 @@
 2. Внеси изменения, обнови версию и changelog
 3. Создай Pull Request в `dev`
 4. После проверки — merge в `dev`
-5. После накопления изменений — PR `dev` → `main` → tag
+5. После накопления изменений — PR `dev` → `main`, затем тэг на `main`
 
 ## Commit message
 
