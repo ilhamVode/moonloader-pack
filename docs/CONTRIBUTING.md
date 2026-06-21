@@ -2,24 +2,30 @@
 
 ## Ветки
 
-- `main` — стабильная ветка для пользователей. Прямые пуши запрещены.
-- `dev` — тестовая сборка. Новые изменения попадают сюда через PR.
-- `feature/*` — ветки новых функций.
-- `script/*` — ветки обновления скриптов.
-- `hotfix/*` — срочные исправления `main`.
+- `main` — стабильная ветка. Всё что в `main` — уже у игроков.
+- `dev/*` — ветки разработчиков. Одна задача = одна ветка.
 
 ## Процесс
 
-1. Создай ветку от `dev`: `git checkout -b script/my-fix dev`
-2. Внеси изменения, обнови версию и changelog
-3. Создай Pull Request в `dev`
-4. После проверки — merge в `dev`
-5. После накопления изменений — PR `dev` → `main`, затем тэг на `main`
+Разработчик хочет обновить свой скрипт:
+
+```bash
+git checkout main
+git pull
+git checkout -b dev/lavaka-fix
+# меняешь файл, обновляешь версию и changelog
+git add .
+git commit -m "Update Lavaka to 1.1.0"
+git push -u origin dev/lavaka-fix
+```
+
+Создаёшь Pull Request: `dev/lavaka-fix → main`
+
+Я проверяю и merge. После merge игроки сразу видят обновление в менеджере.
 
 ## Commit message
 
 Пиши коротко и по делу:
-
 - `Fix manager button overlap`
 - `Update Lavaka to 1.1.0`
 - `Add InfoZZ database download`
