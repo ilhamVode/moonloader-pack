@@ -12,7 +12,7 @@
 ```bash
 git checkout main
 git pull
-git checkout -b dev/lavaka-fix
+git checkout -b dev/lavaka
 # меняешь файл, обновляешь версию и changelog
 git add .
 git commit -m "Update Lavaka to 1.1.0"
