@@ -22,32 +22,28 @@ SOFTWARE.
 
 ---
 
-## ModioZodio Scripts (MIT License)
+ModioZodio Scripts (MIT License)
 
 The MIT license applies to the following scripts authored by ModioZodio:
 
-| Script | Description |
-|--------|-------------|
-| modio_manager.lua | Modio Manager — install, update and delete scripts in-game |
-| lavaka.lua | Lavaka installation helper |
-| ctrllkm.lua | Ctrl + LMB auto-clicker helper |
-| infozz.lua | In-game TXT reference for SA:MP |
+  modio_manager.lua  - Modio Manager, install, update and delete scripts in-game
+  lavaka.lua         - Lavaka installation helper
+  ctrllkm.lua        - Ctrl + LMB auto-clicker helper
+  infozz.lua         - In-game TXT reference for SA:MP
 
-## Third-Party Scripts
+Third-Party Scripts
 
 This pack includes scripts authored by other developers. These scripts are
 distributed with permission and credit to their original authors. The MIT
 license above applies only to code written by ModioZodio.
 
-| Script | Author | Source |
-|--------|--------|--------|
-| AutoOpenRoulettes.lua | CaJlaT | blast.hk |
-| bFishing.lua | bakhusse | blast.hk |
-| Gribi.lua | vlaDICK2288 | blast.hk |
-| doklad.lua | Caps | blast.hk |
-| arenda.lua | Baretti | blast.hk |
-| NewsHelper.lua | fa1ser | blast.hk |
-| FPSFix.lua | JustFedot | blast.hk (base) |
+  AutoOpenRoulettes.lua  by CaJlaT        (blast.hk)
+  bFishing.lua           by bakhusse      (blast.hk)
+  Gribi.lua              by vlaDICK2288   (blast.hk)
+  doklad.lua             by Caps          (blast.hk)
+  arenda.lua             by Baretti       (blast.hk)
+  NewsHelper.lua         by fa1ser        (blast.hk)
+  FPSFix.lua             by JustFedot     (blast.hk, base)
 
 Original authors retain full rights to their code. If you are an author and
 wish to have your script removed, please open an issue.
