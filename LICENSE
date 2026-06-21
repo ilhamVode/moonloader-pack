@@ -22,6 +22,17 @@ SOFTWARE.
 
 ---
 
+## ModioZodio Scripts (MIT License)
+
+The MIT license applies to the following scripts authored by ModioZodio:
+
+| Script | Description |
+|--------|-------------|
+| modio_manager.lua | Modio Manager — install, update and delete scripts in-game |
+| lavaka.lua | Lavaka installation helper |
+| ctrllkm.lua | Ctrl + LMB auto-clicker helper |
+| infozz.lua | In-game TXT reference for SA:MP |
+
 ## Third-Party Scripts
 
 This pack includes scripts authored by other developers. These scripts are
