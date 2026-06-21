@@ -3,9 +3,23 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-19 MSK",
+  "updated_at": "2026-06-21 MSK",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.3.3",
+      "date": "2026-06-21",
+      "parts": [
+        {
+          "text": "Менеджер стал легче: ",
+          "color": "#9CCBFF"
+        },
+        {
+          "text": "каталог скриптов больше не хранится внутри lua-файла.",
+          "color": "#FFD166"
+        }
+      ]
+    },
     {
       "title": "Modio Manager | Твой скрипт в менеджере",
       "date": "2026-06-16",
@@ -46,10 +60,18 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.3.2",
-    "updated_at": "2026-06-19",
+    "version": "1.8.3.3",
+    "updated_at": "2026-06-21",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.3.3",
+        "date": "2026-06-21",
+        "changes": [
+          "Каталог скриптов больше не хранится внутри manager.lua",
+          "При запуске используется локальная копия manifest, затем проверяется GitHub"
+        ]
+      },
       {
         "version": "1.8.3.2",
         "date": "2026-06-19",

@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3.2'
+local MANAGER_VERSION = '1.8.3.3'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -79,65 +79,26 @@ local next_remote_check_at = 0
 local using_cached_manifest = false
 local last_manifest_error = ''
 local layout_window_extra_h = 0
-local manifest = {
-    schema = 1,
-    name = 'ModioZodio MoonLoader Pack',
-    owner = 'ModioZodio',
-    homepage = 'https://github.com/ilhamVode/moonloader-pack',
-    updated_at = '-',
-    notes = 'Каталог скриптов загружается только из GitHub manifest.json.',
-    manager = {
-        file = 'modio_manager.lua',
-        version = MANAGER_VERSION,
+local function emptyManifest()
+    return {
+        schema = 1,
+        name = 'ModioZodio MoonLoader Pack',
+        owner = 'ModioZodio',
+        homepage = 'https://github.com/ilhamVode/moonloader-pack',
         updated_at = '-',
-        url = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua',
-        changelog = {
-            {
-                version = MANAGER_VERSION,
-                date = '2026-06-16',
-                changes = {
-                    'Исправлен минимальный размер основной области',
-                    'Окно держит новости и список без обрезки при сжатии'
-                }
-            },
-            {
-                version = '1.7.28',
-                date = '2026-06-15',
-                changes = {
-                    'Добавлен флаг hidden:false для всех скриптов',
-                    'Зафиксирована версия менеджера 1.7.28 в manifest и manager.lua'
-                }
-            },
-            {
-                version = '1.7.22',
-                date = '2026-06-15',
-                changes = {
-                    'Исправлено удаление запрещенных скриптов: теперь они корректно выгружаются из памяти',
-                    'Функция deleteForbiddenScripts() теперь использует модульное удаление как deleteScript()'
-                }
-            },
-            {
-                version = '1.7.21',
-                date = '2026-06-15',
-                changes = {
-                    'Manifest и ссылки обновлений переведены на GitHub raw/HEAD',
-                    'raw/HEAD стабильнее отдает свежие manifest и modio_manager.lua в текущей схеме'
-                }
-            }
-        }
-    },
-    scripts = {},
-    news = {
-        {
-            title = 'Modio Manager 1.8.3.2',
-            date = '2026-06-16',
-            parts = {
-                { text = 'Исправлен минимальный размер основной области. ', color = '#9CCBFF' },
-                { text = 'Список и новости больше не должны обрезаться при сжатии окна.', color = '#FFD166' }
-            }
-        }
+        notes = '',
+        manager = {
+            file = 'modio_manager.lua',
+            version = MANAGER_VERSION,
+            updated_at = '-',
+            url = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua'
+        },
+        scripts = {},
+        news = {}
     }
-}
+end
+
+local manifest = emptyManifest()
 
 function textWidth(text)
     local ok, size = pcall(imgui.CalcTextSize, tostring(text or ''))
@@ -201,6 +162,11 @@ function main()
     ensureDir(config_dir)
     ensureDir(tmp_dir)
     loadSeenScripts()
+    loadManifestFromFile(manifest_cache_path, false)
+    if type(manifest.scripts) == 'table' and #manifest.scripts > 0 then
+        using_cached_manifest = true
+        last_check_text = 'Используется локальный manifest. Проверяю GitHub...'
+    end
     refreshLocalState()
 
     sampRegisterChatCommand('modio', function()
