@@ -1,26 +1,8 @@
-# Владельцы файлов ModioZodio MoonLoader Pack
+* @ilhamqasimov46
 
-# Главный менеджер и manifest только через владельца
-/modio_manager.lua @ilhamqasimov46
-/manifest.json @ilhamqasimov46
-
-# Скрипты ModioZodio
-/scripts/lavaka.lua @ilhamqasimov46
-/scripts/ctrllkm.lua @ilhamqasimov46
-/scripts/infozz.lua @ilhamqasimov46
-/scripts/FPSFix.lua @ilhamqasimov46
-
-# Сторонние скрипты
-/scripts/AutoOpenRoulettes.lua
-/scripts/Gribi.lua
-/scripts/bFishing.lua
-/scripts/doklad.lua
-/scripts/arenda.lua
-/scripts/NewsHelper.lua
-
-# Зависимости
-/lib/ @ilhamqasimov46
-
-# Документация
-/docs/ @ilhamqasimov46
-/.github/ @ilhamqasimov46
+/scripts/AutoOpenRoulettes.lua @CaJlaT
+/scripts/bFishing.lua @bakhusse
+/scripts/Gribi.lua @vlaDICK2288
+/scripts/doklad.lua @Caps
+/scripts/arenda.lua @Baretti
+/scripts/NewsHelper.lua @fa1ser
