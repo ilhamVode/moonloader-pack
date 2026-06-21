@@ -23,7 +23,7 @@
 
 <!-- СКРИНШОТ МЕНЕДЖЕРА -->
 <p align="center">
-  <i>(скриншот окна менеджера)</i>
+  <img src="screenshots/manager.png" alt="Modio Manager" width="800">
 </p>
 
 ---
