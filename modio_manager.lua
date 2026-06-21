@@ -1816,7 +1816,7 @@ end
 function readScriptVersion(path)
     local f = io.open(path, 'r')
     if not f then return nil end
-    local text = f:read(8192) or ''
+    local text = f:read(8192) or '' -- первые 8KB (~100-140 строк) — script_version должен быть в заголовке
     f:close()
 
     local direct = text:match("script_version%s*%(%s*['\"]([^'\"]+)['\"]%s*%)")
