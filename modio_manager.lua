@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3.3'
+local MANAGER_VERSION = '1.8.3.4'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')

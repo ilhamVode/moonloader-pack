@@ -3,9 +3,27 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-21 MSK",
+  "updated_at": "2026-06-21 MSK (v1.8.3.4)",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.3.4",
+      "date": "2026-06-21",
+      "parts": [
+        {
+          "text": "Ссылки переведены на ",
+          "color": "#9CCBFF"
+        },
+        {
+          "text": "raw/refs/heads/main",
+          "color": "#FFD166"
+        },
+        {
+          "text": ", добавлены docs, CODEOWNERS, шаблон PR. Ветка main защищена.",
+          "color": "#9CCBFF"
+        }
+      ]
+    },
     {
       "title": "Modio Manager 1.8.3.3",
       "date": "2026-06-21",
@@ -60,10 +78,20 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.3.3",
+    "version": "1.8.3.4",
     "updated_at": "2026-06-21",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.3.4",
+        "date": "2026-06-21",
+        "changes": [
+          "Ссылки raw/HEAD заменены на raw/refs/heads/main для явного указания стабильной ветки",
+          "Добавлена документация: CONTRIBUTING.md, VERSIONING.md, MANIFEST.md",
+          "Добавлены CODEOWNERS и шаблон Pull Request",
+          "Main-ветка защищена от прямых пушей"
+        ]
+      },
       {
         "version": "1.8.3.3",
         "date": "2026-06-21",
