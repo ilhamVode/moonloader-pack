@@ -154,7 +154,7 @@ _Автор: CaJlaT_
 ### 🔹 A-Doklad
 
 <p align="center">
-  <img src="screenshots/doklad.png" alt="A-Doklad" width="800">
+  <img src="screenshots/doklad.png" alt="A-Doklad" width="550">
 </p>
 
 Скрипт для автоматических докладов в рацию на посту для армий Arizona RP. Отправляет заданный доклад через выбранный интервал и помогает не забывать регулярные сообщения на посту.
@@ -288,7 +288,7 @@ _Автор: vlaDICK2288_
 #### 🔴 bFishing
 
 <p align="center">
-  <img src="screenshots/bFishing.png" alt="bFishing" width="800">
+  <img src="screenshots/bFishing.png" alt="bFishing" width="550">
 </p>
 
 Помощник для рыбалки на Arizona RP. Автоматизирует прохождение новой CEF-мини-игры, умеет заново забрасывать удочку после улова и позволяет настраивать задержки действий.
