@@ -1554,6 +1554,10 @@ function checkRemoteManifest(silent)
             busy_text = ''
             local ok, err = loadManifestFromFile(tmp, true)
             if ok then
+                if type(manifest.manager) ~= 'table' or not manifest.manager.url or manifest.manager.url == '' then
+                    last_error = 'В manifest.json отсутствует manager.url — обновление менеджера невозможно.'
+                    msg(last_error, ERR)
+                end
                 copyFile(tmp, manifest_cache_path)
                 os.remove(tmp)
                 using_cached_manifest = false
@@ -1812,7 +1816,7 @@ end
 function readScriptVersion(path)
     local f = io.open(path, 'r')
     if not f then return nil end
-    local text = f:read('*a') or ''
+    local text = f:read(8192) or ''
     f:close()
 
     local direct = text:match("script_version%s*%(%s*['\"]([^'\"]+)['\"]%s*%)")

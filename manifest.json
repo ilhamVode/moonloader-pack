@@ -612,7 +612,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "infozz",
@@ -706,7 +706,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "gribi",
@@ -743,7 +743,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "bfishing",
@@ -780,7 +780,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "adoklad",
@@ -817,7 +817,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "arendahelper",
@@ -853,7 +853,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "newshelper",
@@ -889,7 +889,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     }
   ]
 }
