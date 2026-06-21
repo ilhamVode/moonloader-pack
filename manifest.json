@@ -11,15 +11,7 @@
       "date": "2026-06-21",
       "parts": [
         {
-          "text": "Ссылки переведены на ",
-          "color": "#9CCBFF"
-        },
-        {
-          "text": "raw/refs/heads/main",
-          "color": "#FFD166"
-        },
-        {
-          "text": ", добавлены docs, CODEOWNERS, шаблон PR. Ветка main защищена.",
+          "text": "Ссылки обновлены, добавлена документация и защита main-ветки.",
           "color": "#9CCBFF"
         }
       ]
