@@ -62,7 +62,7 @@
     "file": "modio_manager.lua",
     "version": "1.8.3.3",
     "updated_at": "2026-06-21",
-    "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua",
+    "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
     "changelog": [
       {
         "version": "1.8.3.3",
@@ -485,7 +485,7 @@
         "защита от ложных сообщений игроков: реакция только на системные подсказки и ошибки"
       ],
       "notes": "Фоновый CEF-перехват убран специально: так скрипт не вмешивается в другие CEF-окна игры, например /time.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/lavaka.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/lavaka.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -522,7 +522,7 @@
         "без повторяющихся подсказок в чат во время работы"
       ],
       "notes": "Команды и название приведены к ЛКМ: старое упоминание ПКМ было ошибкой в раннем описании.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/ctrllkm.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/ctrllkm.lua",
       "changelog": [
         {
           "version": "1.1",
@@ -570,7 +570,7 @@
         "автоеда срабатывает по event.arizonahud.playerSatiety при сытости 20 или ниже"
       ],
       "notes": "Авторская основа FPSFix сохранена. Автоеда читает только точечное CEF-событие playerSatiety и не блокирует другие CEF-пакеты.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/FPSFix.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/FPSFix.lua",
       "changelog": [
         {
           "version": "1.1",
@@ -615,7 +615,7 @@
         "обновление списка файлов без перезапуска игры"
       ],
       "notes": "Python-парсер используется только разработчиком для подготовки TXT перед публикацией. Обычному игроку нужен только InfoZZ и доступ к GitHub. Важно: текущие материалы и структура справочника пока сделаны под [01] Phoenix.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/infozz.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/infozz.lua",
       "changelog": [
         {
           "version": "1.7.4.2",
@@ -674,7 +674,7 @@
         "логирует полученные призы в текстовый файл за текущую дату"
       ],
       "notes": "Скрипт работает только когда открыто окно рулетки и текущая рулетка поддерживается кодом. Автор указан из script_author: CaJlaT.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/AutoOpenRoulettes.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/AutoOpenRoulettes.lua",
       "changelog": [
         {
           "version": "2.4",
@@ -710,7 +710,7 @@
         "переключение одной командой без дополнительного окна"
       ],
       "notes": "В оригинальном файле нет script_version, поэтому версия отображается как \"без версии\". Автор указан из сообщения загрузки скрипта: vlaDICK2288.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/Gribi.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/Gribi.lua",
       "changelog": [
         {
           "version": "без версии",
@@ -748,7 +748,7 @@
         "сохранение настроек в moonloader/config/bFishing.json"
       ],
       "notes": "Требования: MoonLoader 0.26+, mimgui, inicfg, arizona-events, samp.events, encoding. Автор указан из script_author: bakhusse.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/bFishing.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/bFishing.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -786,7 +786,7 @@
         "сохранение настроек в doklad_settings.ini"
       ],
       "notes": "Требования: MoonLoader, SAMP.Lua, mimgui, inicfg, encoding. В исходном описании автор не указан; в pack добавлены script_name и script_version для менеджера.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/doklad.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/doklad.lua",
       "changelog": [
         {
           "version": "1.0",
@@ -821,7 +821,7 @@
         "сохранение настроек в config/arenda.json"
       ],
       "notes": "Требования: MoonLoader 0.26, mimgui, samp.events, vkeys, fAwesome6, jsoncfg. Автор указан из SCRIPT_META: Baretti.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/arenda.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/arenda.lua",
       "changelog": [
         {
           "version": "V9.0",
@@ -857,7 +857,7 @@
         "настраиваемая тема интерфейса"
       ],
       "notes": "Требования: MoonLoader, mimgui, samp.events, fAwesome6, memory, mimgui_hotkeys, encoding. Автор указан из script_author: fa1ser.",
-      "url": "https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/NewsHelper.lua",
+      "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/NewsHelper.lua",
       "changelog": [
         {
           "version": "4.3",

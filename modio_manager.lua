@@ -42,7 +42,7 @@ local window_target = false
 local window_alpha = 0.0
 local window_anim_clock = os.clock()
 
-local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/manifest.json'
+local MANIFEST_URL = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/manifest.json'
 local LOCAL_REFRESH_INTERVAL = 2.0
 local REMOTE_CHECK_INTERVAL = 3600
 local REMOTE_RETRY_AFTER_ERROR = 300
@@ -91,7 +91,7 @@ local function emptyManifest()
             file = 'modio_manager.lua',
             version = MANAGER_VERSION,
             updated_at = '-',
-            url = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/modio_manager.lua'
+            url = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua'
         },
         scripts = {},
         news = {}

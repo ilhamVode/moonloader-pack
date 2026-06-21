@@ -27,7 +27,7 @@ local CHAT_WARN = 0xFFD166
 local CHAT_ERR = 0xFF6666
 local MAX_FILE_BYTES = 2 * 1024 * 1024
 local READ_CHUNK_BYTES = 16 * 1024
-local REMOTE_CONFIG_BASE = 'https://github.com/ilhamVode/moonloader-pack/raw/HEAD/scripts/config/infozz'
+local REMOTE_CONFIG_BASE = 'https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/scripts/config/infozz'
 local REMOTE_FILES_INDEX = REMOTE_CONFIG_BASE .. '/_files.txt'
 
 local window = new.bool(false)
