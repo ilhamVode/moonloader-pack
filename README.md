@@ -326,7 +326,6 @@ _Автор: bakhusse_
 
 - **GTA: San Andreas** (любая версия)
 - **[MoonLoader](https://www.blast.hk/threads/13305/) 0.26+**
-- **Сервер:** Arizona RP
 
 ---
 
