@@ -1,7 +1,7 @@
 script_name('InfoZZ')
-script_author('Codex')
+script_author('ModioZodio')
 script_version('1.7.4.2')
-script_description('TXT справочник для SA:MP. Пока заточен под сервер [01] Phoenix. Автор: Codex')
+script_description('TXT справочник для SA:MP. Пока заточен под сервер [01] Phoenix. Автор: ModioZodio')
 
 require 'lib.moonloader'
 
@@ -19,7 +19,7 @@ end
 local ok_lfs, lfs = pcall(require, 'lfs')
 
 local PREFIX = '[InfoZZ]'
-local AUTHOR = 'Codex'
+local AUTHOR = 'ModioZodio'
 local TARGET_SERVER = '[01] Phoenix'
 local CHAT_INFO = 0x66CCFF
 local CHAT_OK = 0x77DD77
@@ -257,14 +257,14 @@ function draw_render_startup_notice()
     local y = sy - 92
     renderDrawBox(x - 12, y - 10, 300, 72, 0xC8101724)
     renderFontDrawText(startup_font, render_text('InfoZZ загружен'), x, y, 0xFF66CCFF)
-    renderFontDrawText(startup_font, render_text('Автор: Codex'), x, y + 20, 0xFFE8EEF8)
+    renderFontDrawText(startup_font, render_text('Автор: ModioZodio'), x, y + 20, 0xFFE8EEF8)
     renderFontDrawText(startup_font, render_text('/infozz - TXT справочник'), x, y + 40, 0xFF9AA7B7)
 end
 
 function draw_header()
     imgui.TextColored(colors.cyan, 'InfoZZ')
     imgui.SameLine()
-    imgui.TextDisabled('by Codex')
+    imgui.TextDisabled('by ModioZodio')
     imgui.SameLine()
     imgui.TextColored(colors.success, tostring(#files) .. ' TXT')
     imgui.SameLine()

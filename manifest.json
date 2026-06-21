@@ -621,7 +621,7 @@
       "version": "1.7.4.2",
       "updated_at": "2026-06-16",
       "hidden": false,
-      "author": "Codex / ModioZodio",
+      "author": "ModioZodio",
       "description": "Внутриигровой TXT-справочник для SA:MP. Читает локальные материалы, умеет искать по ним и скачивать готовую TXT-базу с GitHub. Текущая база пока заточена под сервер [01] Phoenix.",
       "commands": [
         "/infozz - открыть справочник"
