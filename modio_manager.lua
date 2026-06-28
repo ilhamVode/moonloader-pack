@@ -607,7 +607,7 @@ function dangerButton(label, size)
 end
 
 function drawManagerUpdateButton()
-    local label = ui(uiIcon('REFRESH', '') .. ' Обновить менеджер')
+    local label = ui(uiIcon('ARROWS_ROTATE', '') .. ' Обновить менеджер')
     local size = buttonSize(label, 210)
     size = imgui.ImVec2(size.x, 34)
     sameLineIfFits(size.x)
