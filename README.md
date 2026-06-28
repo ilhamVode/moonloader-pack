@@ -23,7 +23,7 @@
 
 <!-- СКРИНШОТ МЕНЕДЖЕРА -->
 <p align="center">
-  ![Manager](./screenshots/manager.png)
+  <img src="https://githubusercontent.com" alt="Manager">
 </p>
 
 ---
