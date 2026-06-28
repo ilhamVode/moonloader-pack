@@ -1,4 +1,18 @@
 local MANAGER_VERSION = '1.8.4'
+local MANAGER_CHANGELOG = {
+    {
+        version = '1.8.4',
+        date = '28.06.2026',
+        changes = {
+            'Иконки FontAwesome 6: заголовок, хедер, все кнопки, infoRow, секции описания, статус-бейдж, ченжлог, новости, фильтры',
+            'Слияние шрифта FontAwesome в ImGui (AddFontFromMemoryCompressedBase85TTF)',
+            'Валидация manager.url при загрузке манифеста',
+            'Исправлен uiIcon — работа с табличным модулем fAwesome6',
+            'Исправлено выравнивание drawSwitch — текст по центру переключателя',
+            'readScriptVersion ограничен 8KB'
+        }
+    }
+}
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -464,7 +478,7 @@ function drawHeader()
     end
 
     if show_manager_changelog then
-        drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
+        drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or MANAGER_CHANGELOG)
     end
 
     drawForbiddenDeleteConfirmation()
