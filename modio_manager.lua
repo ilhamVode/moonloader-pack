@@ -543,7 +543,7 @@ function drawSwitch(id, label, value, active_color)
     local text_h = imgui.CalcTextSize(label).y
     local text_x = pos.x + size.x + 8
     local text_y = pos.y + (size.y - text_h) / 2
-    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(imgui.GetColorU32(imgui.Col.Text)), ui(label))
+    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(imgui.GetStyle().Colors[imgui.Col.Text]), ui(label))
     local text_w = imgui.CalcTextSize(label).x
     imgui.SetCursorPosX(text_x + text_w - imgui.GetWindowPos().x + 4)
     imgui.SetCursorPosY(pos.y - imgui.GetWindowPos().y)
