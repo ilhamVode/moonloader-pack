@@ -441,14 +441,14 @@ function drawHeader()
 
     drawFilters()
 
-    local check_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Проверить обновления'), 220)
-    if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Проверить обновления'), check_size) then
+    local check_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Проверить обновления'), 220)
+    if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Проверить обновления'), check_size) then
         checkRemoteManifest(false)
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
-    local manager_history_label = show_manager_changelog and ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' Скрыть историю менеджера') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' История менеджера')
+    local manager_history_label = show_manager_changelog and ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  Скрыть историю менеджера') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  История менеджера')
     local manager_history_size = buttonSize(manager_history_label, 210)
     sameLineIfFits(manager_history_size.x)
     if managerButton(manager_history_label, manager_history_size) then
@@ -456,9 +456,9 @@ function drawHeader()
     end
 
     if hasInstalledForbiddenScripts() then
-        local danger_size = buttonSize(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Удалить запрещенные'), 230)
+        local danger_size = buttonSize(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. '  Удалить запрещенные'), 230)
         sameLineIfFits(danger_size.x)
-        if dangerButton(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Удалить запрещенные'), danger_size) then
+        if dangerButton(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. '  Удалить запрещенные'), danger_size) then
             pending_delete_forbidden = true
         end
     end
@@ -560,25 +560,25 @@ function managerButton(label, size, variant, opts)
     local active = imgui.IsItemActive()
     local pulse = opts.pulse or 0
 
-    local bg, border, text_color
+    local bg, border, text
     if variant == 'danger' then
         bg = active and imgui.ImVec4(0.42, 0.10, 0.11, 0.96)
             or hovered and imgui.ImVec4(0.66, 0.20, 0.21, 0.92)
             or imgui.ImVec4(0.50, 0.15, 0.16, 0.82)
         border = imgui.ImVec4(0.95, 0.42, 0.38, hovered and 0.62 or 0.38)
-        text_color = imgui.ImVec4(1.00, 0.94, 0.94, 1.00)
+        text = imgui.ImVec4(1.00, 0.94, 0.94, 1.00)
     elseif variant == 'update' then
         bg = active and imgui.ImVec4(0.50, 0.12, 0.10, 0.98)
             or hovered and imgui.ImVec4(0.70, 0.23, 0.16, 0.94)
             or imgui.ImVec4(0.48 + pulse * 0.08, 0.15, 0.12, 0.88)
         border = imgui.ImVec4(1.00, 0.47 + pulse * 0.16, 0.24, 0.62)
-        text_color = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
+        text = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
     else
         bg = active and imgui.ImVec4(0.30, 0.35, 0.90, 0.96)
             or hovered and imgui.ImVec4(0.40, 0.45, 1.00, 0.88)
             or imgui.ImVec4(0.35, 0.40, 0.95, 0.76)
         border = imgui.ImVec4(0.58, 0.66, 1.00, hovered and 0.52 or 0.28)
-        text_color = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
+        text = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
     end
 
     if opts.glow then
@@ -594,35 +594,10 @@ function managerButton(label, size, variant, opts)
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), 8, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), 8, 15, 1.0)
 
-    local icon_char, text_part
-    local b = string.byte(label, 1)
-    if b and b >= 0xE0 then
-        local _, count = string.byte(label, 1, 2)
-        local utf8_len = b >= 0xF0 and 4 or b >= 0xE0 and 3 or b >= 0xC0 and 2 or 1
-        icon_char = string.sub(label, 1, utf8_len)
-        text_part = string.match(string.sub(label, utf8_len + 1), '^%s*(.*)') or ''
-    else
-        icon_char = nil
-        text_part = label
-    end
-
-    local text_y = pos.y + (size.y - imgui.CalcTextSize(label).y) / 2 - 1
-    local c = colorU32(text_color)
-
-    if icon_char and #text_part > 0 then
-        local icon_w = imgui.CalcTextSize(icon_char).x
-        local text_w = imgui.CalcTextSize(text_part).x
-        local pad = 8
-        local remaining = size.x - pad - icon_w - 6
-        local text_x = pos.x + pad + icon_w + 6 + (remaining - text_w) / 2
-        if text_x < pos.x + pad + icon_w + 6 then text_x = pos.x + pad + icon_w + 6 end
-        draw:AddText(imgui.ImVec2(pos.x + pad, text_y), c, icon_char)
-        draw:AddText(imgui.ImVec2(text_x, text_y), c, text_part)
-    else
-        local text_size = imgui.CalcTextSize(label)
-        local text_x = pos.x + (size.x - text_size.x) / 2
-        draw:AddText(imgui.ImVec2(text_x, text_y), c, label)
-    end
+    local text_size = imgui.CalcTextSize(label)
+    local text_x = pos.x + (size.x - text_size.x) / 2
+    local text_y = pos.y + (size.y - text_size.y) / 2 - 1
+    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(text), label)
 
     return clicked
 end
@@ -632,7 +607,7 @@ function dangerButton(label, size)
 end
 
 function drawManagerUpdateButton()
-    local label = ui(uiIcon('ARROWS_ROTATE', '') .. ' Обновить менеджер')
+    local label = ui(uiIcon('ARROWS_ROTATE', '') .. '  Обновить менеджер')
     local size = buttonSize(label, 210)
     size = imgui.ImVec2(size.x, 34)
     sameLineIfFits(size.x)
@@ -1127,8 +1102,8 @@ function drawDetailsBody(item, st)
     end
 
     if not st.installed then
-        local install_size = buttonSize(ui(uiIcon('DOWNLOAD', '') .. ' Установить'), 190)
-        if managerButton(ui(uiIcon('DOWNLOAD', '') .. ' Установить'), install_size) then
+        local install_size = buttonSize(ui(uiIcon('DOWNLOAD', '') .. '  Установить'), 190)
+        if managerButton(ui(uiIcon('DOWNLOAD', '') .. '  Установить'), install_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем устанавливайте скрипты.', WARN)
             elseif busy then
@@ -1138,8 +1113,8 @@ function drawDetailsBody(item, st)
             end
         end
     elseif st.outdated then
-        local update_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Обновить'), 190)
-        if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Обновить'), update_size) then
+        local update_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Обновить'), 190)
+        if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Обновить'), update_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем обновляйте скрипты.', WARN)
             elseif busy then
@@ -1154,13 +1129,13 @@ function drawDetailsBody(item, st)
         if st.outdated then
             sameLineIfFits(170)
         end
-        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), 170)
-        if managerButton(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), delete_size, 'danger') then
+        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. '  Удалить'), 170)
+        if managerButton(ui(uiIcon('TRASH_CAN', '') .. '  Удалить'), delete_size, 'danger') then
             pending_delete_id = item.id
         end
     elseif st.installed then
-        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), 170)
-        if managerButton(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), delete_size, 'danger') then
+        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. '  Удалить'), 170)
+        if managerButton(ui(uiIcon('TRASH_CAN', '') .. '  Удалить'), delete_size, 'danger') then
             msg('Удаление недоступно, пока идет другая операция.', WARN)
         end
     end
@@ -1189,14 +1164,14 @@ function drawDeleteConfirmation(item, st)
     imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui(uiIcon('TRASH_CAN', '') .. ' Подтвердите удаление: ' .. tostring(item.name or item.file)))
     imgui.TextWrapped(ui(uiIcon('FOLDER_OPEN', '') .. ' Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
 
-    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. ' Да, удалить'), 170)
-    if managerButton(ui(uiIcon('CHECK', '') .. ' Да, удалить'), confirm_size, 'danger') then
+    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. '  Да, удалить'), 170)
+    if managerButton(ui(uiIcon('CHECK', '') .. '  Да, удалить'), confirm_size, 'danger') then
         pending_delete_id = nil
         deleteScript(item)
     end
-    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. ' Отмена'), 130)
+    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. '  Отмена'), 130)
     sameLineIfFits(cancel_size.x)
-    if managerButton(ui(uiIcon('BAN', '') .. ' Отмена'), cancel_size) then
+    if managerButton(ui(uiIcon('BAN', '') .. '  Отмена'), cancel_size) then
         pending_delete_id = nil
     end
 end
@@ -1208,14 +1183,14 @@ function drawForbiddenDeleteConfirmation()
     imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Подтвердите удаление всех запрещенных скриптов.'))
     imgui.TextWrapped(ui(uiIcon('FOLDER_OPEN', '') .. ' Будут удалены только установленные файлы из внутреннего списка рискованных скриптов менеджера.'))
 
-    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. ' Да, удалить запрещенные'), 250)
-    if dangerButton(ui(uiIcon('CHECK', '') .. ' Да, удалить запрещенные'), confirm_size) then
+    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. '  Да, удалить запрещенные'), 250)
+    if dangerButton(ui(uiIcon('CHECK', '') .. '  Да, удалить запрещенные'), confirm_size) then
         pending_delete_forbidden = false
         deleteForbiddenScripts()
     end
-    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. ' Отмена'), 130)
+    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. '  Отмена'), 130)
     sameLineIfFits(cancel_size.x)
-    if managerButton(ui(uiIcon('BAN', '') .. ' Отмена'), cancel_size) then
+    if managerButton(ui(uiIcon('BAN', '') .. '  Отмена'), cancel_size) then
         pending_delete_forbidden = false
     end
 end
@@ -1422,7 +1397,7 @@ function drawScriptChangelog(item)
     local id = tostring(item.id or item.file or item.name or 'script')
     imgui.Spacing()
     local opened = script_changelog_open[id] == true
-    local label = opened and ui(uiIcon('LIST_CHECK', '') .. ' Скрыть историю версий') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' Показать историю версий')
+    local label = opened and ui(uiIcon('LIST_CHECK', '') .. '  Скрыть историю версий') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  Показать историю версий')
     if managerButton(label, buttonSize(label, 220)) then
         script_changelog_open[id] = not opened
     end
