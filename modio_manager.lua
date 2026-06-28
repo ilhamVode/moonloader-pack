@@ -560,25 +560,25 @@ function managerButton(label, size, variant, opts)
     local active = imgui.IsItemActive()
     local pulse = opts.pulse or 0
 
-    local bg, border, text
+    local bg, border, text_color
     if variant == 'danger' then
         bg = active and imgui.ImVec4(0.42, 0.10, 0.11, 0.96)
             or hovered and imgui.ImVec4(0.66, 0.20, 0.21, 0.92)
             or imgui.ImVec4(0.50, 0.15, 0.16, 0.82)
         border = imgui.ImVec4(0.95, 0.42, 0.38, hovered and 0.62 or 0.38)
-        text = imgui.ImVec4(1.00, 0.94, 0.94, 1.00)
+        text_color = imgui.ImVec4(1.00, 0.94, 0.94, 1.00)
     elseif variant == 'update' then
         bg = active and imgui.ImVec4(0.50, 0.12, 0.10, 0.98)
             or hovered and imgui.ImVec4(0.70, 0.23, 0.16, 0.94)
             or imgui.ImVec4(0.48 + pulse * 0.08, 0.15, 0.12, 0.88)
         border = imgui.ImVec4(1.00, 0.47 + pulse * 0.16, 0.24, 0.62)
-        text = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
+        text_color = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
     else
         bg = active and imgui.ImVec4(0.30, 0.35, 0.90, 0.96)
             or hovered and imgui.ImVec4(0.40, 0.45, 1.00, 0.88)
             or imgui.ImVec4(0.35, 0.40, 0.95, 0.76)
         border = imgui.ImVec4(0.58, 0.66, 1.00, hovered and 0.52 or 0.28)
-        text = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
+        text_color = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
     end
 
     if opts.glow then
@@ -594,10 +594,35 @@ function managerButton(label, size, variant, opts)
     draw:AddRectFilled(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(bg), 8, 15)
     draw:AddRect(pos, imgui.ImVec2(pos.x + size.x, pos.y + size.y), colorU32(border), 8, 15, 1.0)
 
-    local text_size = imgui.CalcTextSize(label)
-    local text_x = pos.x + (size.x - text_size.x) / 2
-    local text_y = pos.y + (size.y - text_size.y) / 2 - 1
-    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(text), label)
+    local icon_char, text_part
+    local b = string.byte(label, 1)
+    if b and b >= 0xE0 then
+        local _, count = string.byte(label, 1, 2)
+        local utf8_len = b >= 0xF0 and 4 or b >= 0xE0 and 3 or b >= 0xC0 and 2 or 1
+        icon_char = string.sub(label, 1, utf8_len)
+        text_part = string.match(string.sub(label, utf8_len + 1), '^%s*(.*)') or ''
+    else
+        icon_char = nil
+        text_part = label
+    end
+
+    local text_y = pos.y + (size.y - imgui.CalcTextSize(label).y) / 2 - 1
+    local c = colorU32(text_color)
+
+    if icon_char and #text_part > 0 then
+        local icon_w = imgui.CalcTextSize(icon_char).x
+        local text_w = imgui.CalcTextSize(text_part).x
+        local pad = 8
+        local remaining = size.x - pad - icon_w - 6
+        local text_x = pos.x + pad + icon_w + 6 + (remaining - text_w) / 2
+        if text_x < pos.x + pad + icon_w + 6 then text_x = pos.x + pad + icon_w + 6 end
+        draw:AddText(imgui.ImVec2(pos.x + pad, text_y), c, icon_char)
+        draw:AddText(imgui.ImVec2(text_x, text_y), c, text_part)
+    else
+        local text_size = imgui.CalcTextSize(label)
+        local text_x = pos.x + (size.x - text_size.x) / 2
+        draw:AddText(imgui.ImVec2(text_x, text_y), c, label)
+    end
 
     return clicked
 end
