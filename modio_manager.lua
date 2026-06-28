@@ -204,6 +204,10 @@ function toggleManagerWindow()
     setManagerWindowOpen(not (window[0] and window_target))
 end
 
+
+
+
+
 function setManagerWindowOpen(open)
     open = open == true
     if open then
