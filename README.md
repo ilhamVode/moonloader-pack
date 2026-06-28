@@ -23,7 +23,7 @@
 
 <!-- СКРИНШОТ МЕНЕДЖЕРА -->
 <p align="center">
-  <img src="https://githubusercontent.com" alt="Manager">
+  <img src="https://raw.githubusercontent.com/ilhamVode/moonloader-pack/refs/heads/main/screenshots/manager.png" alt="Modio Manager" width="800">
 </p>
 
 ---
