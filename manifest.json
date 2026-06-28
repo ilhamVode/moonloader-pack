@@ -3,9 +3,29 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-21 MSK (v1.8.3.4)",
+  "updated_at": "2026-06-28 MSK (v1.8.4.1)",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.4.1",
+      "date": "2026-06-28",
+      "parts": [
+        {
+          "text": "Исправлено расположение фильтров в окне менеджера.",
+          "color": "#9CCBFF"
+        }
+      ]
+    },
+    {
+      "title": "Modio Manager 1.8.4",
+      "date": "2026-06-28",
+      "parts": [
+        {
+          "text": "Добавлены иконки и стикеры в интерфейс менеджера. Исправлено выравнивание текста в переключателях.",
+          "color": "#9CCBFF"
+        }
+      ]
+    },
     {
       "title": "Modio Manager 1.8.3.4",
       "date": "2026-06-21",
@@ -70,10 +90,25 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.3.4",
-    "updated_at": "2026-06-21",
+    "version": "1.8.4.1",
+    "updated_at": "2026-06-28",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.4.1",
+        "date": "2026-06-28",
+        "changes": [
+          "Фильтры исправлены: теперь на одной строке"
+        ]
+      },
+      {
+        "version": "1.8.4",
+        "date": "2026-06-28",
+        "changes": [
+          "Добавлены иконки и стикеры в интерфейс менеджера",
+          "Исправлено выравнивание текста в переключателях"
+        ]
+      },
       {
         "version": "1.8.3.4",
         "date": "2026-06-21",
@@ -612,7 +647,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "infozz",
@@ -621,7 +656,7 @@
       "version": "1.7.4.2",
       "updated_at": "2026-06-16",
       "hidden": false,
-      "author": "Codex / ModioZodio",
+      "author": "ModioZodio",
       "description": "Внутриигровой TXT-справочник для SA:MP. Читает локальные материалы, умеет искать по ним и скачивать готовую TXT-базу с GitHub. Текущая база пока заточена под сервер [01] Phoenix.",
       "commands": [
         "/infozz - открыть справочник"
@@ -706,7 +741,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "gribi",
@@ -743,7 +778,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "bfishing",
@@ -780,7 +815,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "adoklad",
@@ -817,7 +852,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "arendahelper",
@@ -853,7 +888,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     },
     {
       "id": "newshelper",
@@ -889,7 +924,7 @@
           ]
         }
       ],
-      "status": "0"
+      "status": "actual"
     }
   ]
 }

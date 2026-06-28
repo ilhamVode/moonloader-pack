@@ -2,6 +2,7 @@
 *.download
 *.tmp
 config/
+!scripts/config/
 tmp/
 
 # IDE
