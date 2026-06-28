@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.4.1'
+local MANAGER_VERSION = '1.8.4'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -502,11 +502,7 @@ end
 function drawFilters()
     imgui.Spacing()
     filter_modio_only = drawSwitch('filter_modio_only', uiIcon('USER_PEN', '') .. '  Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
-    local label2 = ui(uiIcon('BAN', '') .. '  Показывать запрещенные')
-    local label2_w = 48 + imgui.CalcTextSize(label2).x + 16
-    if label2_w < imgui.GetContentRegionAvail().x then
-        imgui.SameLine()
-    end
+    imgui.SameLine()
     show_forbidden = drawSwitch('show_forbidden', uiIcon('BAN', '') .. '  Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
     imgui.Spacing()
 end
@@ -540,13 +536,11 @@ function drawSwitch(id, label, value, active_color)
     draw:AddCircleFilled(knob, radius, colorU32(imgui.ImVec4(0.95, 0.97, 0.99, 1.00)), 40)
     draw:AddCircle(knob, radius, colorU32(imgui.ImVec4(1.00, 1.00, 1.00, 0.70)), 40, 1.0)
 
+    imgui.SameLine()
     local text_h = imgui.CalcTextSize(label).y
-    local text_x = pos.x + size.x + 8
-    local text_y = pos.y + (size.y - text_h) / 2
-    draw:AddText(imgui.ImVec2(text_x, text_y), colorU32(imgui.GetStyle().Colors[imgui.Col.Text]), ui(label))
-    local text_w = imgui.CalcTextSize(label).x
-    imgui.SetCursorPosX(text_x + text_w - imgui.GetWindowPos().x + 4)
-    imgui.SetCursorPosY(pos.y - imgui.GetWindowPos().y)
+    local switch_h = size.y
+    imgui.SetCursorPosY(imgui.GetCursorPosY() + (switch_h - text_h) / 2)
+    imgui.Text(ui(label))
     return value
 end
 
