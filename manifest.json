@@ -3,9 +3,19 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-06-28 MSK (v1.8.4)",
+  "updated_at": "2026-06-28 MSK (v1.8.4.1)",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.4.1",
+      "date": "2026-06-28",
+      "parts": [
+        {
+          "text": "Исправлено расположение фильтров в окне менеджера.",
+          "color": "#9CCBFF"
+        }
+      ]
+    },
     {
       "title": "Modio Manager 1.8.4",
       "date": "2026-06-28",
@@ -80,10 +90,17 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.4",
+    "version": "1.8.4.1",
     "updated_at": "2026-06-28",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.4.1",
+        "date": "2026-06-28",
+        "changes": [
+          "Фильтры исправлены: теперь на одной строке"
+        ]
+      },
       {
         "version": "1.8.4",
         "date": "2026-06-28",
