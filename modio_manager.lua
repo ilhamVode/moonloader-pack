@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.3.4'
+local MANAGER_VERSION = '1.8.4'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -193,8 +193,8 @@ function onWindowMessage(msg, wparam, lparam)
 end
 
 local function uiIcon(name, fallback)
-    if ok_fa and type(fa) == 'function' then
-        local ok, result = pcall(fa, name)
+    if ok_fa and fa then
+        local ok, result = pcall(function() return fa(name) end)
         if ok and type(result) == 'string' and result ~= '' then return result end
     end
     return fallback or ''
@@ -251,10 +251,25 @@ function isScriptNew(item)
     return id ~= '' and seen_scripts[id] ~= true
 end
 
+local fa6_font_merged = false
 imgui.OnInitialize(function()
     ensureDir(config_dir)
     imgui.GetIO().IniFilename = imgui_ini_path
     applyStyle()
+
+    if not fa6_font_merged and ok_fa and fa and fa.get_font_data_base85 then
+        local cfg = imgui.ImFontConfig()
+        cfg.MergeMode = true
+        cfg.PixelSnapH = true
+        local iconRanges = new.ImWchar[3](fa.min_range, fa.max_range, 0)
+        imgui.GetIO().Fonts:AddFontFromMemoryCompressedBase85TTF(
+            fa.get_font_data_base85('solid'),
+            14.0,
+            cfg,
+            iconRanges
+        )
+        fa6_font_merged = true
+    end
 end)
 
 imgui.OnFrame(
@@ -283,7 +298,7 @@ imgui.OnFrame(
         imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
 
         local main_flags = noOuterScrollFlags(imgui.WindowFlags.NoCollapse)
-        if imgui.Begin(ui 'Modio Manager | менеджер скриптов', window, main_flags) then
+        if imgui.Begin(ui(uiIcon('CUBES', '') .. ' Modio Manager | менеджер скриптов'), window, main_flags) then
             refreshLocalStateIfNeeded(false)
             drawHeader()
             imgui.Separator()
@@ -333,6 +348,7 @@ imgui.OnFrame(
             if news_h > 0 then
                 drawNewsPanel('bottom_fixed', 4, news_h)
             end
+
         end
         imgui.End()
         imgui.PopStyleVar()
@@ -398,9 +414,9 @@ end
 function drawHeader()
     imgui.TextColored(
         imgui.ImVec4(0.380, 0.680, 1.000, 1.00),
-        ui(tostring(manifest.name or 'ModioZodio MoonLoader Pack') .. ' | Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-'))
+        ui(uiIcon('NEWSPAPER', '') .. ' ' .. tostring(manifest.name or 'ModioZodio MoonLoader Pack') .. ' | Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-'))
     )
-    imgui.TextColored(managerVersionColor(), ui(managerStatusText()))
+    imgui.TextColored(managerVersionColor(), ui(uiIcon('CODE_BRANCH', '') .. ' ' .. managerStatusText()))
 
     if manifest.notes and #manifest.notes > 0 then
         imgui.TextWrapped(ui(manifest.notes))
@@ -415,24 +431,24 @@ function drawHeader()
     if using_cached_manifest then
         imgui.TextColored(
             imgui.ImVec4(1.00, 0.78, 0.36, 1.00),
-            ui 'GitHub временно недоступен: показана локальная копия manifest, повтор каждые 5 минут.'
+            ui(uiIcon('CLOUD', '') .. ' GitHub временно недоступен: показана локальная копия manifest, повтор каждые 5 минут.')
         )
     end
 
     if last_error ~= '' then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(last_error))
+        imgui.TextColored(imgui.ImVec4(1.00, 0.35, 0.35, 1.00), ui(uiIcon('CIRCLE_XMARK', '') .. ' ' .. last_error))
     end
 
     drawFilters()
 
-    local check_size = buttonSize(ui 'Проверить обновления', 220)
-    if managerButton(ui 'Проверить обновления', check_size) then
+    local check_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Проверить обновления'), 220)
+    if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Проверить обновления'), check_size) then
         checkRemoteManifest(false)
     end
     if managerIsOutdated() then
         drawManagerUpdateButton()
     end
-    local manager_history_label = show_manager_changelog and ui 'Скрыть историю менеджера' or ui 'История менеджера'
+    local manager_history_label = show_manager_changelog and ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' Скрыть историю менеджера') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' История менеджера')
     local manager_history_size = buttonSize(manager_history_label, 210)
     sameLineIfFits(manager_history_size.x)
     if managerButton(manager_history_label, manager_history_size) then
@@ -440,9 +456,9 @@ function drawHeader()
     end
 
     if hasInstalledForbiddenScripts() then
-        local danger_size = buttonSize(ui 'Удалить запрещенные', 230)
+        local danger_size = buttonSize(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Удалить запрещенные'), 230)
         sameLineIfFits(danger_size.x)
-        if dangerButton(ui 'Удалить запрещенные', danger_size) then
+        if dangerButton(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Удалить запрещенные'), danger_size) then
             pending_delete_forbidden = true
         end
     end
@@ -460,7 +476,7 @@ function drawNewScriptsNotice()
 
     imgui.TextColored(
         imgui.ImVec4(0.45, 0.72, 1.00, 1.00),
-        ui('В каталоге появились новые скрипты: ' .. tostring(count))
+        ui(uiIcon('SPARKLES', '') .. ' В каталоге появились новые скрипты: ' .. tostring(count))
     )
 end
 
@@ -469,7 +485,7 @@ function drawInstalledForbiddenWarning()
 
     imgui.TextColored(
         imgui.ImVec4(1.00, 0.36, 0.36, 1.00),
-        ui 'В вашей сборке есть скрипты из менеджера, за которые можно получить бан.'
+        ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' В вашей сборке есть скрипты из менеджера, за которые можно получить бан.')
     )
 end
 
@@ -485,9 +501,9 @@ end
 
 function drawFilters()
     imgui.Spacing()
-    filter_modio_only = drawSwitch('filter_modio_only', 'Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
+    filter_modio_only = drawSwitch('filter_modio_only', uiIcon('USER_PEN', '') .. ' Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
     imgui.SameLine()
-    show_forbidden = drawSwitch('show_forbidden', 'Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
+    show_forbidden = drawSwitch('show_forbidden', uiIcon('BAN', '') .. ' Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
     imgui.Spacing()
 end
 
@@ -521,6 +537,9 @@ function drawSwitch(id, label, value, active_color)
     draw:AddCircle(knob, radius, colorU32(imgui.ImVec4(1.00, 1.00, 1.00, 0.70)), 40, 1.0)
 
     imgui.SameLine()
+    local text_h = imgui.CalcTextSize(label).y
+    local switch_h = size.y
+    imgui.SetCursorPosY(imgui.GetCursorPosY() + (switch_h - text_h) / 2)
     imgui.Text(ui(label))
     return value
 end
@@ -588,7 +607,7 @@ function dangerButton(label, size)
 end
 
 function drawManagerUpdateButton()
-    local label = ui 'Обновить менеджер'
+    local label = ui(uiIcon('REFRESH', '') .. ' Обновить менеджер')
     local size = buttonSize(label, 210)
     size = imgui.ImVec2(size.x, 34)
     sameLineIfFits(size.x)
@@ -620,7 +639,7 @@ end
 
 function drawScriptList()
     -- Header is outside the scrolling child, so the word 'Скрипты' never leaves the top.
-    imgui.TextDisabled(ui 'Скрипты')
+    imgui.TextDisabled(ui(uiIcon('SCROLL', '') .. ' Скрипты'))
     imgui.Separator()
 
     local list_h = imgui.GetContentRegionAvail().y
@@ -639,7 +658,7 @@ function drawScriptList()
     end
 
     if shown == 0 then
-        imgui.TextDisabled(ui 'Нет скриптов по выбранным фильтрам.')
+        imgui.TextDisabled(ui(uiIcon('FILTER', '') .. ' Нет скриптов по выбранным фильтрам.'))
     end
 
     imgui.EndChild()
@@ -1021,7 +1040,7 @@ function drawDetails()
         item = (manifest.scripts or {})[selected]
     end
     if not item then
-        imgui.TextDisabled(ui 'Скриптов в манифесте нет.')
+        imgui.TextDisabled(ui(uiIcon('FILE_CIRCLE_XMARK', '') .. ' Скриптов в манифесте нет.'))
         return
     end
 
@@ -1039,7 +1058,7 @@ end
 
 function drawDetailsHeader(item, st)
     -- Title/status row is outside the scrolling child, so it stays pinned at the top.
-    local title = ui(item.name or item.id)
+    local title = ui(uiIcon('FILE', '') .. ' ' .. (item.name or item.id))
     local title_size = imgui.CalcTextSize(title)
     local pill_size = statusPillSize(item, 1.0, st)
     local row_pos = imgui.GetCursorScreenPos()
@@ -1062,10 +1081,10 @@ function drawDetailsBody(item, st)
         imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(forbiddenWarning(item)))
         imgui.Spacing()
     end
-    infoRow('Автор', item.author or '-')
-    infoRow('Локальная версия', st.installed and st.local_version or 'не установлен')
-    infoRow('Версия на сайте', versionText(item.version))
-    infoRow('Последнее обновление на сайте', item.updated_at or '-')
+    infoRow(uiIcon('USER', '') .. ' Автор', item.author or '-')
+    infoRow(uiIcon('DESKTOP', '') .. ' Локальная версия', st.installed and st.local_version or 'не установлен')
+    infoRow(uiIcon('CLOUD', '') .. ' Версия на сайте', versionText(item.version))
+    infoRow(uiIcon('CALENDAR', '') .. ' Последнее обновление на сайте', item.updated_at or '-')
     drawScriptChangelog(item)
 
     imgui.Spacing()
@@ -1077,14 +1096,14 @@ function drawDetailsBody(item, st)
     if script_actions_locked then
         imgui.TextColored(
             imgui.ImVec4(1.00, 0.66, 0.30, 1.00),
-            ui 'Сначала обновите Modio Manager. Установка и обновление скриптов временно заблокированы.'
+            ui(uiIcon('LOCK', '') .. ' Сначала обновите Modio Manager. Установка и обновление скриптов временно заблокированы.')
         )
         imgui.Spacing()
     end
 
     if not st.installed then
-        local install_size = buttonSize(ui 'Установить', 190)
-        if managerButton(ui 'Установить', install_size) then
+        local install_size = buttonSize(ui(uiIcon('DOWNLOAD', '') .. ' Установить'), 190)
+        if managerButton(ui(uiIcon('DOWNLOAD', '') .. ' Установить'), install_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем устанавливайте скрипты.', WARN)
             elseif busy then
@@ -1094,8 +1113,8 @@ function drawDetailsBody(item, st)
             end
         end
     elseif st.outdated then
-        local update_size = buttonSize(ui 'Обновить', 190)
-        if managerButton(ui 'Обновить', update_size) then
+        local update_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Обновить'), 190)
+        if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. ' Обновить'), update_size) then
             if script_actions_locked then
                 msg('Сначала обновите Modio Manager, затем обновляйте скрипты.', WARN)
             elseif busy then
@@ -1110,49 +1129,49 @@ function drawDetailsBody(item, st)
         if st.outdated then
             sameLineIfFits(170)
         end
-        local delete_size = buttonSize(ui 'Удалить', 170)
-        if managerButton(ui 'Удалить', delete_size, 'danger') then
+        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), 170)
+        if managerButton(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), delete_size, 'danger') then
             pending_delete_id = item.id
         end
     elseif st.installed then
-        local delete_size = buttonSize(ui 'Удалить', 170)
-        if managerButton(ui 'Удалить', delete_size, 'danger') then
+        local delete_size = buttonSize(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), 170)
+        if managerButton(ui(uiIcon('TRASH_CAN', '') .. ' Удалить'), delete_size, 'danger') then
             msg('Удаление недоступно, пока идет другая операция.', WARN)
         end
     end
 
     if not st.installed and busy then
-        imgui.TextDisabled(ui 'Установка будет доступна после завершения текущей операции.')
+        imgui.TextDisabled(ui(uiIcon('HOURGLASS', '') .. ' Установка будет доступна после завершения текущей операции.'))
     elseif st.installed and st.outdated and busy then
-        imgui.TextDisabled(ui 'Обновление будет доступно после завершения текущей операции.')
+        imgui.TextDisabled(ui(uiIcon('HOURGLASS', '') .. ' Обновление будет доступно после завершения текущей операции.'))
     end
 
     imgui.Spacing()
     drawDeleteConfirmation(item, st)
     imgui.Spacing()
 
-    drawTextSection('Что делает', item.description)
-    drawListSection('Команды', item.commands)
-    drawTextSection('Как пользоваться', item.usage)
-    drawListSection('Особенности', item.features)
-    drawTextSection('Важно', item.notes)
+    drawTextSection(uiIcon('CIRCLE_INFO', '') .. ' Что делает', item.description)
+    drawListSection(uiIcon('TERMINAL', '') .. ' Команды', item.commands)
+    drawTextSection(uiIcon('BOOK', '') .. ' Как пользоваться', item.usage)
+    drawListSection(uiIcon('STAR', '') .. ' Особенности', item.features)
+    drawTextSection(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Важно', item.notes)
 end
 
 function drawDeleteConfirmation(item, st)
     if pending_delete_id ~= item.id then return end
 
     imgui.Separator()
-    imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui('Подтвердите удаление: ' .. tostring(item.name or item.file)))
-    imgui.TextWrapped(ui('Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
+    imgui.TextColored(imgui.ImVec4(1.00, 0.55, 0.35, 1.00), ui(uiIcon('TRASH_CAN', '') .. ' Подтвердите удаление: ' .. tostring(item.name or item.file)))
+    imgui.TextWrapped(ui(uiIcon('FOLDER_OPEN', '') .. ' Файл будет удален из папки moonloader: ' .. getScriptPath(item)))
 
-    local confirm_size = buttonSize(ui 'Да, удалить', 170)
-    if managerButton(ui 'Да, удалить', confirm_size, 'danger') then
+    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. ' Да, удалить'), 170)
+    if managerButton(ui(uiIcon('CHECK', '') .. ' Да, удалить'), confirm_size, 'danger') then
         pending_delete_id = nil
         deleteScript(item)
     end
-    local cancel_size = buttonSize(ui 'Отмена', 130)
+    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. ' Отмена'), 130)
     sameLineIfFits(cancel_size.x)
-    if managerButton(ui 'Отмена', cancel_size) then
+    if managerButton(ui(uiIcon('BAN', '') .. ' Отмена'), cancel_size) then
         pending_delete_id = nil
     end
 end
@@ -1161,17 +1180,17 @@ function drawForbiddenDeleteConfirmation()
     if not pending_delete_forbidden then return end
 
     imgui.Spacing()
-    imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui 'Подтвердите удаление всех запрещенных скриптов.')
-    imgui.TextWrapped(ui 'Будут удалены только установленные файлы из внутреннего списка рискованных скриптов менеджера.')
+    imgui.TextColored(imgui.ImVec4(1.00, 0.36, 0.36, 1.00), ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Подтвердите удаление всех запрещенных скриптов.'))
+    imgui.TextWrapped(ui(uiIcon('FOLDER_OPEN', '') .. ' Будут удалены только установленные файлы из внутреннего списка рискованных скриптов менеджера.'))
 
-    local confirm_size = buttonSize(ui 'Да, удалить запрещенные', 250)
-    if dangerButton(ui 'Да, удалить запрещенные', confirm_size) then
+    local confirm_size = buttonSize(ui(uiIcon('CHECK', '') .. ' Да, удалить запрещенные'), 250)
+    if dangerButton(ui(uiIcon('CHECK', '') .. ' Да, удалить запрещенные'), confirm_size) then
         pending_delete_forbidden = false
         deleteForbiddenScripts()
     end
-    local cancel_size = buttonSize(ui 'Отмена', 130)
+    local cancel_size = buttonSize(ui(uiIcon('BAN', '') .. ' Отмена'), 130)
     sameLineIfFits(cancel_size.x)
-    if managerButton(ui 'Отмена', cancel_size) then
+    if managerButton(ui(uiIcon('BAN', '') .. ' Отмена'), cancel_size) then
         pending_delete_forbidden = false
     end
 end
@@ -1263,7 +1282,7 @@ function drawNewsPanel(id, limit, height)
     end
 
     if count == 0 then
-        imgui.TextDisabled(ui 'Новостей пока нет.')
+        imgui.TextDisabled(ui(uiIcon('NEWSPAPER', '') .. ' Новостей пока нет.'))
     end
     imgui.EndChild()
 
@@ -1282,7 +1301,7 @@ function drawNewsItem(item, index)
     imgui.TextColored(imgui.ImVec4(0.92, 0.95, 1.00, 1.00), ui(title))
     if date ~= '' then
         imgui.SameLine()
-        imgui.TextDisabled(ui(date))
+        imgui.TextDisabled(ui(uiIcon('CALENDAR', '') .. ' ' .. date))
     end
 
     local lines = newsLines(item)
@@ -1378,7 +1397,7 @@ function drawScriptChangelog(item)
     local id = tostring(item.id or item.file or item.name or 'script')
     imgui.Spacing()
     local opened = script_changelog_open[id] == true
-    local label = opened and ui 'Скрыть историю версий' or ui 'Показать историю версий'
+    local label = opened and ui(uiIcon('LIST_CHECK', '') .. ' Скрыть историю версий') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. ' Показать историю версий')
     if managerButton(label, buttonSize(label, 220)) then
         script_changelog_open[id] = not opened
     end
@@ -1389,13 +1408,13 @@ end
 
 function drawChangelog(changelog)
     if type(changelog) ~= 'table' or #changelog == 0 then
-        imgui.TextDisabled(ui 'История версий пока не заполнена.')
+        imgui.TextDisabled(ui(uiIcon('HOURGLASS', '') .. ' История версий пока не заполнена.'))
         return
     end
 
     imgui.Spacing()
     for _, entry in ipairs(changelog) do
-        local title = tostring(entry.version or 'версия')
+        local title = uiIcon('TAG', '') .. ' ' .. tostring(entry.version or 'версия')
         if entry.date and tostring(entry.date) ~= '' then
             title = title .. ' | ' .. tostring(entry.date)
         end
@@ -1435,13 +1454,13 @@ end
 
 function drawStatusBadge(st)
     if not st.installed then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.65, 0.30, 1.00), ui 'Статус: не установлен')
+        imgui.TextColored(imgui.ImVec4(1.00, 0.65, 0.30, 1.00), ui(uiIcon('CIRCLE_XMARK', '') .. ' Статус: не установлен'))
     elseif st.outdated then
-        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.28, 1.00), ui 'Статус: доступно обновление')
+        imgui.TextColored(imgui.ImVec4(1.00, 0.82, 0.28, 1.00), ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. ' Статус: доступно обновление'))
     elseif st.no_version then
-        imgui.TextColored(imgui.ImVec4(0.55, 0.72, 0.92, 1.00), ui 'Статус: установлен, версия не указана автором')
+        imgui.TextColored(imgui.ImVec4(0.55, 0.72, 0.92, 1.00), ui(uiIcon('CIRCLE_QUESTION', '') .. ' Статус: установлен, версия не указана автором'))
     else
-        imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), ui 'Статус: установлена последняя версия')
+        imgui.TextColored(imgui.ImVec4(0.35, 1.00, 0.58, 1.00), ui(uiIcon('CIRCLE_CHECK', '') .. ' Статус: установлена последняя версия'))
     end
 end
 
