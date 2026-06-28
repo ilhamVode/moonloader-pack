@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.8.3.4-2ea44f?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.4-2ea44f?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/MoonLoader-0.26+-blue?style=for-the-badge" alt="MoonLoader">
   <img src="https://img.shields.io/badge/Arizona%20RP-поддержка-orange?style=for-the-badge" alt="Arizona RP">
 </p>
