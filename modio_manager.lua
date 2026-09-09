@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.4'
+local MANAGER_VERSION = '1.8.5'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -363,59 +363,61 @@ imgui.OnFrame(
 function applyStyle()
     local style = imgui.GetStyle()
     style.Alpha = 0.985
-    style.WindowRounding = 12
-    style.ChildRounding = 10
-    style.FrameRounding = 8
-    style.PopupRounding = 10
-    style.GrabRounding = 8
-    style.ScrollbarRounding = 10
+    style.WindowRounding = 14
+    style.ChildRounding = 12
+    style.FrameRounding = 10
+    style.PopupRounding = 12
+    style.GrabRounding = 10
+    style.ScrollbarRounding = 12
     style.WindowBorderSize = 1
     style.ChildBorderSize = 1
     style.FrameBorderSize = 0
-    style.WindowPadding = imgui.ImVec2(17, 16)
-    style.FramePadding = imgui.ImVec2(12, 8)
-    style.ItemSpacing = imgui.ImVec2(10, 9)
+    style.WindowPadding = imgui.ImVec2(20, 18)
+    style.FramePadding = imgui.ImVec2(13, 9)
+    style.ItemSpacing = imgui.ImVec2(10, 10)
     style.ItemInnerSpacing = imgui.ImVec2(8, 7)
     style.ScrollbarSize = 13
 
     local c = style.Colors
-    c[imgui.Col.WindowBg] = imgui.ImVec4(0.055, 0.066, 0.088, 0.96)
-    c[imgui.Col.ChildBg] = imgui.ImVec4(0.088, 0.106, 0.142, 0.90)
-    c[imgui.Col.PopupBg] = imgui.ImVec4(0.065, 0.078, 0.104, 0.98)
-    c[imgui.Col.Border] = imgui.ImVec4(0.250, 0.320, 0.420, 0.58)
+    -- Aurora graphite: calm dark surfaces with a teal accent for primary actions.
+    c[imgui.Col.WindowBg] = imgui.ImVec4(0.043, 0.055, 0.075, 0.975)
+    c[imgui.Col.ChildBg] = imgui.ImVec4(0.071, 0.091, 0.118, 0.94)
+    c[imgui.Col.PopupBg] = imgui.ImVec4(0.056, 0.072, 0.096, 0.99)
+    c[imgui.Col.Border] = imgui.ImVec4(0.235, 0.365, 0.405, 0.55)
     c[imgui.Col.BorderShadow] = imgui.ImVec4(0.000, 0.000, 0.000, 0.00)
-    c[imgui.Col.FrameBg] = imgui.ImVec4(0.125, 0.158, 0.214, 0.94)
-    c[imgui.Col.FrameBgHovered] = imgui.ImVec4(0.165, 0.222, 0.306, 0.98)
-    c[imgui.Col.FrameBgActive] = imgui.ImVec4(0.200, 0.278, 0.382, 1.00)
-    c[imgui.Col.Button] = imgui.ImVec4(0.150, 0.292, 0.515, 0.94)
-    c[imgui.Col.ButtonHovered] = imgui.ImVec4(0.215, 0.405, 0.705, 1.00)
-    c[imgui.Col.ButtonActive] = imgui.ImVec4(0.115, 0.245, 0.440, 1.00)
-    c[imgui.Col.Header] = imgui.ImVec4(0.145, 0.236, 0.368, 0.74)
-    c[imgui.Col.HeaderHovered] = imgui.ImVec4(0.195, 0.318, 0.492, 0.88)
-    c[imgui.Col.HeaderActive] = imgui.ImVec4(0.155, 0.286, 0.480, 0.96)
-    c[imgui.Col.TitleBg] = imgui.ImVec4(0.050, 0.064, 0.092, 0.98)
-    c[imgui.Col.TitleBgActive] = imgui.ImVec4(0.085, 0.135, 0.205, 0.99)
-    c[imgui.Col.TitleBgCollapsed] = imgui.ImVec4(0.050, 0.060, 0.080, 0.90)
-    c[imgui.Col.Separator] = imgui.ImVec4(0.300, 0.380, 0.500, 0.45)
-    c[imgui.Col.SeparatorHovered] = imgui.ImVec4(0.400, 0.560, 0.760, 0.70)
-    c[imgui.Col.SeparatorActive] = imgui.ImVec4(0.500, 0.680, 0.900, 0.95)
-    c[imgui.Col.ScrollbarBg] = imgui.ImVec4(0.045, 0.055, 0.075, 0.50)
-    c[imgui.Col.ScrollbarGrab] = imgui.ImVec4(0.250, 0.330, 0.450, 0.75)
-    c[imgui.Col.ScrollbarGrabHovered] = imgui.ImVec4(0.330, 0.440, 0.590, 0.90)
-    c[imgui.Col.ScrollbarGrabActive] = imgui.ImVec4(0.400, 0.530, 0.700, 1.00)
-    c[imgui.Col.CheckMark] = imgui.ImVec4(0.500, 0.760, 1.000, 1.00)
-    c[imgui.Col.ResizeGrip] = imgui.ImVec4(0.300, 0.450, 0.650, 0.28)
-    c[imgui.Col.ResizeGripHovered] = imgui.ImVec4(0.420, 0.620, 0.880, 0.55)
-    c[imgui.Col.ResizeGripActive] = imgui.ImVec4(0.520, 0.720, 1.000, 0.80)
-    c[imgui.Col.Text] = imgui.ImVec4(0.930, 0.948, 0.978, 1.00)
-    c[imgui.Col.TextDisabled] = imgui.ImVec4(0.600, 0.660, 0.740, 1.00)
+    c[imgui.Col.FrameBg] = imgui.ImVec4(0.105, 0.137, 0.165, 0.94)
+    c[imgui.Col.FrameBgHovered] = imgui.ImVec4(0.138, 0.193, 0.216, 0.98)
+    c[imgui.Col.FrameBgActive] = imgui.ImVec4(0.152, 0.257, 0.270, 1.00)
+    c[imgui.Col.Button] = imgui.ImVec4(0.105, 0.390, 0.405, 0.94)
+    c[imgui.Col.ButtonHovered] = imgui.ImVec4(0.145, 0.530, 0.535, 1.00)
+    c[imgui.Col.ButtonActive] = imgui.ImVec4(0.080, 0.315, 0.335, 1.00)
+    c[imgui.Col.Header] = imgui.ImVec4(0.105, 0.245, 0.272, 0.70)
+    c[imgui.Col.HeaderHovered] = imgui.ImVec4(0.145, 0.350, 0.370, 0.86)
+    c[imgui.Col.HeaderActive] = imgui.ImVec4(0.135, 0.315, 0.345, 0.96)
+    c[imgui.Col.TitleBg] = imgui.ImVec4(0.036, 0.050, 0.069, 0.99)
+    c[imgui.Col.TitleBgActive] = imgui.ImVec4(0.064, 0.122, 0.145, 0.99)
+    c[imgui.Col.TitleBgCollapsed] = imgui.ImVec4(0.036, 0.048, 0.066, 0.92)
+    c[imgui.Col.Separator] = imgui.ImVec4(0.225, 0.410, 0.435, 0.45)
+    c[imgui.Col.SeparatorHovered] = imgui.ImVec4(0.330, 0.640, 0.655, 0.70)
+    c[imgui.Col.SeparatorActive] = imgui.ImVec4(0.410, 0.790, 0.800, 0.95)
+    c[imgui.Col.ScrollbarBg] = imgui.ImVec4(0.032, 0.044, 0.060, 0.58)
+    c[imgui.Col.ScrollbarGrab] = imgui.ImVec4(0.190, 0.355, 0.385, 0.78)
+    c[imgui.Col.ScrollbarGrabHovered] = imgui.ImVec4(0.255, 0.510, 0.525, 0.92)
+    c[imgui.Col.ScrollbarGrabActive] = imgui.ImVec4(0.320, 0.660, 0.665, 1.00)
+    c[imgui.Col.CheckMark] = imgui.ImVec4(0.400, 0.920, 0.820, 1.00)
+    c[imgui.Col.ResizeGrip] = imgui.ImVec4(0.210, 0.500, 0.515, 0.30)
+    c[imgui.Col.ResizeGripHovered] = imgui.ImVec4(0.310, 0.710, 0.710, 0.60)
+    c[imgui.Col.ResizeGripActive] = imgui.ImVec4(0.410, 0.880, 0.850, 0.86)
+    c[imgui.Col.Text] = imgui.ImVec4(0.932, 0.958, 0.965, 1.00)
+    c[imgui.Col.TextDisabled] = imgui.ImVec4(0.560, 0.655, 0.690, 1.00)
 end
 
 function drawHeader()
     imgui.TextColored(
-        imgui.ImVec4(0.380, 0.680, 1.000, 1.00),
-        ui(uiIcon('NEWSPAPER', '') .. ' ' .. tostring(manifest.name or 'ModioZodio MoonLoader Pack') .. ' | Последнее обновление на сайте: ' .. tostring(manifest.updated_at or '-'))
+        imgui.ImVec4(0.400, 0.920, 0.820, 1.00),
+        ui(uiIcon('CUBES', '') .. ' ' .. tostring(manifest.name or 'ModioZodio MoonLoader Pack'))
     )
+    imgui.TextDisabled(ui(uiIcon('CLOCK', '') .. ' Последнее обновление каталога: ' .. tostring(manifest.updated_at or '-')))
     imgui.TextColored(managerVersionColor(), ui(uiIcon('CODE_BRANCH', '') .. ' ' .. managerStatusText()))
 
     if manifest.notes and #manifest.notes > 0 then
@@ -440,34 +442,41 @@ function drawHeader()
     end
 
     drawFilters()
-
-    local check_size = buttonSize(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Проверить обновления'), 220)
-    if managerButton(ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Проверить обновления'), check_size) then
-        checkRemoteManifest(false)
-    end
-    if managerIsOutdated() then
-        drawManagerUpdateButton()
-    end
-    local manager_history_label = show_manager_changelog and ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  Скрыть историю менеджера') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  История менеджера')
-    local manager_history_size = buttonSize(manager_history_label, 210)
-    sameLineIfFits(manager_history_size.x)
-    if managerButton(manager_history_label, manager_history_size) then
-        show_manager_changelog = not show_manager_changelog
-    end
-
-    if hasInstalledForbiddenScripts() then
-        local danger_size = buttonSize(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. '  Удалить запрещенные'), 230)
-        sameLineIfFits(danger_size.x)
-        if dangerButton(ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. '  Удалить запрещенные'), danger_size) then
-            pending_delete_forbidden = true
-        end
-    end
+    drawActions()
 
     if show_manager_changelog then
         drawChangelog(type(manifest.manager) == 'table' and manifest.manager.changelog or nil)
     end
 
     drawForbiddenDeleteConfirmation()
+end
+
+function drawActions()
+    imgui.TextDisabled(ui(uiIcon('BOLT', '') .. ' Действия'))
+    local full_width = math.max(220, imgui.GetContentRegionAvail().x)
+    local gap = imgui.GetStyle().ItemSpacing.x
+    local half_width = math.max(105, (full_width - gap) / 2)
+    local check_label = ui(uiIcon('CLOUD_ARROW_DOWN', '') .. '  Проверить обновления')
+    if managerButton(check_label, imgui.ImVec2(half_width, 34)) then
+        checkRemoteManifest(false)
+    end
+    imgui.SameLine()
+
+    local manager_history_label = show_manager_changelog and ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  Скрыть историю') or ui(uiIcon('CLOCK_ROTATE_LEFT', '') .. '  История менеджера')
+    if managerButton(manager_history_label, imgui.ImVec2(half_width, 34)) then
+        show_manager_changelog = not show_manager_changelog
+    end
+
+    if managerIsOutdated() then
+        drawManagerUpdateButton(full_width)
+    end
+
+    if hasInstalledForbiddenScripts() then
+        local danger_label = ui(uiIcon('TRIANGLE_EXCLAMATION', '') .. '  Удалить запрещенные')
+        if dangerButton(danger_label, imgui.ImVec2(full_width, 34)) then
+            pending_delete_forbidden = true
+        end
+    end
 end
 
 function drawNewScriptsNotice()
@@ -501,13 +510,34 @@ end
 
 function drawFilters()
     imgui.Spacing()
-    filter_modio_only = drawSwitch('filter_modio_only', uiIcon('USER_PEN', '') .. '  Только автор ModioZodio', filter_modio_only, imgui.ImVec4(0.28, 0.54, 0.86, 1.00))
+    filter_modio_only = drawInlineFilter(
+        'filter_modio_only',
+        uiIcon('USER_PEN', '') .. ' Только автор ModioZodio',
+        filter_modio_only,
+        imgui.ImVec4(0.16, 0.64, 0.62, 1.00)
+    )
     imgui.SameLine()
-    show_forbidden = drawSwitch('show_forbidden', uiIcon('BAN', '') .. '  Показывать запрещенные', show_forbidden, imgui.ImVec4(0.75, 0.34, 0.32, 1.00))
-    imgui.Spacing()
+    show_forbidden = drawInlineFilter(
+        'show_forbidden',
+        uiIcon('BAN', '') .. ' Показывать запрещенные',
+        show_forbidden,
+        imgui.ImVec4(0.78, 0.31, 0.30, 1.00)
+    )
 end
 
-function drawSwitch(id, label, value, active_color)
+function drawInlineFilter(id, label, value, active_color)
+    imgui.BeginGroup()
+    local row_y = imgui.GetCursorPosY()
+    value = drawSwitch(id, value, active_color)
+    imgui.SameLine()
+    local text_h = imgui.CalcTextSize(label).y
+    imgui.SetCursorPosY(row_y + (24 - text_h) / 2)
+    imgui.Text(ui(label))
+    imgui.EndGroup()
+    return value
+end
+
+function drawSwitch(id, value, active_color)
     local size = imgui.ImVec2(48, 24)
     local pos = imgui.GetCursorScreenPos()
     local clicked = imgui.InvisibleButton(ui('##switch_' .. id), size)
@@ -536,11 +566,6 @@ function drawSwitch(id, label, value, active_color)
     draw:AddCircleFilled(knob, radius, colorU32(imgui.ImVec4(0.95, 0.97, 0.99, 1.00)), 40)
     draw:AddCircle(knob, radius, colorU32(imgui.ImVec4(1.00, 1.00, 1.00, 0.70)), 40, 1.0)
 
-    imgui.SameLine()
-    local text_h = imgui.CalcTextSize(label).y
-    local switch_h = size.y
-    imgui.SetCursorPosY(imgui.GetCursorPosY() + (switch_h - text_h) / 2)
-    imgui.Text(ui(label))
     return value
 end
 
@@ -574,11 +599,11 @@ function managerButton(label, size, variant, opts)
         border = imgui.ImVec4(1.00, 0.47 + pulse * 0.16, 0.24, 0.62)
         text = imgui.ImVec4(1.00, 0.96, 0.92, 1.00)
     else
-        bg = active and imgui.ImVec4(0.30, 0.35, 0.90, 0.96)
-            or hovered and imgui.ImVec4(0.40, 0.45, 1.00, 0.88)
-            or imgui.ImVec4(0.35, 0.40, 0.95, 0.76)
-        border = imgui.ImVec4(0.58, 0.66, 1.00, hovered and 0.52 or 0.28)
-        text = imgui.ImVec4(0.96, 0.97, 1.00, 1.00)
+        bg = active and imgui.ImVec4(0.070, 0.330, 0.340, 0.98)
+            or hovered and imgui.ImVec4(0.145, 0.540, 0.535, 0.94)
+            or imgui.ImVec4(0.095, 0.415, 0.425, 0.84)
+        border = imgui.ImVec4(0.380, 0.840, 0.790, hovered and 0.65 or 0.38)
+        text = imgui.ImVec4(0.950, 1.000, 0.985, 1.00)
     end
 
     if opts.glow then
@@ -606,11 +631,9 @@ function dangerButton(label, size)
     return managerButton(label, size, 'danger')
 end
 
-function drawManagerUpdateButton()
+function drawManagerUpdateButton(width)
     local label = ui(uiIcon('ARROWS_ROTATE', '') .. '  Обновить менеджер')
-    local size = buttonSize(label, 210)
-    size = imgui.ImVec2(size.x, 34)
-    sameLineIfFits(size.x)
+    local size = imgui.ImVec2(width or buttonSize(label, 210).x, 34)
 
     local pulse = 0.5 + 0.5 * math.sin(os.clock() * 2.4)
     local pos = imgui.GetCursorScreenPos()
@@ -672,10 +695,8 @@ function scriptListPanelWidth()
     for _, entry in ipairs(sortedVisibleScripts()) do
         local item = entry.item
         local st = runtime[item.id] or inspectLocal(item)
-        local name_w = textWidth(item.name or item.id or 'script')
-        if isForbiddenScript(item) then
-            name_w = name_w + 16 + style.ItemSpacing.x
-        end
+        -- Every list item reserves the same small slot for its status sticker.
+        local name_w = textWidth(item.name or item.id or 'script') + 20 + style.ItemSpacing.x
 
         local badge_w = 0
         if isScriptNew(item) then
@@ -695,7 +716,7 @@ function scriptListPanelWidth()
     local desired = row_w + 16 + listScrollbarReserve()
     local details_share = math.max(0, avail - desired - style.ItemSpacing.x)
     desired = desired + details_share * 0.08
-    local min_w = textWidth(ui 'Arenda Helper') + badge_max + style.ItemSpacing.x * 2 + 16 + listScrollbarReserve()
+    local min_w = textWidth(ui 'Arenda Helper') + 20 + badge_max + style.ItemSpacing.x * 2 + 16 + listScrollbarReserve()
     local max_w = math.max(min_w, avail * 0.38)
     return math.min(math.max(desired, min_w), max_w)
 end
@@ -744,12 +765,11 @@ function drawScriptListItem(index, item, st)
 
     local after = imgui.GetCursorPos()
     local text_offset = progress * 4
+    local marker_width = 20
     local is_new = isScriptNew(item)
     imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + text_offset, pos.y + 8))
-    if isForbiddenScript(item) then
-        drawWarningIcon(16)
-        imgui.SameLine()
-    end
+    drawScriptListMarker(item, st)
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + marker_width + text_offset, pos.y + 8))
     imgui.Text(ui(item.name or item.id or 'script'))
     if is_new then
         drawCompactNewBadge(item, text_offset)
@@ -757,11 +777,29 @@ function drawScriptListItem(index, item, st)
         drawCompactStatusBadge(item, text_offset)
     end
 
-    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + text_offset, pos.y + 31))
+    imgui.SetCursorPos(imgui.ImVec2(pos.x + 10 + marker_width + text_offset, pos.y + 31))
     imgui.TextColored(listVersionColor(st), ui(statusLine(item, st)))
 
     imgui.SetCursorPos(after)
     imgui.Spacing()
+end
+
+function drawScriptListMarker(item, st)
+    local icon, color
+    if not st.installed then
+        icon = 'CLOUD_ARROW_DOWN'
+        color = imgui.ImVec4(1.00, 0.76, 0.38, 1.00)
+    elseif st.outdated then
+        icon = 'ARROWS_ROTATE'
+        color = imgui.ImVec4(1.00, 0.76, 0.36, 1.00)
+    elseif st.no_version then
+        icon = 'CIRCLE_QUESTION'
+        color = imgui.ImVec4(0.52, 0.72, 0.96, 1.00)
+    else
+        icon = 'CIRCLE_CHECK'
+        color = imgui.ImVec4(0.38, 0.92, 0.58, 1.00)
+    end
+    imgui.TextColored(color, ui(uiIcon(icon, '•')))
 end
 
 function updateListItemAnimation(id, active, hovered)
