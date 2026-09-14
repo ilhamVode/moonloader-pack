@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.5'
+local MANAGER_VERSION = '1.8.6'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -730,6 +730,10 @@ function sortedVisibleScripts()
     end
 
     table.sort(result, function(a, b)
+        local ab = scriptStatusValue(a.item) == 'broken'
+        local bb = scriptStatusValue(b.item) == 'broken'
+        if ab ~= bb then return not ab end
+
         local am = isModioScript(a.item)
         local bm = isModioScript(b.item)
         if am ~= bm then return am end
@@ -1506,13 +1510,15 @@ function scriptStatusValue(item)
     local status = type(item) == 'table' and item.status or nil
     local value = type(status) == 'table' and tostring(status.official or ''):lower() or tostring(status or ''):lower()
     if value == 'actual' or value == 'ok' or value == 'active' or value == '0' then return 'actual' end
-    if value == 'outdated' or value == 'broken' or value == 'inactive' then return 'outdated' end
+    if value == 'outdated' then return 'outdated' end
+    if value == 'broken' or value == 'inactive' then return 'broken' end
     return 'unknown'
 end
 
 function scriptStatusText(item, st)
-    if st and st.outdated then return 'update' end
     local value = scriptStatusValue(item)
+    if value == 'broken' then return 'неактуально' end
+    if st and st.outdated then return 'update' end
     if value == 'actual' then return 'актуально' end
     if value == 'outdated' then return 'update' end
     if value == 'unknown' then return 'неизвестно' end
@@ -1520,8 +1526,9 @@ function scriptStatusText(item, st)
 end
 
 function scriptStatusColor(item, st)
-    if st and st.outdated then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     local value = scriptStatusValue(item)
+    if value == 'broken' then return imgui.ImVec4(1.00, 0.62, 0.62, 1.00) end
+    if st and st.outdated then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     if value == 'actual' then return imgui.ImVec4(0.63, 0.90, 0.68, 1.00) end
     if value == 'outdated' then return imgui.ImVec4(0.90, 0.90, 0.90, 1.00) end
     return imgui.ImVec4(0.94, 0.80, 0.52, 1.00)
@@ -1529,6 +1536,9 @@ end
 
 function scriptStatusPalette(item, st)
     local value = scriptStatusValue(item)
+    if value == 'broken' then
+        return imgui.ImVec4(0.34, 0.10, 0.12, 0.92), imgui.ImVec4(0.82, 0.24, 0.27, 0.82), imgui.ImVec4(1.00, 0.32, 0.34, 1.00)
+    end
     if st and st.outdated then
         return imgui.ImVec4(0.18, 0.18, 0.18, 0.88), imgui.ImVec4(0.45, 0.45, 0.45, 0.72), imgui.ImVec4(0.80, 0.80, 0.80, 1.00)
     end
@@ -1545,7 +1555,8 @@ function scriptStatusPriority(item)
     local value = scriptStatusValue(item)
     if value == 'actual' then return 1 end
     if value == 'unknown' then return 2 end
-    return 3
+    if value == 'outdated' then return 3 end
+    return 4
 end
 
 function statusLine(item, st)
