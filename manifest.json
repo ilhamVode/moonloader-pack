@@ -3,9 +3,19 @@
   "name": "ModioZodio MoonLoader Pack",
   "owner": "ModioZodio",
   "homepage": "https://github.com/ilhamVode/moonloader-pack",
-  "updated_at": "2026-09-14 MSK (v1.8.6)",
+  "updated_at": "2026-09-14 MSK (v1.8.7)",
   "notes": "Менеджер MoonLoader-скриптов для Arizona RP: установка, обновление и удаление прямо из игры без ручного поиска файлов.",
   "news": [
+    {
+      "title": "Modio Manager 1.8.7",
+      "date": "2026-09-14",
+      "parts": [
+        {
+          "text": "Установка и обновление неактуальных скриптов теперь заблокированы.",
+          "color": "#FF9999"
+        }
+      ]
+    },
     {
       "title": "Modio Manager 1.8.6",
       "date": "2026-09-14",
@@ -100,10 +110,18 @@
   ],
   "manager": {
     "file": "modio_manager.lua",
-    "version": "1.8.6",
+    "version": "1.8.7",
     "updated_at": "2026-09-14",
     "url": "https://github.com/ilhamVode/moonloader-pack/raw/refs/heads/main/modio_manager.lua",
     "changelog": [
+      {
+        "version": "1.8.7",
+        "date": "2026-09-14",
+        "changes": [
+          "Установка и обновление неактуальных скриптов заблокированы",
+          "Вместо кнопки загрузки показывается светло-красная кнопка «Недоступно: неактуально»"
+        ]
+      },
       {
         "version": "1.8.6",
         "date": "2026-09-14",
