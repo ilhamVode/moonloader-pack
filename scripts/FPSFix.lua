@@ -1,14 +1,13 @@
 script_author('JustFedot')
-local script__version = '1.1'
+local script__version = '1.2'
 script_version(script__version)
 script_description(
-    'Универсальный помощник для Центрального Рынка с множеством функций и системой логов с уведомлениями в телеграм.')
+    'FPSFix с упором на очиститель игроков и транспорта: снижает нагрузку, повышает FPS и минимизирует риск краша или подрыва в местах большого скопления игроков, например у Гурама.')
 
 
 require("moonloader")
 require("sampfuncs")
 local sampev = require("samp.events")
-local effil = require("effil")
 local encoding = require("encoding")
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
@@ -512,11 +511,6 @@ local files = {
 }
 function defaultConfig()
     local cfg = {
-        auto_heal = {
-            active = false,
-            command = '',
-            hp = 80,
-        },
         lavka = {
             active = false,
             name = '',
@@ -524,12 +518,6 @@ function defaultConfig()
         auto_eat = {
             active = false,
             command = '',
-        },
-        telegram = {
-            active = false,
-            user_id = '',
-            token = '',
-            sendsell = false,
         },
         cleaner = false,
         auto_active = false,
@@ -632,11 +620,6 @@ end
 
 ----------------Переменные дня Imgui
 local imgui_cfg = {
-    auto_heal = {
-        active = imgui.ImBool(false),
-        command = imgui.ImBuffer(256),
-        hp = imgui.ImInt(0),
-    },
     lavka = {
         active = imgui.ImBool(false),
         name = imgui.ImBuffer(256),
@@ -645,12 +628,6 @@ local imgui_cfg = {
         active = imgui.ImBool(false),
         command = imgui.ImBuffer(20),
     },
-    telegram = {
-        active = imgui.ImBool(false),
-        user_id = imgui.ImBuffer(256),
-        token = imgui.ImBuffer(256),
-        sendsell = imgui.ImBool(false),
-    },
     cleaner = imgui.ImBool(false),
     auto_active = imgui.ImBool(false),
 }
@@ -658,17 +635,10 @@ local imgui_windows = {
     main = imgui.ImBool(false),
 }
 function refreshImgui()
-    imgui_cfg.auto_heal.active.v = cfg.auto_heal.active
-    imgui_cfg.auto_heal.command.v = u8(cfg.auto_heal.command)
-    imgui_cfg.auto_heal.hp.v = cfg.auto_heal.hp
     imgui_cfg.lavka.name.v = u8(cfg.lavka.name)
     imgui_cfg.lavka.active.v = cfg.lavka.active
     imgui_cfg.auto_eat.active.v = cfg.auto_eat.active
     imgui_cfg.auto_eat.command.v = cfg.auto_eat.command
-    imgui_cfg.telegram.active.v = cfg.telegram.active
-    imgui_cfg.telegram.user_id.v = cfg.telegram.user_id
-    imgui_cfg.telegram.token.v = cfg.telegram.token
-    imgui_cfg.telegram.sendsell.v = cfg.telegram.sendsell
     imgui_cfg.cleaner.v = cfg.cleaner
     imgui_cfg.auto_active.v = cfg.auto_active
 end
@@ -692,39 +662,6 @@ local script_status = {
 
 
 
-local lavaka_helper = {
-    enabled = false,
-    debug = false,
-    state = 'idle',
-    lastOpenAttemptAt = 0,
-    lastActionAttemptAt = 0,
-    nextOpenAt = 0,
-    openAttempts = 0,
-    actionAttempts = 0,
-    lastCloseAt = 0,
-    startedAt = 0,
-    lastInstallText = 'Нет данных',
-    lastTooFarNoticeAt = 0,
-    openRetryMs = 50,
-    actionRetryMs = 300,
-    baseAfterActionMs = 850,
-    afterActionMs = 850,
-    minAfterActionMs = 850,
-    maxAfterActionMs = 1500,
-    retryLimit = 20,
-    retryCycles = 0,
-    cleanLimit = 20,
-    cleanCycles = 0,
-    openMenuPacket = { 220, 0, 82, 64 },
-    actionCommand = 'radialMenu.useAction|1',
-    interactiveMenuText = "window.executeEvent('event.setActiveView', `[\"InteractiveMenu\"]`);",
-    closeViewText = "window.executeEvent('event.setActiveView', '[ null ]');",
-    alreadyPlacedText = u8:decode('\208\163\32\208\146\208\176\209\129\32\209\131\208\182\208\181\32\209\131\209\129\209\130\208\176\208\189\208\190\208\178\208\187\208\181\208\189\208\176\32\208\187\208\176\208\178\208\186\208\176\33'),
-    placedSuccessText = u8:decode('\208\146\209\139\32\209\131\209\129\208\191\208\181\209\136\208\189\208\190\32\208\178\209\139\209\129\209\130\208\176\208\178\208\184\208\187\208\184\32\208\187\208\176\208\178\208\186\209\131\32\208\180\208\187\209\143\32\208\191\209\128\208\190\208\180\208\176\208\182\208\184\47\208\191\208\190\208\186\209\131\208\191\208\186\208\184\32\209\130\208\190\208\178\208\176\209\128\208\176\33'),
-    tooFarText = u8:decode('\208\146\209\139\32\208\180\208\176\208\187\208\181\208\186\208\190\32\208\190\209\130\208\190\209\136\208\187\208\184\32\208\190\209\130\32\208\188\208\181\209\129\209\130\208\176\32\209\131\209\129\209\130\208\176\208\189\208\190\208\178\208\186\208\184\33'),
-    hintPrefix = u8:decode('\208\159\208\190\208\180\209\129\208\186\208\176\208\183\208\186\208\176'),
-    errorPrefix = u8:decode('\208\158\209\136\208\184\208\177\208\186\208\176')
-}
 function addChat(a)
     sampAddChatMessage('{cca540}[fps fix]: {ffffff}' .. a, -1)
 end
@@ -733,14 +670,13 @@ function main()
     repeat wait(0) until isSampAvailable()
     while not isSampLoaded() do wait(0) end
     lua_thread.create(main_thread)
-    lua_thread.create(heal_thread)
+    lua_thread.create(action_thread)
     refreshImgui()
     sampRegisterChatCommand('fps', function() imgui_windows.main.v = not imgui_windows.main.v end)
     addChat('/fps')
     while true do
         wait(0)
         imgui.Process = imgui_windows.main.v
-        processLavakaHelper()
     end
 end
 
@@ -852,7 +788,7 @@ function main_thread()
     end
 end
 
-function heal_thread()
+function action_thread()
     while true do
         wait(0)
         if render_status_lovec and render_status_flood then
@@ -880,14 +816,6 @@ function heal_thread()
                 data.send()
                 wait(100)
             until not script_status.integrate_plt.alt or not script_status.integrate_plt.active
-        end
-        if script_status.active and cfg.auto_heal.active then
-            if getCharHealth(PLAYER_PED) < cfg.auto_heal.hp then
-                repeat
-                    sampSendChat(cfg.auto_heal.command)
-                    wait(1000)
-                until getCharHealth(PLAYER_PED) > cfg.auto_heal.hp or not cfg.auto_heal.active or not script_status.active
-            end
         end
     end
 end
@@ -923,43 +851,26 @@ function sampev.onShowTextDraw(id, data)
         if data.text:find('^.+ %- .+ .+ %(.+%)~n~$') and data.modelId == 0 and data.letterColor == -5397778 then
             local nick, gun, damage = data.text:match('^(.+) %- (.+) (.+) %(.+%)~n~$')
             writeStatistic('Зарегестрирован Урон. Источник: ' .. nick .. ' Оружие: ' .. gun .. '. Урон: ' .. damage)
-            if cfg.telegram.active then
-                sendTelegram('Зарегестрирован Урон. Источник: ' .. nick .. ' Оружие: ' .. gun .. '. Урон: ' .. damage)
-            end
         elseif data.text:find('^Collision .+ %(.+%)~n~$') and data.modelId == 0 and data.letterColor == -5397778 then
             writeStatistic('Зарегестрирован Урон. Источник: Collision. Урон: ' ..
                 data.text:match('^Collision (.+) %(.+%)~n~$'))
-            if cfg.telegram.active then
-                sendTelegram('Зарегестрирован Урон. Источник: Collision. Урон: ' ..
-                    data.text:match('^Collision (.+) %(.+%)~n~$'))
-            end
         end
     end
 end
 
 function sampev.onServerMessage(color, text)
-    handleLavakaServerMessage(text)
     if text:find('^%[Подсказка%] {FFFFFF}Вы успешно арендовали лавку для продажи') or text:find('^%[Подсказка%] {FFFFFF}Вы успешно выставили лавку для продажи.покупки товара.$') then
         script_status.active = true
         --addChat('Вы встали в лавку. Функции включены.')
         writeStatistic('Вы встали в лавку. Функции включены.')
-        if cfg.telegram.active then
-            sendTelegram('Вы встали в лавку. Функции включены.')
-        end
     elseif script_status.active and (text:find('^%[Информация%] {FFFFFF}Вы отказались от аренды лавки') or text:find('^%[Информация%] {FFFFFF}Вы сняли лавку') or text:find('^%[Информация%] {FFFFFF}У Вас закончилось время для настройки товаров')) then
         script_status.active = false
         --addChat('Вы вышли из лавки. Функции отключены!')
         writeStatistic('Вы вышли из лавки. Функции отключены!')
-        if cfg.telegram.active then
-            sendTelegram('Вы вышли из лавки. Функции отключены!')
-        end
     elseif script_status.active and (text:find('^%[Информация%] {FFFFFF}Ваша лавка была закрыта')) then
         script_status.active = false
         --addChat('Вас выкинули с вашей лавки!')
         writeStatistic('Вас выкинули с вашей лавки!')
-        if cfg.telegram.active then
-            sendTelegram('Вас выкинули с вашей лавки!')
-        end
     end
     if script_status.active then
         -- Продажа с обычным $
@@ -968,18 +879,12 @@ function sampev.onServerMessage(color, text)
                 '^(.+) купил у вас (.+), вы получили %$(%d+) от продажи %(комиссия %d процент%(а%)%)')
             local reg_text = 'Вы продали: "' .. product .. '" за ' .. money .. '$ Игроку: ' .. name .. '.'
             writeStatistic(reg_text)
-            if cfg.telegram.active and cfg.telegram.sendsell then
-                sendTelegram(reg_text)
-            end
 
             -- Покупка с обычным $
         elseif text:find('^Вы купили .+ у игрока .+ за %$%d+') then
             local product, name, money = text:match('^Вы купили (.+) у игрока (.+) за %$(%d+)')
             local reg_text = 'Вы купили: "' .. product .. '" за ' .. money .. '$ У игрока: ' .. name .. '.'
             writeStatistic(reg_text)
-            if cfg.telegram.active and cfg.telegram.sendsell then
-                sendTelegram(reg_text)
-            end
 
             -- Продажа с VC$
         elseif text:find('^.+ купил у вас .+, вы получили VC%$%d+ от продажи %(комиссия %d процент%(а%)%)') then
@@ -987,18 +892,12 @@ function sampev.onServerMessage(color, text)
                 '^(.+) купил у вас (.+), вы получили VC%$(%d+) от продажи %(комиссия %d процент%(а%)%)')
             local reg_text = '[SOSITY] Вы продали: "' .. product .. '" за ' .. money .. 'VC$ Игроку: ' .. name .. '.'
             writeStatistic(reg_text)
-            if cfg.telegram.active and cfg.telegram.sendsell then
-                sendTelegram(reg_text)
-            end
 
             -- Покупка с VC$ (ИСПРАВЛЕНО)
         elseif text:find('^Вы купили .+ у игрока .+ за VC%$%d+') then
             local product, name, money = text:match('^Вы купили (.+) у игрока (.+) за VC%$(%d+)')
             local reg_text = '[SOSITY] Вы купили: "' .. product .. '" за ' .. money .. 'VC$ У игрока: ' .. name .. '.'
             writeStatistic(reg_text)
-            if cfg.telegram.active and cfg.telegram.sendsell then
-                sendTelegram(reg_text)
-            end
         end
     end
 end
@@ -1057,16 +956,12 @@ end
 
 function onReceivePacket(id, bitStream)
     handleSatietyReceivePacket(id, bitStream)
-    handleLavakaReceivePacket(id, bitStream)
     if script_status.active then
         if (id == PACKET_DISCONNECTION_NOTIFICATION) or
             (id == PACKET_CONNECTION_LOST) then
             script_status.active = false
             --addChat('Зафиксирована потеря соединения с сервером. Скрипт отключен.')
             writeStatistic('Зафиксирована потеря соединения с сервером. Скрипт отключен.')
-            if cfg.telegram.active then
-                sendTelegram('Зафиксирована потеря соединения с сервером. Скрипт отключен.')
-            end
         end
     end
 end
@@ -1081,7 +976,7 @@ local cef_satiety = {
 function handleSatietyReceivePacket(id, bs)
     if id ~= 220 then return end
 
-    local text = lavakaReadCefPacket(bs)
+    local text = readCefPacket(bs)
     local value = parseSatietyCef(text)
     if not value then return end
 
@@ -1125,76 +1020,6 @@ end
 
 -----------------End
 
---------------Telergam
-function sendTelegram(message)
-    local function threadHandle(runner, url, args, resolve, reject)
-        local t = runner(url, args)
-        local r = t:get(0)
-        while not r do
-            r = t:get(0)
-            wait(0)
-        end
-        local status = t:status()
-        if status == 'completed' then
-            local ok, result = r[1], r[2]
-            if ok then resolve(result) else reject(result) end
-        elseif err then
-            reject(err)
-        elseif status == 'canceled' then
-            reject(status)
-        end
-        t:cancel(0)
-    end
-    local function requestRunner()
-        return effil.thread(function(u, a)
-            local https = require 'ssl.https'
-            local ok, result = pcall(https.request, u, a)
-            if ok then
-                return { true, result }
-            else
-                return { false, result }
-            end
-        end)
-    end
-    local function async_http_request(url, args, resolve, reject)
-        local runner = requestRunner()
-        if not reject then reject = function() end end
-        lua_thread.create(function()
-            threadHandle(runner, url, args, resolve, reject)
-        end)
-    end
-    local function encodeUrl(str)
-        str = str:gsub(' ', '%+')
-        str = str:gsub('\n', '%%0A')
-        return u8:encode(str, 'CP1251')
-    end
-    local function sendTelegramNotification(msg)
-        msg = msg:gsub('{......}', '')
-        msg = encodeUrl(msg)
-        async_http_request(
-            'https://api.telegram.org/bot' ..
-            cfg.telegram.token .. '/sendMessage?chat_id=' .. cfg.telegram.user_id .. '&text=' .. msg, '',
-            function(result) end)
-    end
-    if message and message:len() > 0 then
-        local _, id = sampGetPlayerIdByCharHandle(PLAYER_PED)
-        if _ then
-            local srv = getArizonaName()
-            if not srv then
-                srv = 'Err'
-            end
-            message = '[' .. srv .. ']' .. sampGetPlayerNickname(id) .. '(' .. id .. '):\n' .. message
-            sendTelegramNotification(message)
-        else
-            message = '[Err]Unknown_Name(nil):\n' .. message
-            sendTelegramNotification(message)
-        end
-    else
-        sendTelegramNotification('[JF fps fix]: Попытался отправить сообщение, однако что-то пошло не так!')
-    end
-end
-
---------------End
 
 ---------------Imgui
 local fontsize = nil
@@ -1208,132 +1033,7 @@ end
 local tabs = 1
 local statistic_imCombo = imgui.ImInt(0)
 local search_buffer = imgui.ImBuffer(256)
-function lavakaHelperSetEnabled(value)
-    lavaka_helper.enabled = value
-    resetLavakaHelperState()
-    if lavaka_helper.enabled then
-        imgui_windows.main.v = false
-        imgui.Process = false
-        resetLavakaAdaptiveDelay()
-        lavaka_helper.startedAt = lavakaNowMs()
-    else
-        lavaka_helper.startedAt = 0
-    end
-    addChat(lavaka_helper.enabled and 'Помощник установки лавки включен.' or 'Помощник установки лавки выключен.')
-end
-
-function processLavakaHelper()
-    if not lavaka_helper.enabled then return end
-
-    local now = lavakaNowMs()
-    if lavaka_helper.state == 'pause' then
-        if now >= lavaka_helper.nextOpenAt then
-            lavaka_helper.state = 'idle'
-        else
-            return
-        end
-    end
-
-    if lavaka_helper.state == 'idle' then
-        if now >= lavaka_helper.nextOpenAt and now - lavaka_helper.lastOpenAttemptAt >= lavaka_helper.openRetryMs then
-            lavakaSendRawPacket(lavaka_helper.openMenuPacket)
-            lavaka_helper.state = 'wait_menu'
-            lavaka_helper.lastOpenAttemptAt = now
-            lavaka_helper.openAttempts = lavaka_helper.openAttempts + 1
-        end
-        return
-    end
-
-    if lavaka_helper.state == 'wait_menu' then
-        if now >= lavaka_helper.nextOpenAt and now - lavaka_helper.lastOpenAttemptAt >= lavaka_helper.openRetryMs then
-            lavakaSendRawPacket(lavaka_helper.openMenuPacket)
-            lavaka_helper.lastOpenAttemptAt = now
-            lavaka_helper.openAttempts = lavaka_helper.openAttempts + 1
-        end
-        return
-    end
-
-    if lavaka_helper.state == 'wait_close' then
-        if now - lavaka_helper.lastActionAttemptAt >= lavaka_helper.actionRetryMs then
-            lavakaSendCefCommand(lavaka_helper.actionCommand)
-            lavaka_helper.lastActionAttemptAt = now
-            lavaka_helper.actionAttempts = lavaka_helper.actionAttempts + 1
-        end
-    end
-end
-
-function handleLavakaReceivePacket(id, bs)
-    if not lavaka_helper.enabled or id ~= 220 then return end
-    if lavaka_helper.state ~= 'wait_menu' and lavaka_helper.state ~= 'wait_close' then return end
-
-    local text, packets = lavakaReadCefPacket(bs)
-    if lavaka_helper.state == 'wait_menu' and lavakaIsInteractiveMenuPacket(text, packets) then
-        lavakaReportOpenTiming()
-        lavakaSendCefCommand(lavaka_helper.actionCommand)
-        lavaka_helper.state = 'wait_close'
-        lavaka_helper.lastActionAttemptAt = lavakaNowMs()
-        lavaka_helper.actionAttempts = 1
-        return
-    end
-
-    if lavaka_helper.state == 'wait_close' and lavakaIsCloseViewPacket(text, packets) then
-        lavakaReportActionTiming()
-        lavakaUpdateAdaptiveDelayByRetries()
-        resetLavakaHelperState(lavaka_helper.afterActionMs)
-        return
-    end
-end
-
-function handleLavakaServerMessage(text)
-    if not lavaka_helper.enabled or not text then return end
-
-    local placed = lavakaIsSystemChat(text, lavaka_helper.hintPrefix, lavaka_helper.placedSuccessText)
-    local alreadyPlaced = lavakaIsSystemChat(text, lavaka_helper.errorPrefix, lavaka_helper.alreadyPlacedText)
-    if placed or alreadyPlaced then
-        lavakaReportInstallTime()
-        lavaka_helper.enabled = false
-        resetLavakaHelperState()
-        lavaka_helper.startedAt = 0
-        addChat('Лавка установлена, помощник выключен.')
-        return
-    end
-
-    if lavakaIsSystemChat(text, lavaka_helper.errorPrefix, lavaka_helper.tooFarText) then
-        resetLavakaHelperState(lavaka_helper.afterActionMs)
-        lavakaReportTooFar()
-    end
-end
-
-function lavakaIsSystemChat(text, prefix, needle)
-    local cleanText = lavakaCleanChatText(text)
-    return cleanText:find('[' .. prefix .. ']', 1, true) == 1 and cleanText:find(needle, 1, true) ~= nil
-end
-
-function lavakaCleanChatText(text)
-    if not text then return '' end
-    return text:gsub('{%x%x%x%x%x%x}', ''):gsub('^%s+', '')
-end
-function lavakaSendRawPacket(bytes)
-    local bs = raknetNewBitStream()
-    for _, byte in ipairs(bytes) do
-        raknetBitStreamWriteInt8(bs, byte)
-    end
-    raknetSendBitStream(bs)
-    raknetDeleteBitStream(bs)
-end
-
-function lavakaSendCefCommand(text)
-    local bs = raknetNewBitStream()
-    raknetBitStreamWriteInt8(bs, 220)
-    raknetBitStreamWriteInt8(bs, 18)
-    raknetBitStreamWriteInt16(bs, #text)
-    raknetBitStreamWriteString(bs, text)
-    raknetBitStreamWriteInt32(bs, 0)
-    raknetSendBitStream(bs)
-    raknetDeleteBitStream(bs)
-end
-
-function lavakaReadCefPacket(bs)
+function readCefPacket(bs)
     local text, packets = '', {}
     local bytesUsed = raknetBitStreamGetNumberOfBytesUsed(bs)
 
@@ -1368,147 +1068,6 @@ function lavakaReadCefPacket(bs)
     return text, packets
 end
 
-function lavakaIsInteractiveMenuPacket(text, packets)
-    return text == lavaka_helper.interactiveMenuText
-end
-
-function lavakaIsCloseViewPacket(text, packets)
-    return text == lavaka_helper.closeViewText
-end
-
-function lavakaReportOpenTiming()
-    if lavaka_helper.debug and lavaka_helper.openAttempts > 1 then
-        local extraMs = (lavaka_helper.openAttempts - 1) * lavaka_helper.openRetryMs
-        local fromClose = lavaka_helper.lastCloseAt > 0 and (lavakaNowMs() - lavaka_helper.lastCloseAt) or 0
-        if fromClose > 0 then
-            addChat(('Меню открылось с %d попытки, после закрытия прошло %d мс, расчетный кд %d мс.'):format(lavaka_helper.openAttempts, fromClose, lavaka_helper.afterActionMs + extraMs))
-        else
-            addChat(('Меню открылось с %d попытки, расчетный кд %d мс.'):format(lavaka_helper.openAttempts, lavaka_helper.afterActionMs + extraMs))
-        end
-    end
-end
-
-function lavakaReportActionTiming()
-    if lavaka_helper.debug and lavaka_helper.actionAttempts > 1 then
-        local extraMs = (lavaka_helper.actionAttempts - 1) * lavaka_helper.actionRetryMs
-        addChat(('Действие прошло с %d попытки, шаг %d мс, ожидание %d мс.'):format(lavaka_helper.actionAttempts, lavaka_helper.actionRetryMs, extraMs))
-    end
-end
-
-function lavakaUpdateAdaptiveDelayByRetries()
-    local hadRetry = lavaka_helper.openAttempts > 1 or lavaka_helper.actionAttempts > 1
-
-    if hadRetry then
-        lavaka_helper.retryCycles = lavaka_helper.retryCycles + 1
-        lavaka_helper.cleanCycles = 0
-        if lavaka_helper.retryCycles > lavaka_helper.retryLimit then
-            lavakaRaiseAdaptiveDelay()
-            lavaka_helper.retryCycles = 0
-        end
-    else
-        lavaka_helper.cleanCycles = lavaka_helper.cleanCycles + 1
-        lavaka_helper.retryCycles = 0
-        if lavaka_helper.cleanCycles >= lavaka_helper.cleanLimit then
-            lavakaLowerAdaptiveDelay()
-            lavaka_helper.cleanCycles = 0
-        end
-    end
-end
-
-function lavakaRaiseAdaptiveDelay()
-    if lavaka_helper.afterActionMs >= lavaka_helper.maxAfterActionMs then return end
-
-    lavaka_helper.afterActionMs = math.min(lavaka_helper.afterActionMs + 50, lavaka_helper.maxAfterActionMs)
-    addChat('Адаптивный кд увеличен: ' .. lavaka_helper.afterActionMs .. ' мс.')
-end
-
-function lavakaLowerAdaptiveDelay()
-    if lavaka_helper.afterActionMs <= lavaka_helper.minAfterActionMs then return end
-
-    lavaka_helper.afterActionMs = math.max(lavaka_helper.afterActionMs - 25, lavaka_helper.minAfterActionMs)
-    lavaka_helper.retryCycles = 0
-    addChat('Адаптивный кд снижен: ' .. lavaka_helper.afterActionMs .. ' мс.')
-end
-
-function resetLavakaAdaptiveDelay()
-    lavaka_helper.afterActionMs = lavaka_helper.baseAfterActionMs
-    lavaka_helper.retryCycles = 0
-    lavaka_helper.cleanCycles = 0
-end
-
-function lavakaReportInstallTime()
-    if lavaka_helper.startedAt <= 0 then return end
-
-    local elapsedMs = math.max(lavakaNowMs() - lavaka_helper.startedAt, 1)
-    local minutes = math.max(math.ceil(elapsedMs / 60000), 1)
-    lavaka_helper.lastInstallText = 'Последняя установка: меньше чем за ' .. minutes .. ' ' .. lavakaMinuteWord(minutes)
-    addChat('Вы установили лавку меньше чем за ' .. minutes .. ' ' .. lavakaMinuteWord(minutes) .. '.')
-end
-
-function lavakaReportTooFar()
-    local now = lavakaNowMs()
-    if now - lavaka_helper.lastTooFarNoticeAt < 5000 then return end
-
-    lavaka_helper.lastTooFarNoticeAt = now
-    addChat('Вы далеко от места установки, помощник продолжает попытки.')
-end
-
-function resetLavakaHelperState(delayMs)
-    if delayMs and delayMs > 0 then
-        lavaka_helper.lastCloseAt = lavakaNowMs()
-    end
-    lavaka_helper.state = 'idle'
-    lavaka_helper.lastOpenAttemptAt = 0
-    lavaka_helper.lastActionAttemptAt = 0
-    lavaka_helper.nextOpenAt = lavakaNowMs() + (delayMs or 0)
-    lavaka_helper.openAttempts = 0
-    lavaka_helper.actionAttempts = 0
-    if delayMs and delayMs > 0 then
-        lavaka_helper.state = 'pause'
-    end
-end
-
-function lavakaNowMs()
-    return math.floor(os.clock() * 1000)
-end
-
-function lavakaMinuteWord(value)
-    local lastTwo = value % 100
-    local last = value % 10
-
-    if lastTwo >= 11 and lastTwo <= 14 then
-        return 'минут'
-    elseif last == 1 then
-        return 'минуту'
-    elseif last >= 2 and last <= 4 then
-        return 'минуты'
-    end
-
-    return 'минут'
-end
-
-function lavakaStatusText()
-    if lavaka_helper.enabled then
-        return 'Статус: включен | состояние: ' .. lavaka_helper.state .. ' | кд: ' .. lavaka_helper.afterActionMs .. ' мс'
-    end
-    return 'Статус: выключен | кд: ' .. lavaka_helper.afterActionMs .. ' мс'
-end
-
-function drawLavakaHelperUi()
-    imgui.Separator()
-    imgui.TextColored(imgui.ImVec4(0.28, 0.56, 1.00, 1.00), u8 'Помощник установки лавки')
-    imgui.TextDisabled(u8(lavakaStatusText()))
-    imgui.TextDisabled(u8(lavaka_helper.lastInstallText))
-
-    if imgui.ButtonActivatedWithHint(u8 'Включает строгую CEF-цепочку установки лавки: открыть интерактивное меню, дождаться ответа, выбрать действие и дождаться закрытия.', lavaka_helper.enabled, u8(lavaka_helper.enabled and 'Остановить помощник' or 'Запустить помощник'), imgui.ImVec2(170, 0)) then
-        lavakaHelperSetEnabled(not lavaka_helper.enabled)
-    end
-    imgui.SameLine()
-    if imgui.ButtonActivatedWithHint(u8 'Показывает технические сообщения о повторных попытках и текущем расчетном кд.', lavaka_helper.debug, u8(lavaka_helper.debug and 'Скрыть диагностику' or 'Показать диагностику'), imgui.ImVec2(170, 0)) then
-        lavaka_helper.debug = not lavaka_helper.debug
-        addChat('Диагностика помощника установки лавки: ' .. (lavaka_helper.debug and 'включена.' or 'выключена.'))
-    end
-end
 function imgui.OnDrawFrame()
     local w, h = getScreenResolution()
     local arizona_name = getArizonaName()
@@ -1548,20 +1107,14 @@ function imgui.OnDrawFrame()
         imgui.VerticalSeparator()
         imgui.SetCursorPosX(600)
         imgui.SetCursorPosY((imgui.GetWindowHeight() - 20) / 2)
-        if imgui.ButtonActivatedWithHint(u8 'Ручное "Включение/Отключение" скрипта.\nКрайне не рекомендуется использование вне лавки.\nЗа некоторые функции есть риски бана!', script_status.active, u8 'Активация', imgui.ImVec2(150, 0)) then
+        if imgui.ButtonActivatedWithHint(u8 'Ручное включение или отключение функций скрипта.\nДля работы очистителя активируйте скрипт вручную; использовать остальные функции вне лавки не рекомендуется.\nЗа некоторые функции есть риски бана!', script_status.active, u8 'Активация', imgui.ImVec2(150, 0)) then
             script_status.active = not script_status.active
             if script_status.active then
                 --addChat('Функции включены вручную.')
                 writeStatistic('Функции включены вручную.')
-                if cfg.telegram.active then
-                    sendTelegram('Функции включены вручную.')
-                end
             else
                 --addChat('Функции отключены вручную.')
                 writeStatistic('Функции отключены вручную.')
-                if cfg.telegram.active then
-                    sendTelegram('Функции отключены вручную.')
-                end
             end
         end
         imgui.EndChild()
@@ -1622,65 +1175,9 @@ function imgui.OnDrawFrame()
                 end
             end
             imgui.Separator()
-            if imgui.CheckboxWithHint(u8 "Авто-Хил\nФункция выполняет указанную команду в случае если ваше здоровье ниже указанного числа.", u8 'Авто-Хил', imgui_cfg.auto_heal.active) then
-                cfg.auto_heal.active = imgui_cfg.auto_heal.active.v
-                saveConfig()
-            end
-            if cfg.auto_heal.active then
-                if imgui.InputTextWithHintEx(u8 'Введите команду которую скрипт будет выполнять в случае если ваше здоровье ниже указанного числа.\nПримеры:\n/smoke - Сигареты\n/beer - Пиво\n/usedrugs 3 - Наркотики\n(( Команды обязательно писать с / ))', u8 'Команда Авто-Хила##autoeatcfg', u8 'Поле для команды Авто-Хила', imgui_cfg.auto_heal.command) then
-                    cfg.auto_heal.command = imgui_cfg.auto_heal.command.v
-                    saveConfig()
-                end
-                imgui.TextDisabled(u8 'Убедитесь что в вашем инвентаре достаточно Сигарет/Пива/Наркотиков или что вы там используете.')
-                imgui.PushItemWidth(150)
-                if imgui.InputIntEx(u8 'Минимальное Здоровье', imgui_cfg.auto_heal.hp) then
-                    if imgui_cfg.auto_heal.hp.v < 0 then
-                        imgui_cfg.auto_heal.hp.v = 0
-                    end
-                    cfg.auto_heal.hp = imgui_cfg.auto_heal.hp.v
-                    saveConfig()
-                end
-                if imgui.IsItemHovered() then
-                    imgui.BeginTooltip()
-                    imgui.PushTextWrapPos(600)
-                    imgui.TextUnformatted(u8 'Здесь указывается значение здоровья при котором функция начинает фулдить.\nСтандартное значение - 80 (мин. 0)\nЕсли указано 80, скрипт начнёт флудить командой если здоровье будет ниже чем 80.')
-                    imgui.PopTextWrapPos()
-                    imgui.EndTooltip()
-                end
-                imgui.PopItemWidth()
-                if imgui_cfg.auto_heal.hp.v < 50 or imgui_cfg.auto_heal.hp.v > 100 then
-                    imgui.TextDisabled(u8(
-                        'Вы указали странное значение. Ваши настройки подразумевают что флуд начнётся если у вас меньше чем ' ..
-                        imgui_cfg.auto_heal.hp.v .. ' HP.'))
-                end
-            end
-            imgui.Separator()
-            if imgui.CheckboxWithHint(u8 "Очищать игроков и транспорт. Повышает FPS, минимизирует шанс краша.\nИспользовать на свой страх и риск, после выхода с палатки, рекомендую перезайти в игру.\nДанный очиститель не имеет багов, которые вызывают краш игры.", u8 'Очиститель', imgui_cfg.cleaner) then
+            if imgui.CheckboxWithHint(u8 "Главная функция FPSFix: очищает игроков и транспорт из зоны стрима, повышает FPS и минимизирует риск краша или подрыва.\nОсобенно полезно у Гурама и в других местах большого скопления игроков — шанс краша или того, что вас подорвут, сводится практически к нулю.\nНе двигайтесь во время работы очистителя. Используйте на свой страх и риск; после отключения рекомендуется перезайти в игру.", u8 'Очиститель', imgui_cfg.cleaner) then
                 cfg.cleaner = imgui_cfg.cleaner.v
                 saveConfig()
-            end
-            imgui.Separator()
-            if imgui.CheckboxWithHint(u8 "Уведомления в Telegram\nПри обнаружении события - отправляет уведомление в Telegram\nПримеры Событий:\nВы взяли лавку\nОтключение от сервера\nНанесение вам урона\nПотеря лавки", u8 'Уведомления в Telegram', imgui_cfg.telegram.active) then
-                cfg.telegram.active = imgui_cfg.telegram.active.v
-                saveConfig()
-            end
-            if cfg.telegram.active then
-                imgui.SameLine()
-                if imgui.Button(u8 'Отправить тестовое сообщение!', imgui.ImVec2(0, 0)) then
-                    sendTelegram('Тестовое сообщение!')
-                end
-                if imgui.CheckboxWithHint(u8 "Включить/Отключить отправку уведомления при КАЖДОЙ покупке/продаже.", u8 'Постоянные уведомления', imgui_cfg.telegram.sendsell) then
-                    cfg.telegram.sendsell = imgui_cfg.telegram.sendsell.v
-                    saveConfig()
-                end
-                if imgui.InputTextWithHintEx(u8 'Запустите Telegram, перейдите к поисковой строке над списком чатов и введите в неё запрос getmyid_bot.\nПосле начала работы с ботом он отобразит ваш пользовательский ID.\nВставьте полученный ID в это поле.', 'User_Id', u8 'Поле для User_Id', imgui_cfg.telegram.user_id) then
-                    cfg.telegram.user_id = imgui_cfg.telegram.user_id.v
-                    saveConfig()
-                end
-                if imgui.InputTextWithHintEx(u8 'Найдите в телеграме бота с именем «@botfarther», он поможет вам в создании и управлении вашим ботом.\nЧтобы создать нового бота, отправьте «/newbot»\nСледуйте инструкциям, которые он дал, и создайте новое имя для своего бота.\nПоздравляем! Вы только что создали своего бота Telegram. Вы увидите новый токен API, сгенерированный для него.\nВставьте полученный токен в это поле!', 'Token', u8 'Поле для Token', imgui_cfg.telegram.token) then
-                    cfg.telegram.token = imgui_cfg.telegram.token.v
-                    saveConfig()
-                end
             end
             imgui.Separator()
             if imgui.CheckboxWithHint(u8 "Авто-Взятие Лавки\nКогда вы берёте лавку, автоматически платит за аренду, прописывает название Лавки.\nИ рандомно выбирает её цвет.\nТак-же автоматически пропишет: /anim 1", u8 'Авто-Взятие Лавки', imgui_cfg.lavka.active) then
@@ -1706,8 +1203,6 @@ function imgui.OnDrawFrame()
                 imgui.TextDisabled(u8 'Помните, название лавки не может быть короче 3 и длиннее 20 символов! Текущая длина: ' ..
                     string.len(u8:decode(imgui_cfg.lavka.name.v)) .. u8(' символов.'))
             end
-            drawLavakaHelperUi()
-            imgui.Separator()
             if imgui.CollapsingHeader(u8 'Очистка Логов') then
                 if imgui.ButtonActivatedWithHint(u8 'Внимание! Эта кнопка полностью удалит все логи записанные со всех аккаунтов!\nПеред тем как её нажимать, убедитесь что вы знаете что делаете!', false, u8 'Стереть все Логи', imgui.ImVec2(150, 40)) then
                     im_choto = {}
@@ -1781,11 +1276,6 @@ function imgui.OnDrawFrame()
                     end
                     addChat('Выгруженный лог за: ' .. im_stats[server_nickname][statistic_imCombo.v + 1])
                     addChat('Общая прибыль составляет: ' .. money .. '$')
-                    if cfg.telegram.active then
-                        sendTelegram('Выгруженный лог за: ' ..
-                            im_stats[server_nickname][statistic_imCombo.v + 1] .. '\nОбщая прибыль составляет: ' ..
-                            money .. '$')
-                    end
                 else
                     addChat('Ошибка. Записей в логе не обнаружено!')
                 end
@@ -1793,7 +1283,7 @@ function imgui.OnDrawFrame()
             if imgui.IsItemHovered() then
                 imgui.BeginTooltip()
                 imgui.PushTextWrapPos(600)
-                imgui.TextUnformatted(u8 'Считает вашу прибыль либо убытки за выбранную дату.\n(( Из того что отображается на экране ))\nЕсли включены Уведомления в Telegram, продублирует туда.')
+                imgui.TextUnformatted(u8 'Считает вашу прибыль либо убытки за выбранную дату.\n(( Из того что отображается на экране ))')
                 imgui.PopTextWrapPos()
                 imgui.EndTooltip()
             end
