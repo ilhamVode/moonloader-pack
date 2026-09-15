@@ -1,4 +1,4 @@
-local MANAGER_VERSION = '1.8.6'
+local MANAGER_VERSION = '1.8.7'
 local LAYOUT_FIX_BUILD = 'fixed-scroll-layout-2026-06-16-v4'
 
 script_name('ModioManager')
@@ -584,9 +584,19 @@ function managerButton(label, size, variant, opts)
     local hovered = imgui.IsItemHovered()
     local active = imgui.IsItemActive()
     local pulse = opts.pulse or 0
+    local disabled = opts.disabled == true
+
+    if disabled then
+        clicked = false
+        active = false
+    end
 
     local bg, border, text
-    if variant == 'danger' then
+    if variant == 'inactive' then
+        bg = imgui.ImVec4(0.42, 0.18, 0.20, hovered and 0.74 or 0.62)
+        border = imgui.ImVec4(0.92, 0.42, 0.44, hovered and 0.62 or 0.44)
+        text = imgui.ImVec4(1.00, 0.78, 0.78, 1.00)
+    elseif variant == 'danger' then
         bg = active and imgui.ImVec4(0.42, 0.10, 0.11, 0.96)
             or hovered and imgui.ImVec4(0.66, 0.20, 0.21, 0.92)
             or imgui.ImVec4(0.50, 0.15, 0.16, 0.82)
@@ -1143,7 +1153,16 @@ function drawDetailsBody(item, st)
         imgui.Spacing()
     end
 
-    if not st.installed then
+    local script_inactive = scriptStatusValue(item) == 'broken'
+    if script_inactive then
+        local inactive_label = ui(uiIcon('BAN', '') .. '  Недоступно: неактуально')
+        local inactive_size = buttonSize(inactive_label, 230)
+        managerButton(inactive_label, inactive_size, 'inactive', { disabled = true })
+        imgui.TextColored(
+            imgui.ImVec4(1.00, 0.58, 0.58, 1.00),
+            ui('Установка и обновление этого скрипта отключены.')
+        )
+    elseif not st.installed then
         local install_size = buttonSize(ui(uiIcon('DOWNLOAD', '') .. '  Установить'), 190)
         if managerButton(ui(uiIcon('DOWNLOAD', '') .. '  Установить'), install_size) then
             if script_actions_locked then
@@ -1741,6 +1760,10 @@ end
 
 function installOrUpdate(item, mode)
     if busy or not item or not item.url or item.url == '' then return end
+    if scriptStatusValue(item) == 'broken' then
+        msg('Скрипт неактуален. Установка и обновление недоступны.', WARN)
+        return
+    end
     busy = true
     last_error = ''
     busy_text = (mode == 'install' and 'Устанавливаю ' or 'Обновляю ') .. tostring(item.name or item.id) .. '...'
