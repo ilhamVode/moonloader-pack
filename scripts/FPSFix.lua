@@ -1,5 +1,6 @@
+script_name('FPSFix')
 script_author('JustFedot')
-local script__version = '1.2'
+local script__version = '1.2.1'
 script_version(script__version)
 script_description(
     'FPSFix с упором на очиститель игроков и транспорта: снижает нагрузку, повышает FPS и минимизирует риск краша или подрыва в местах большого скопления игроков, например у Гурама.')
@@ -669,6 +670,7 @@ end
 function main()
     repeat wait(0) until isSampAvailable()
     while not isSampLoaded() do wait(0) end
+    print('[FPSFix] Vehicle BitStream ownership fix active.')
     lua_thread.create(main_thread)
     lua_thread.create(action_thread)
     refreshImgui()
@@ -684,6 +686,16 @@ end
 local render_status_active = false
 local render_status_flood = false
 local render_status_lovec = false
+-- FPSFix owned BitStream: release on success and on writer/emulator errors.
+local function fpsWithOwnedBitStream(callback)
+    local bs = raknetNewBitStream()
+    local ok, result = pcall(callback, bs)
+    local released, releaseError = pcall(raknetDeleteBitStream, bs)
+    if not ok then error(result, 0) end
+    if not released then error(releaseError, 0) end
+    return result
+end
+-- End owned BitStream helper.
 function main_thread()
     local posX2, posY2, posZ2
     local bit = require 'lib.samp.events.bitstream_io'
@@ -777,9 +789,10 @@ function main_thread()
                         local res, id = sampGetVehicleIdByCarHandle(cars[i])
                         if res and cars[i] ~= 1 then
                             local w = bit.bs_write
-                            local bs = raknetNewBitStream()
-                            w.int16(bs, id)
-                            raknetEmulRpcReceiveBitStream(165, bs)
+                            fpsWithOwnedBitStream(function(bs)
+                                w.int16(bs, id)
+                                raknetEmulRpcReceiveBitStream(165, bs)
+                            end)
                         end
                     end
                 end
